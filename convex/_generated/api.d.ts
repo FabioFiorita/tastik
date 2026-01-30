@@ -8,16 +8,34 @@
  * @module
  */
 
-import type * as tasks from "../tasks.js";
+import type * as auth from "../auth.js";
+import type * as http from "../http.js";
+import type * as items from "../items.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_subscription from "../lib/subscription.js";
+import type * as listEditors from "../listEditors.js";
+import type * as lists from "../lists.js";
+import type * as profiles from "../profiles.js";
+import type * as subscriptions from "../subscriptions.js";
+import type * as tags from "../tags.js";
 
 import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
+	ApiFromModules,
+	FilterApi,
+	FunctionReference,
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  tasks: typeof tasks;
+	auth: typeof auth;
+	http: typeof http;
+	items: typeof items;
+	"lib/auth": typeof lib_auth;
+	"lib/subscription": typeof lib_subscription;
+	listEditors: typeof listEditors;
+	lists: typeof lists;
+	profiles: typeof profiles;
+	subscriptions: typeof subscriptions;
+	tags: typeof tags;
 }>;
 
 /**
@@ -29,8 +47,8 @@ declare const fullApi: ApiFromModules<{
  * ```
  */
 export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
+	typeof fullApi,
+	FunctionReference<any, "public">
 >;
 
 /**
@@ -42,8 +60,8 @@ export declare const api: FilterApi<
  * ```
  */
 export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
+	typeof fullApi,
+	FunctionReference<any, "internal">
 >;
 
 export declare const components: {};

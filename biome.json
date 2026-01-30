@@ -53,7 +53,11 @@
 	},
 	"overrides": [
 		{
-			"includes": ["src/components/ui/**/*", "src/routeTree.gen.ts"],
+			"includes": [
+				"src/components/ui/**/*",
+				"src/routeTree.gen.ts",
+				"convex/_generated/**/*"
+			],
 			"linter": {
 				"enabled": false
 			},

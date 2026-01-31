@@ -35,11 +35,6 @@ export const listStatusValidator = v.union(
 	v.literal("archived"),
 );
 
-export const subscriptionProviderValidator = v.union(
-	v.literal("stripe"),
-	v.literal("revenue_cat"),
-);
-
 export const subscriptionStatusValidator = v.union(
 	v.literal("inactive"),
 	v.literal("trialing"),
@@ -125,7 +120,6 @@ const schema = defineSchema({
 	// Payment/subscription data
 	subscriptions: defineTable({
 		userId: v.id("users"),
-		provider: subscriptionProviderValidator,
 		status: subscriptionStatusValidator,
 		externalCustomerId: v.optional(v.string()),
 		externalSubscriptionId: v.optional(v.string()),
@@ -136,6 +130,11 @@ const schema = defineSchema({
 		.index("by_user", ["userId"])
 		.index("by_external_customer", ["externalCustomerId"])
 		.index("by_external_subscription", ["externalSubscriptionId"]),
+
+	processedWebhookEvents: defineTable({
+		eventId: v.string(),
+	})
+		.index("by_event_id", ["eventId"]),
 });
 
 export default schema;

@@ -18,6 +18,7 @@ import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_subscription from "../lib/subscription.js";
 import type * as listEditors from "../listEditors.js";
 import type * as lists from "../lists.js";
+import type * as revenuecatWebhook from "../revenuecatWebhook.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
 import type * as users from "../users.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   "lib/subscription": typeof lib_subscription;
   listEditors: typeof listEditors;
   lists: typeof lists;
+  revenuecatWebhook: typeof revenuecatWebhook;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
   users: typeof users;

@@ -15,6 +15,7 @@ import {
 import { Field, FieldGroup, FieldSeparator } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { getErrorMessage } from "@/lib/utils";
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn });
 
@@ -41,9 +42,7 @@ function SignIn() {
 		try {
 			await signIn("google");
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to sign in with Google",
-			);
+			setError(getErrorMessage(err, "Failed to sign in with Google"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -55,9 +54,7 @@ function SignIn() {
 		try {
 			await signIn("apple");
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to sign in with Apple",
-			);
+			setError(getErrorMessage(err, "Failed to sign in with Apple"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -76,9 +73,7 @@ function SignIn() {
 			await signIn("resend-otp", { email });
 			setStep("verify");
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to send verification code",
-			);
+			setError(getErrorMessage(err, "Failed to send verification code"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -97,7 +92,10 @@ function SignIn() {
 			await signIn("resend-otp", { email, code });
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Invalid verification code",
+				getErrorMessage(
+					err,
+					"That code is invalid or has expired. Please try again or use a different email to get a new code.",
+				),
 			);
 		} finally {
 			setIsLoading(false);

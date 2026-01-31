@@ -1,9 +1,8 @@
+import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { appError } from "./errors";
 
-/**
- * Verify the user has an active subscription, throw if not.
- */
 export async function requireSubscription(
 	ctx: QueryCtx | MutationCtx,
 	userId: Id<"users">,
@@ -14,10 +13,14 @@ export async function requireSubscription(
 		.unique();
 
 	if (!subscription) {
-		throw new Error("Subscription required");
+		throw new ConvexError(
+			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
 	}
 
 	if (subscription.status !== "active" && subscription.status !== "trialing") {
-		throw new Error("Subscription required");
+		throw new ConvexError(
+			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
 	}
 }

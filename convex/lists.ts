@@ -1,25 +1,16 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth, requireListAccess, requireListOwner } from "./lib/auth";
+import {
+	requireAuth,
+	requireListAccess,
+	requireListOwner,
+} from "./lib/permissions";
 import { requireSubscription } from "./lib/subscription";
 import {
 	listStatusValidator,
 	listTypeValidator,
 	sortByValidator,
 } from "./schema";
-
-const listReturnValidator = v.object({
-	_id: v.id("lists"),
-	_creationTime: v.number(),
-	ownerId: v.id("users"),
-	name: v.string(),
-	icon: v.optional(v.string()),
-	type: listTypeValidator,
-	status: listStatusValidator,
-	sortBy: sortByValidator,
-	sortAscending: v.boolean(),
-	showCompleted: v.boolean(),
-});
 
 /**
  * Get all lists the user owns or has access to as editor.
@@ -28,12 +19,6 @@ export const getUserLists = query({
 	args: {
 		status: v.optional(listStatusValidator),
 	},
-	returns: v.array(
-		v.object({
-			...listReturnValidator.fields,
-			isOwner: v.boolean(),
-		}),
-	),
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 		await requireSubscription(ctx, userId);
@@ -90,13 +75,6 @@ export const getList = query({
 	args: {
 		listId: v.id("lists"),
 	},
-	returns: v.union(
-		v.object({
-			...listReturnValidator.fields,
-			isOwner: v.boolean(),
-		}),
-		v.null(),
-	),
 	handler: async (ctx, args) => {
 		const { userId, list, isOwner } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
@@ -113,12 +91,11 @@ export const createList = mutation({
 		type: v.optional(listTypeValidator),
 		icon: v.optional(v.string()),
 	},
-	returns: v.id("lists"),
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 		await requireSubscription(ctx, userId);
 
-		return await ctx.db.insert("lists", {
+		await ctx.db.insert("lists", {
 			ownerId: userId,
 			name: args.name,
 			icon: args.icon,
@@ -144,7 +121,6 @@ export const updateList = mutation({
 		sortAscending: v.optional(v.boolean()),
 		showCompleted: v.optional(v.boolean()),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
@@ -159,8 +135,6 @@ export const updateList = mutation({
 		if (Object.keys(filteredUpdates).length > 0) {
 			await ctx.db.patch(listId, filteredUpdates);
 		}
-
-		return null;
 	},
 });
 
@@ -171,7 +145,6 @@ export const deleteList = mutation({
 	args: {
 		listId: v.id("lists"),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
@@ -206,10 +179,7 @@ export const deleteList = mutation({
 			await ctx.db.delete(editor._id);
 		}
 
-		// Delete the list itself
 		await ctx.db.delete(args.listId);
-
-		return null;
 	},
 });
 
@@ -220,12 +190,10 @@ export const archiveList = mutation({
 	args: {
 		listId: v.id("lists"),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
 		await ctx.db.patch(args.listId, { status: "archived" });
-		return null;
 	},
 });
 
@@ -236,11 +204,9 @@ export const restoreList = mutation({
 	args: {
 		listId: v.id("lists"),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
 		await ctx.db.patch(args.listId, { status: "active" });
-		return null;
 	},
 });

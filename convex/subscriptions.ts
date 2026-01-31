@@ -1,11 +1,12 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
 	internalMutation,
 	internalQuery,
 	mutation,
 	query,
 } from "./_generated/server";
-import { requireAuth } from "./lib/auth";
+import { appError } from "./lib/errors";
+import { requireAuth } from "./lib/permissions";
 import {
 	subscriptionProviderValidator,
 	subscriptionStatusValidator,
@@ -121,16 +122,13 @@ export const upsertSubscription = internalMutation({
 		currentPeriodEnd: v.optional(v.number()),
 		canceledAt: v.optional(v.number()),
 	},
-	returns: v.id("subscriptions"),
 	handler: async (ctx, args) => {
-		// Check if subscription already exists for this user
 		const existingSubscription = await ctx.db
 			.query("subscriptions")
 			.withIndex("by_user", (q) => q.eq("userId", args.userId))
 			.unique();
 
 		if (existingSubscription) {
-			// Update existing subscription
 			await ctx.db.patch(existingSubscription._id, {
 				provider: args.provider,
 				status: args.status,
@@ -140,20 +138,18 @@ export const upsertSubscription = internalMutation({
 				currentPeriodEnd: args.currentPeriodEnd,
 				canceledAt: args.canceledAt,
 			});
-			return existingSubscription._id;
+		} else {
+			await ctx.db.insert("subscriptions", {
+				userId: args.userId,
+				provider: args.provider,
+				status: args.status,
+				externalCustomerId: args.externalCustomerId,
+				externalSubscriptionId: args.externalSubscriptionId,
+				currentPeriodStart: args.currentPeriodStart,
+				currentPeriodEnd: args.currentPeriodEnd,
+				canceledAt: args.canceledAt,
+			});
 		}
-
-		// Create new subscription
-		return await ctx.db.insert("subscriptions", {
-			userId: args.userId,
-			provider: args.provider,
-			status: args.status,
-			externalCustomerId: args.externalCustomerId,
-			externalSubscriptionId: args.externalSubscriptionId,
-			currentPeriodStart: args.currentPeriodStart,
-			currentPeriodEnd: args.currentPeriodEnd,
-			canceledAt: args.canceledAt,
-		});
 	},
 });
 
@@ -164,7 +160,6 @@ export const upsertSubscription = internalMutation({
  */
 export const cancelSubscription = mutation({
 	args: {},
-	returns: v.null(),
 	handler: async (ctx) => {
 		const userId = await requireAuth(ctx);
 
@@ -174,14 +169,14 @@ export const cancelSubscription = mutation({
 			.unique();
 
 		if (!subscription) {
-			throw new Error("No subscription found");
+			throw new ConvexError(
+				appError("SUBSCRIPTION_NOT_FOUND", "No subscription found"),
+			);
 		}
 
 		await ctx.db.patch(subscription._id, {
 			status: "canceled",
 			canceledAt: Date.now(),
 		});
-
-		return null;
 	},
 });

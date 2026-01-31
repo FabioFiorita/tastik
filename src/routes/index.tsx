@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/")({
 	component: App,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/")({
 
 function App() {
 	const { signOut, isLoading } = useAuth();
+	const user = useQuery(api.users.getCurrentUser);
 
 	return (
 		<>
@@ -20,6 +22,11 @@ function App() {
 							You are successfully signed in!
 						</p>
 					</div>
+					{user !== undefined && user !== null && (
+						<pre className="w-full max-w-lg overflow-auto rounded-lg border bg-muted p-4 text-left text-sm">
+							{JSON.stringify(user, null, 2)}
+						</pre>
+					)}
 					<Button
 						variant="outline"
 						onClick={() => signOut()}

@@ -1,26 +1,10 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { requireListAccess } from "./lib/auth";
+import { appError } from "./lib/errors";
+import { requireListAccess } from "./lib/permissions";
 import { requireSubscription } from "./lib/subscription";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
-
-const itemReturnValidator = v.object({
-	_id: v.id("items"),
-	_creationTime: v.number(),
-	listId: v.id("lists"),
-	name: v.string(),
-	type: itemTypeValidator,
-	completed: v.boolean(),
-	completedAt: v.optional(v.number()),
-	currentValue: v.optional(v.number()),
-	targetValue: v.optional(v.number()),
-	calculatorValue: v.optional(v.number()),
-	status: v.optional(itemStatusValidator),
-	tagId: v.optional(v.id("listTags")),
-	notes: v.optional(v.string()),
-	sortOrder: v.number(),
-});
 
 /**
  * Get all items in a list.
@@ -30,7 +14,6 @@ export const getListItems = query({
 		listId: v.id("lists"),
 		includeCompleted: v.optional(v.boolean()),
 	},
-	returns: v.array(itemReturnValidator),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
@@ -62,7 +45,6 @@ export const getItem = query({
 	args: {
 		itemId: v.id("items"),
 	},
-	returns: v.union(itemReturnValidator, v.null()),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) return null;
@@ -85,7 +67,6 @@ export const createItem = mutation({
 		tagId: v.optional(v.id("listTags")),
 		notes: v.optional(v.string()),
 	},
-	returns: v.id("items"),
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
@@ -103,7 +84,7 @@ export const createItem = mutation({
 
 		const itemType = args.type ?? "simple";
 
-		return await ctx.db.insert("items", {
+		await ctx.db.insert("items", {
 			listId: args.listId,
 			name: args.name,
 			type: itemType,
@@ -136,11 +117,10 @@ export const updateItem = mutation({
 		notes: v.optional(v.union(v.string(), v.null())),
 		sortOrder: v.optional(v.number()),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) {
-			throw new Error("Item not found");
+			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
 		const { userId } = await requireListAccess(ctx, item.listId);
@@ -165,8 +145,6 @@ export const updateItem = mutation({
 		if (Object.keys(filteredUpdates).length > 0) {
 			await ctx.db.patch(itemId, filteredUpdates);
 		}
-
-		return null;
 	},
 });
 
@@ -177,11 +155,10 @@ export const toggleItemComplete = mutation({
 	args: {
 		itemId: v.id("items"),
 	},
-	returns: v.boolean(),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) {
-			throw new Error("Item not found");
+			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
 		const { userId } = await requireListAccess(ctx, item.listId);
@@ -192,8 +169,6 @@ export const toggleItemComplete = mutation({
 			completed: newCompleted,
 			completedAt: newCompleted ? Date.now() : undefined,
 		});
-
-		return newCompleted;
 	},
 });
 
@@ -206,15 +181,16 @@ export const incrementItemValue = mutation({
 		delta: v.optional(v.number()),
 		setValue: v.optional(v.number()),
 	},
-	returns: v.number(),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) {
-			throw new Error("Item not found");
+			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
 		if (item.type !== "stepper") {
-			throw new Error("Item is not a stepper type");
+			throw new ConvexError(
+				appError("ITEM_NOT_STEPPER_TYPE", "Item is not a stepper type"),
+			);
 		}
 
 		const { userId } = await requireListAccess(ctx, item.listId);
@@ -237,8 +213,6 @@ export const incrementItemValue = mutation({
 			completed,
 			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
 		});
-
-		return newValue;
 	},
 });
 
@@ -250,15 +224,16 @@ export const updateItemStatus = mutation({
 		itemId: v.id("items"),
 		status: itemStatusValidator,
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) {
-			throw new Error("Item not found");
+			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
 		if (item.type !== "kanban") {
-			throw new Error("Item is not a kanban type");
+			throw new ConvexError(
+				appError("ITEM_NOT_KANBAN_TYPE", "Item is not a kanban type"),
+			);
 		}
 
 		const { userId } = await requireListAccess(ctx, item.listId);
@@ -270,8 +245,6 @@ export const updateItemStatus = mutation({
 			completed,
 			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
 		});
-
-		return null;
 	},
 });
 
@@ -282,44 +255,14 @@ export const deleteItem = mutation({
 	args: {
 		itemId: v.id("items"),
 	},
-	returns: v.null(),
 	handler: async (ctx, args) => {
 		const item = await ctx.db.get(args.itemId);
 		if (!item) {
-			throw new Error("Item not found");
+			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
 		const { userId } = await requireListAccess(ctx, item.listId);
 		await requireSubscription(ctx, userId);
 		await ctx.db.delete(args.itemId);
-
-		return null;
-	},
-});
-
-/**
- * Delete all completed items in a list.
- */
-export const deleteCompletedItems = mutation({
-	args: {
-		listId: v.id("lists"),
-	},
-	returns: v.number(),
-	handler: async (ctx, args) => {
-		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
-
-		const completedItems = await ctx.db
-			.query("items")
-			.withIndex("by_list_and_completed", (q) =>
-				q.eq("listId", args.listId).eq("completed", true),
-			)
-			.collect();
-
-		for (const item of completedItems) {
-			await ctx.db.delete(item._id);
-		}
-
-		return completedItems.length;
 	},
 });

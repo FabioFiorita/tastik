@@ -1,8 +1,10 @@
 import type { EmailConfig as AuthjsEmailConfig } from "@auth/core/providers";
 import { Email } from "@convex-dev/auth/providers/Email";
 import { Resend, type ResendComponent } from "@convex-dev/resend";
+import { ConvexError } from "convex/values";
 import { alphabet, generateRandomString } from "oslo/crypto";
 import { components } from "./_generated/api";
+import { appError } from "./lib/errors";
 
 type SendVerificationParams = Parameters<
 	AuthjsEmailConfig["sendVerificationRequest"]
@@ -11,7 +13,7 @@ type ResendSendEmailCtx = Parameters<Resend["sendEmail"]>[0];
 
 const resend = new Resend((components as { resend: ResendComponent }).resend, {
 	apiKey: process.env.AUTH_RESEND_KEY,
-	testMode: true,
+	testMode: process.env.RESEND_TEST_MODE === "true",
 });
 
 export const ResendOTP = Email({
@@ -25,7 +27,13 @@ export const ResendOTP = Email({
 		params: SendVerificationParams,
 		ctx?: ResendSendEmailCtx,
 	) => {
-		if (!ctx) throw new Error("Resend sendEmail requires action context");
+		if (!ctx)
+			throw new ConvexError(
+				appError(
+					"RESEND_SEND_EMAIL_REQUIRES_ACTION_CONTEXT",
+					"Resend sendEmail requires action context",
+				),
+			);
 		await resend.sendEmail(ctx, {
 			from: process.env.AUTH_EMAIL ?? "Tastik <noreply@tastikapp.com>",
 			to: params.identifier,

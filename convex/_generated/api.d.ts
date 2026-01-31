@@ -13,13 +13,14 @@ import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
-import type * as lib_auth from "../lib/auth.js";
+import type * as lib_errors from "../lib/errors.js";
+import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_subscription from "../lib/subscription.js";
 import type * as listEditors from "../listEditors.js";
 import type * as lists from "../lists.js";
-import type * as profiles from "../profiles.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -33,13 +34,14 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   http: typeof http;
   items: typeof items;
-  "lib/auth": typeof lib_auth;
+  "lib/errors": typeof lib_errors;
+  "lib/permissions": typeof lib_permissions;
   "lib/subscription": typeof lib_subscription;
   listEditors: typeof listEditors;
   lists: typeof lists;
-  profiles: typeof profiles;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
+  users: typeof users;
 }>;
 
 /**

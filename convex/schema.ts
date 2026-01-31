@@ -50,16 +50,17 @@ export const subscriptionStatusValidator = v.union(
 
 const schema = defineSchema({
 	...authTables,
-
-	// User profile data (extends auth users)
-	profiles: defineTable({
-		userId: v.id("users"),
+	users: defineTable({
 		name: v.optional(v.string()),
-		avatarUrl: v.optional(v.string()),
+		image: v.optional(v.string()),
+		email: v.optional(v.string()),
+		emailVerificationTime: v.optional(v.number()),
+		phone: v.optional(v.string()),
+		phoneVerificationTime: v.optional(v.number()),
+		isAnonymous: v.optional(v.boolean()),
 		termsAcceptedAt: v.optional(v.number()),
-		sessionCount: v.number(),
 		lastSeenAt: v.optional(v.number()),
-	}).index("by_userId", ["userId"]),
+	}).index("email", ["email"]),
 
 	// User lists with type, icon, settings
 	lists: defineTable({

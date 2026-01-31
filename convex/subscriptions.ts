@@ -97,6 +97,11 @@ export const handleRevenueCatEvent = internalMutation({
 		const currentPeriodEnd = event.expiration_at_ms;
 		const eventTimestamp = event.event_timestamp_ms;
 
+		const existingSubscription = await ctx.db
+			.query("subscriptions")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.unique();
+
 		let status: "inactive" | "trialing" | "active" | "past_due" | "canceled" =
 			"active";
 		let canceledAt: number | undefined;
@@ -112,8 +117,20 @@ export const handleRevenueCatEvent = internalMutation({
 				break;
 			}
 			case "CANCELLATION": {
-				status = "canceled";
-				canceledAt = eventTimestamp ?? Date.now();
+				const now = eventTimestamp ?? Date.now();
+				const isExpired =
+					currentPeriodEnd !== undefined && currentPeriodEnd <= now;
+				if (isExpired) {
+					status = "inactive";
+				} else if (
+					existingSubscription?.status === "trialing" ||
+					event.period_type === "TRIAL"
+				) {
+					status = "trialing";
+				} else {
+					status = "active";
+				}
+				canceledAt = now;
 				break;
 			}
 			case "EXPIRATION": {
@@ -148,11 +165,6 @@ export const handleRevenueCatEvent = internalMutation({
 				});
 				return;
 		}
-
-		const existingSubscription = await ctx.db
-			.query("subscriptions")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.unique();
 
 		const payload = {
 			status,

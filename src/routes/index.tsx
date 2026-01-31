@@ -26,6 +26,10 @@ function AuthenticatedView() {
 	const { signOut, isLoading } = useAuth();
 	const user = useQuery(api.users.getCurrentUser);
 	const isSubscribed = useQuery(api.subscriptions.isSubscribed);
+	const isUserReady = user !== undefined && user !== null;
+	const purchaseUrl = isUserReady
+		? `${env.VITE_REVENUECAT_PURCHASE_LINK}/${user._id.toString()}`
+		: null;
 
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
@@ -48,13 +52,13 @@ function AuthenticatedView() {
 				</div>
 			)}
 			<div className="flex gap-3">
-				<a
-					href={`${env.VITE_REVENUECAT_PURCHASE_LINK}/${user?._id.toString()}`}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Button>Purchase</Button>
-				</a>
+				{purchaseUrl ? (
+					<a href={purchaseUrl} target="_blank" rel="noopener noreferrer">
+						<Button>Purchase</Button>
+					</a>
+				) : (
+					<Button disabled>Purchase</Button>
+				)}
 				<Button
 					variant="outline"
 					onClick={() => signOut()}

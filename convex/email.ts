@@ -34,6 +34,9 @@ export const ResendOTP = Email({
 					"Resend sendEmail requires action context",
 				),
 			);
+		if (process.env.LOG_OTP_IN_DEV === "true") {
+			console.log("[OTP]", params.identifier, "->", params.token);
+		}
 		await resend.sendEmail(ctx, {
 			from: process.env.AUTH_EMAIL ?? "Tastik <noreply@tastikapp.com>",
 			to: params.identifier,

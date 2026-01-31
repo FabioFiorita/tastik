@@ -1,0 +1,236 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { AlertCircleIcon, ArrowLeftIcon, MailIcon } from "lucide-react";
+import { useState } from "react";
+import { AppleIcon } from "@/components/icons/apple";
+import { GoogleIcon } from "@/components/icons/google";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldSeparator } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
+
+export const Route = createFileRoute("/sign-in")({ component: SignIn });
+
+type Step = "initial" | "verify";
+
+function SignIn() {
+	const navigate = useNavigate();
+	const { signIn, isAuthenticated } = useAuth();
+	const [step, setStep] = useState<Step>("initial");
+	const [email, setEmail] = useState("");
+	const [code, setCode] = useState("");
+	const [error, setError] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+
+	// Redirect if already authenticated
+	if (isAuthenticated) {
+		navigate({ to: "/" });
+		return null;
+	}
+
+	const handleGoogleSignIn = async () => {
+		setIsLoading(true);
+		setError("");
+		try {
+			await signIn("google");
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : "Failed to sign in with Google",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleAppleSignIn = async () => {
+		setIsLoading(true);
+		setError("");
+		try {
+			await signIn("apple");
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : "Failed to sign in with Apple",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleEmailSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!email) {
+			setError("Please enter your email address");
+			return;
+		}
+
+		setIsLoading(true);
+		setError("");
+		try {
+			await signIn("resend-otp", { email });
+			setStep("verify");
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : "Failed to send verification code",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleCodeVerify = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!code || code.length !== 8) {
+			setError("Please enter the 8-digit code from your email");
+			return;
+		}
+
+		setIsLoading(true);
+		setError("");
+		try {
+			await signIn("resend-otp", { email, code });
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : "Invalid verification code",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleBackToEmail = () => {
+		setStep("initial");
+		setCode("");
+		setError("");
+	};
+
+	return (
+		<div className="flex min-h-screen items-center justify-center p-4">
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle className="text-center text-2xl">
+						{step === "initial" ? "Sign in to Tastik" : "Check your email"}
+					</CardTitle>
+					<CardDescription className="text-center">
+						{step === "initial"
+							? "Choose your preferred sign-in method"
+							: `We sent an 8-digit code to ${email}`}
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{error && (
+						<Alert variant="destructive" className="mb-6">
+							<AlertCircleIcon className="size-4" />
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
+					)}
+
+					{step === "initial" ? (
+						<FieldGroup>
+							{/* OAuth Buttons */}
+							<div className="flex flex-col gap-3">
+								<Button
+									variant="outline"
+									size="lg"
+									onClick={handleGoogleSignIn}
+									disabled={isLoading}
+									className="w-full"
+								>
+									<GoogleIcon className="size-5" />
+									Continue with Google
+								</Button>
+								<Button
+									variant="outline"
+									size="lg"
+									onClick={handleAppleSignIn}
+									disabled={isLoading}
+									className="w-full"
+								>
+									<AppleIcon className="size-5" />
+									Continue with Apple
+								</Button>
+							</div>
+
+							{/* Separator */}
+							<FieldSeparator>Or continue with</FieldSeparator>
+
+							{/* Email Form */}
+							<form onSubmit={handleEmailSubmit}>
+								<div className="flex flex-col gap-3">
+									<Field>
+										<Input
+											type="email"
+											placeholder="Enter your email"
+											value={email}
+											onChange={(e) => setEmail(e.target.value)}
+											disabled={isLoading}
+											autoComplete="email"
+											className="h-11"
+										/>
+									</Field>
+									<Button
+										type="submit"
+										size="lg"
+										disabled={isLoading}
+										className="w-full"
+									>
+										<MailIcon className="size-5" />
+										Continue with Email
+									</Button>
+								</div>
+							</form>
+						</FieldGroup>
+					) : (
+						<form onSubmit={handleCodeVerify}>
+							<FieldGroup>
+								<Field>
+									<Input
+										type="text"
+										placeholder="Enter 8-digit code"
+										value={code}
+										onChange={(e) => {
+											const value = e.target.value.replace(/\D/g, "");
+											if (value.length <= 8) {
+												setCode(value);
+											}
+										}}
+										disabled={isLoading}
+										autoComplete="one-time-code"
+										className="h-14 text-center font-mono text-xl tabular-nums tracking-[0.5em]"
+										maxLength={8}
+										inputMode="numeric"
+									/>
+								</Field>
+								<Button
+									type="submit"
+									size="lg"
+									disabled={isLoading || code.length !== 8}
+									className="w-full"
+								>
+									Verify Code
+								</Button>
+								<Button
+									type="button"
+									variant="ghost"
+									size="lg"
+									onClick={handleBackToEmail}
+									disabled={isLoading}
+									className="w-full"
+								>
+									<ArrowLeftIcon className="size-4" />
+									Use a different email
+								</Button>
+							</FieldGroup>
+						</form>
+					)}
+				</CardContent>
+			</Card>
+		</div>
+	);
+}

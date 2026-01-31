@@ -1,0 +1,35 @@
+---
+description: Prefer named exports over default exports
+globs: "**/*.ts,**/*.tsx"
+alwaysApply: false
+---
+
+# Prefer Named Exports
+
+Use named exports instead of `export default`.
+
+- **Refactoring**: Easier to rename and find references; IDEs and tools work better with named symbols.
+- **Consistency**: Import sites always use the same name as the export; no arbitrary local names.
+- **Re-exports**: Named exports compose cleanly when re-exporting from barrels.
+
+```typescript
+// ❌ Avoid
+export default function VerificationCodeEmail({ code }: Props) {
+  return <Html>...</Html>;
+}
+
+// ✅ Prefer
+export function VerificationCodeEmail({ code }: Props) {
+  return <Html>...</Html>;
+}
+```
+
+```typescript
+// ❌ Avoid
+import VerificationCodeEmail from "./VerificationCodeEmail";
+
+// ✅ Prefer
+import { VerificationCodeEmail } from "./VerificationCodeEmail";
+```
+
+Only use default export when a framework or tool requires it (e.g. Next.js pages, some React Email preview setups).

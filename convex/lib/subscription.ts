@@ -11,6 +11,7 @@ export async function requireSubscription(
 		.query("subscriptions")
 		.withIndex("by_user", (q) => q.eq("userId", userId))
 		.unique();
+	const now = Date.now();
 
 	if (!subscription) {
 		throw new ConvexError(
@@ -21,6 +22,15 @@ export async function requireSubscription(
 	if (subscription.status !== "active" && subscription.status !== "trialing") {
 		throw new ConvexError(
 			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
+	}
+
+	if (
+		subscription.currentPeriodEnd !== undefined &&
+		subscription.currentPeriodEnd <= now
+	) {
+		throw new ConvexError(
+			appError("SUBSCRIPTION_EXPIRED", "Subscription expired"),
 		);
 	}
 }

@@ -27,8 +27,12 @@ function AuthenticatedView() {
 	const user = useQuery(api.users.getCurrentUser);
 	const isSubscribed = useQuery(api.subscriptions.isSubscribed);
 	const isUserReady = user !== undefined && user !== null;
-	const purchaseUrl = isUserReady
-		? `${env.VITE_REVENUECAT_PURCHASE_LINK}/${user._id.toString()}`
+	const purchaseLink = env.VITE_REVENUECAT_PURCHASE_LINK;
+	const monthlyPurchaseUrl = isUserReady
+		? `${purchaseLink}/${user._id.toString()}?package_id=${env.VITE_REVENUECAT_MONTHLY_PACKAGE_ID}&email=${user.email}`
+		: null;
+	const yearlyPurchaseUrl = isUserReady
+		? `${purchaseLink}/${user._id.toString()}?package_id=${env.VITE_REVENUECAT_YEARLY_PACKAGE_ID}&email=${user.email}`
 		: null;
 
 	return (
@@ -52,12 +56,23 @@ function AuthenticatedView() {
 				</div>
 			)}
 			<div className="flex gap-3">
-				{purchaseUrl ? (
-					<a href={purchaseUrl} target="_blank" rel="noopener noreferrer">
-						<Button>Purchase</Button>
+				{monthlyPurchaseUrl ? (
+					<a
+						href={monthlyPurchaseUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<Button>Purchase Monthly</Button>
 					</a>
 				) : (
-					<Button disabled>Purchase</Button>
+					<Button disabled>Can't purchase monthly</Button>
+				)}
+				{yearlyPurchaseUrl ? (
+					<a href={yearlyPurchaseUrl} target="_blank" rel="noopener noreferrer">
+						<Button>Purchase Yearly</Button>
+					</a>
+				) : (
+					<Button disabled>Can't purchase yearly</Button>
 				)}
 				<Button
 					variant="outline"

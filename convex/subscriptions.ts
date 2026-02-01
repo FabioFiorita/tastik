@@ -108,8 +108,7 @@ export const handleRevenueCatEvent = internalMutation({
 
 		switch (type) {
 			case "INITIAL_PURCHASE": {
-				status =
-					event.period_type === "TRIAL" ? "trialing" : "active";
+				status = event.period_type === "TRIAL" ? "trialing" : "active";
 				break;
 			}
 			case "RENEWAL": {

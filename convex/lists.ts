@@ -4,8 +4,8 @@ import {
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
+	requireSubscription,
 } from "./lib/permissions";
-import { requireSubscription } from "./lib/subscription";
 import {
 	listStatusValidator,
 	listTypeValidator,

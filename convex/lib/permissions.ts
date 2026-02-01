@@ -67,3 +67,35 @@ export async function requireListAccess(
 
 	return { userId, list, isOwner };
 }
+
+export async function requireSubscription(
+	ctx: QueryCtx | MutationCtx,
+	userId: Id<"users">,
+): Promise<void> {
+	const subscription = await ctx.db
+		.query("subscriptions")
+		.withIndex("by_user", (q) => q.eq("userId", userId))
+		.unique();
+	const now = Date.now();
+
+	if (!subscription) {
+		throw new ConvexError(
+			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
+	}
+
+	if (subscription.status !== "active" && subscription.status !== "trialing") {
+		throw new ConvexError(
+			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
+	}
+
+	if (
+		subscription.currentPeriodEnd !== undefined &&
+		subscription.currentPeriodEnd <= now
+	) {
+		throw new ConvexError(
+			appError("SUBSCRIPTION_EXPIRED", "Subscription expired"),
+		);
+	}
+}

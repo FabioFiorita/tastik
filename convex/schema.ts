@@ -133,8 +133,7 @@ const schema = defineSchema({
 
 	processedWebhookEvents: defineTable({
 		eventId: v.string(),
-	})
-		.index("by_event_id", ["eventId"]),
+	}).index("by_event_id", ["eventId"]),
 });
 
 export default schema;

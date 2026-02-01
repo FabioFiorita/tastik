@@ -1,8 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
-import { requireListAccess, requireListOwner } from "./lib/permissions";
-import { requireSubscription } from "./lib/subscription";
+import {
+	requireListAccess,
+	requireListOwner,
+	requireSubscription,
+} from "./lib/permissions";
 
 /**
  * Get all tags for a list.

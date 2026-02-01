@@ -37,6 +37,7 @@ export const ResendOTP = Email({
 		if (process.env.LOG_OTP_IN_DEV === "true") {
 			console.log("[OTP]", params.identifier, "->", params.token);
 		}
+		if (process.env.SKIP_OTP === "true") return;
 		await resend.sendEmail(ctx, {
 			from: process.env.AUTH_EMAIL ?? "Tastik <noreply@tastikapp.com>",
 			to: params.identifier,

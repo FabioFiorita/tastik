@@ -10,11 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as PublicRouteImport } from './routes/_public'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
+import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
+import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +30,63 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PubliclegalTermsRoute = PubliclegalTermsRouteImport.update({
+  id: '/(legal)/terms',
+  path: '/terms',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PubliclegalSupportRoute = PubliclegalSupportRouteImport.update({
+  id: '/(legal)/support',
+  path: '/support',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PubliclegalPrivacyRoute = PubliclegalPrivacyRouteImport.update({
+  id: '/(legal)/privacy',
+  path: '/privacy',
+  getParentRoute: () => PublicRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/privacy': typeof PubliclegalPrivacyRoute
+  '/support': typeof PubliclegalSupportRoute
+  '/terms': typeof PubliclegalTermsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/privacy': typeof PubliclegalPrivacyRoute
+  '/support': typeof PubliclegalSupportRoute
+  '/terms': typeof PubliclegalTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_public': typeof PublicRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
+  '/_public/(legal)/support': typeof PubliclegalSupportRoute
+  '/_public/(legal)/terms': typeof PubliclegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in'
+  fullPaths: '/' | '/sign-in' | '/privacy' | '/support' | '/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in'
-  id: '__root__' | '/' | '/sign-in'
+  to: '/' | '/sign-in' | '/privacy' | '/support' | '/terms'
+  id:
+    | '__root__'
+    | '/'
+    | '/_public'
+    | '/sign-in'
+    | '/_public/(legal)/privacy'
+    | '/_public/(legal)/support'
+    | '/_public/(legal)/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PublicRoute: typeof PublicRouteWithChildren
   SignInRoute: typeof SignInRoute
 }
 
@@ -58,6 +99,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +113,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/(legal)/terms': {
+      id: '/_public/(legal)/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof PubliclegalTermsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/(legal)/support': {
+      id: '/_public/(legal)/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof PubliclegalSupportRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/(legal)/privacy': {
+      id: '/_public/(legal)/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PubliclegalPrivacyRouteImport
+      parentRoute: typeof PublicRoute
+    }
   }
 }
 
+interface PublicRouteChildren {
+  PubliclegalPrivacyRoute: typeof PubliclegalPrivacyRoute
+  PubliclegalSupportRoute: typeof PubliclegalSupportRoute
+  PubliclegalTermsRoute: typeof PubliclegalTermsRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PubliclegalPrivacyRoute: PubliclegalPrivacyRoute,
+  PubliclegalSupportRoute: PubliclegalSupportRoute,
+  PubliclegalTermsRoute: PubliclegalTermsRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PublicRoute: PublicRouteWithChildren,
   SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport

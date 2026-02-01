@@ -1,0 +1,36 @@
+---
+description: Frontend standards - no deprecated APIs, Tailwind/shadcn tokens, mobile-first, one component per file, no duplication
+alwaysApply: true
+---
+
+# Frontend Standards
+
+- **No deprecated APIs**: Use current types (e.g. `React.SyntheticEvent<HTMLFormElement>` for form submit instead of removed `FormEvent`); avoid deprecated React/DOM APIs.
+- **Tailwind / shadcn**: Use design tokens (`primary`, `muted`, `muted-foreground`, `foreground`); prefer standard scale (`text-xs`, `text-sm`, `size-5`); avoid arbitrary values (`text-[10px]`, `min-h-[60vh]`, `h-[1.2rem]`) unless behind a theme variable or single shared component.
+- **Mobile-first**: Base styles = mobile; add `md:` or `lg:` for larger screens; avoid `sm:` for layout (use `md:` or `lg:` as first step-up).
+- **One component per file**: Each file exports one main component (plus small local helpers if needed); split multiple components into separate files.
+- **No duplication**: Repeated structure (same wrapper + heading + nav, etc.) should be extracted into a named component and reused.
+
+```typescript
+// ❌ Removed / deprecated
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { ... }
+
+// ✅ Current (form submit)
+const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => { ... }
+```
+
+```css
+/* ❌ Arbitrary values in components */
+className="text-[10px] min-h-[60vh] h-[1.2rem]"
+
+/* ✅ Design tokens / standard scale */
+className="text-xs min-h-(--empty-state-min-height) size-5"
+```
+
+```css
+/* ❌ sm: for layout */
+className="grid sm:grid-cols-2 sm:justify-center"
+
+/* ✅ Mobile-first with md: */
+className="grid grid-cols-1 gap-4 md:grid-cols-2 md:justify-center"
+```

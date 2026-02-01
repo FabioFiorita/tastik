@@ -1,0 +1,5 @@
+./scripts/sync-skill-symlinks.sh
+
+pnpm run check:write
+
+git update-index --again

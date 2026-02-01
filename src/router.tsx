@@ -3,7 +3,9 @@ import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { Toaster } from "sonner";
 import { env } from "@/lib/env";
+import { ThemeProvider } from "./components/common/theme-provider";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -28,7 +30,10 @@ export function getRouter() {
 			scrollRestoration: true,
 			Wrap: ({ children }) => (
 				<ConvexAuthProvider client={convexQueryClient.convexClient}>
-					{children}
+					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+						{children}
+						<Toaster richColors position="top-right" />
+					</ThemeProvider>
 				</ConvexAuthProvider>
 			),
 		}),

@@ -1,0 +1,167 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_public/(legal)/terms")({
+	head: () => ({
+		meta: [{ title: "Terms of Service | Tastik" }],
+	}),
+	component: TermsPage,
+});
+
+function TermsPage() {
+	return (
+		<section className="py-16 md:py-24">
+			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="mx-auto max-w-3xl space-y-10">
+					<div className="space-y-3">
+						<h1 className="font-bold text-4xl text-foreground tracking-tight">
+							Terms of Service
+						</h1>
+						<p className="text-muted-foreground">
+							Last updated: January 11, 2026
+						</p>
+					</div>
+
+					<div className="space-y-8 text-foreground">
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Agreement to Terms</h2>
+							<p className="text-muted-foreground">
+								By downloading, installing, or using Tastik ("the App"), you
+								agree to be bound by these Terms of Service. If you do not agree
+								to these terms, please do not use the App.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Description of Service</h2>
+							<p className="text-muted-foreground">
+								Tastik is a list management application that allows users to
+								create and organize various types of lists including simple
+								checklists, stepper lists with quantities, calculator lists with
+								cost tracking, and kanban boards. The App may include features
+								for sharing and collaborating on lists with other users.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">User Accounts</h2>
+							<p className="text-muted-foreground">
+								To access certain features, you may need to create an account.
+								You are responsible for:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>
+									Maintaining the confidentiality of your account credentials
+								</li>
+								<li>All activities that occur under your account</li>
+								<li>Notifying us immediately of any unauthorized use</li>
+							</ul>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Acceptable Use</h2>
+							<p className="text-muted-foreground">You agree not to:</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>Use the App for any unlawful purpose</li>
+								<li>
+									Attempt to gain unauthorized access to any part of the App
+								</li>
+								<li>Interfere with or disrupt the App or servers</li>
+								<li>Upload malicious content or spam</li>
+								<li>Impersonate others or misrepresent your affiliation</li>
+							</ul>
+							<p className="text-muted-foreground">
+								The App is intended for personal use; excessive automated usage
+								may be limited.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Your Content</h2>
+							<p className="text-muted-foreground">
+								You retain ownership of the lists and content you create in
+								Tastik. By using the App, you grant us a limited license to
+								store, process, and display your content as necessary to provide
+								the service.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Intellectual Property</h2>
+							<p className="text-muted-foreground">
+								The App, including its design, features, and code, is owned by
+								Tastik and protected by intellectual property laws. You may not
+								copy, modify, distribute, or reverse engineer any part of the
+								App.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">
+								Disclaimer of Warranties
+							</h2>
+							<p className="text-muted-foreground">
+								The App is provided "as is" without warranties of any kind,
+								either express or implied. We do not guarantee that the App will
+								be uninterrupted, error-free, or free of viruses or other
+								harmful components.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">
+								Limitation of Liability
+							</h2>
+							<p className="text-muted-foreground">
+								To the maximum extent permitted by law, Tastik shall not be
+								liable for any indirect, incidental, special, consequential, or
+								punitive damages arising from your use of the App.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Termination</h2>
+							<p className="text-muted-foreground">
+								We may terminate or suspend your access to the App at any time,
+								without prior notice, for conduct that we believe violates these
+								Terms or is harmful to other users or the App.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Changes to Terms</h2>
+							<p className="text-muted-foreground">
+								We reserve the right to modify these Terms at any time. We will
+								provide notice of significant changes through the App or by
+								email. Continued use of the App after changes constitutes
+								acceptance of the new Terms.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Governing Law</h2>
+							<p className="text-muted-foreground">
+								These Terms shall be governed by and construed in accordance
+								with applicable laws, without regard to conflict of law
+								principles.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">Contact</h2>
+							<p className="text-muted-foreground">
+								For questions about these Terms, please contact us at{" "}
+								<a
+									href="mailto:fabiolfp@gmail.com"
+									className="text-primary hover:underline"
+								>
+									fabiolfp@gmail.com
+								</a>
+								.
+							</p>
+						</section>
+					</div>
+				</div>
+			</div>
+		</section>
+	);
+}

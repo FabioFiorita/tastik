@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertCircleIcon, ArrowLeftIcon, MailIcon } from "lucide-react";
 import { useState } from "react";
-import { AppleIcon } from "@/components/icons/apple";
-import { GoogleIcon } from "@/components/icons/google";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +14,7 @@ import {
 import { Field, FieldGroup, FieldSeparator } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn });
 
@@ -30,37 +29,14 @@ function SignIn() {
 	const [error, setError] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Redirect if already authenticated
 	if (isAuthenticated) {
 		navigate({ to: "/" });
 		return null;
 	}
 
-	const handleGoogleSignIn = async () => {
-		setIsLoading(true);
-		setError("");
-		try {
-			await signIn("google");
-		} catch (err) {
-			setError(getErrorMessage(err, "Failed to sign in with Google"));
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleAppleSignIn = async () => {
-		setIsLoading(true);
-		setError("");
-		try {
-			await signIn("apple");
-		} catch (err) {
-			setError(getErrorMessage(err, "Failed to sign in with Apple"));
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleEmailSubmit = async (e: React.FormEvent) => {
+	const handleEmailSubmit = async (
+		e: React.SyntheticEvent<HTMLFormElement>,
+	) => {
 		e.preventDefault();
 		if (!email) {
 			setError("Please enter your email address");
@@ -79,7 +55,7 @@ function SignIn() {
 		}
 	};
 
-	const handleCodeVerify = async (e: React.FormEvent) => {
+	const handleCodeVerify = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!code || code.length !== 8) {
 			setError("Please enter the 8-digit code from your email");
@@ -131,31 +107,8 @@ function SignIn() {
 
 					{step === "initial" ? (
 						<FieldGroup>
-							{/* OAuth Buttons */}
-							<div className="flex flex-col gap-3">
-								<Button
-									variant="outline"
-									size="lg"
-									onClick={handleGoogleSignIn}
-									disabled={isLoading}
-									className="w-full"
-								>
-									<GoogleIcon className="size-5" />
-									Continue with Google
-								</Button>
-								<Button
-									variant="outline"
-									size="lg"
-									onClick={handleAppleSignIn}
-									disabled={isLoading}
-									className="w-full"
-								>
-									<AppleIcon className="size-5" />
-									Continue with Apple
-								</Button>
-							</div>
+							<OAuthButtons onError={setError} disabled={isLoading} />
 
-							{/* Separator */}
 							<FieldSeparator>Or continue with</FieldSeparator>
 
 							{/* Email Form */}

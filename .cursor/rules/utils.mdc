@@ -1,0 +1,14 @@
+---
+description: Pure helpers live in src/lib/utils/; constants in src/lib/constants/
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# Utils
+
+Pure helper functions (no React, no side effects) that are used in more than one place belong in `src/lib/utils/` (one file per helper or small domain). Domain-specific helpers that map or derive from app types (e.g. `Plan`) are utils, not component-local logic.
+
+- Keep functions pure: same inputs → same outputs, no I/O.
+- Import types from the concrete constants file (e.g. `@/lib/constants/plans`) as needed.
+- Add new helpers as new files under `src/lib/utils/`; do not use a barrel index (see no-barrel-files rule).
+- Constants live in `src/lib/constants/` (breakpoints, landing, plans, subscription, support). Import directly from the file (e.g. `@/lib/constants/support`). No barrel index.

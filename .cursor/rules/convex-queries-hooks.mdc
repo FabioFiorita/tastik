@@ -1,0 +1,44 @@
+---
+description: Convex queries live in hooks under src/hooks/queries/
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Convex Queries in Hooks
+
+Do not call `convexQuery` (or Convex query APIs) directly inside components. Extract query usage into custom hooks under `src/hooks/queries/`. The hook should return only the data the UI needs (e.g. the user), not the full query result. That way components stay testable: you only mock the returned value (e.g. a user object).
+
+```tsx
+// ❌ BAD – query in component
+export function SubscriptionPage() {
+  const { data: user } = useSuspenseQuery(convexQuery(api.users.getCurrentUser, {}));
+  // ...
+}
+```
+
+```tsx
+// ❌ BAD – hook re-exports query result (component must mock { data, isLoading, ... })
+export function useCurrentUser() {
+  return useSuspenseQuery(convexQuery(api.users.getCurrentUser, {}));
+}
+```
+
+```tsx
+// ✅ GOOD – hook returns only what we use (component mocks user)
+export function useCurrentUser() {
+  const { data } = useSuspenseQuery(convexQuery(api.users.getCurrentUser, {}));
+  return data;
+}
+```
+
+```tsx
+// ✅ GOOD – component gets the value directly
+export function SubscriptionPage() {
+  const user = useCurrentUser();
+  // ...
+}
+```
+
+- One query (or related set) per hook file under `src/hooks/queries/`.
+- Return the data the UI needs (user, list, etc.), not the query result object.
+- Name hooks after the data they expose (e.g. `useCurrentUser`, `useLists`).

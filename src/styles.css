@@ -30,6 +30,17 @@
 	--chart-4: oklch(0.527 0.154 150.069);
 	--chart-5: oklch(0.448 0.119 151.328);
 	--radius: 0.625rem;
+	--empty-state-min-height: 60vh;
+	--hero-gradient-1: radial-gradient(
+		circle at 30% 20%,
+		color-mix(in oklch, var(--primary) 15%, transparent),
+		transparent 50%
+	);
+	--hero-gradient-2: radial-gradient(
+		circle at 70% 80%,
+		color-mix(in oklch, var(--primary) 10%, transparent),
+		transparent 50%
+	);
 	--sidebar: oklch(0.985 0 0);
 	--sidebar-foreground: oklch(0.145 0 0);
 	--sidebar-primary: oklch(0.648 0.2 131.684);
@@ -114,6 +125,15 @@
 	--radius-2xl: calc(var(--radius) + 8px);
 	--radius-3xl: calc(var(--radius) + 12px);
 	--radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer components {
+	.hero-gradient-start {
+		background: var(--hero-gradient-1);
+	}
+	.hero-gradient-end {
+		background: var(--hero-gradient-2);
+	}
 }
 
 @layer base {

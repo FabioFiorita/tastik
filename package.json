@@ -5,13 +5,14 @@
 	"scripts": {
 		"dev": "vite dev --port 3000",
 		"build": "vite build",
+		"typecheck": "tsc --noEmit",
 		"preview": "vite preview",
 		"test": "vitest run",
 		"format": "biome format",
 		"lint": "biome lint",
 		"check": "biome check",
 		"check:write": "biome check --write --unsafe",
-		"email:dev": "email dev --dir convex/email --port 3001"
+		"prepare": "husky"
 	},
 	"dependencies": {
 		"@auth/core": "0.37.0",
@@ -23,6 +24,7 @@
 		"@react-email/components": "1.0.6",
 		"@tailwindcss/vite": "^4.1.18",
 		"@tanstack/react-devtools": "^0.7.11",
+		"@tanstack/react-form": "^1.28.0",
 		"@tanstack/react-query": "^5.90.20",
 		"@tanstack/react-query-devtools": "5.91.3",
 		"@tanstack/react-router": "^1.157.18",
@@ -61,6 +63,7 @@
 		"@types/react": "^19.2.10",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^5.1.2",
+		"husky": "^9.1.7",
 		"jsdom": "^27.4.0",
 		"react-email": "5.2.5",
 		"typescript": "^5.9.3",

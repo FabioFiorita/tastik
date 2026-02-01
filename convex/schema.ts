@@ -122,14 +122,14 @@ const schema = defineSchema({
 		userId: v.id("users"),
 		status: subscriptionStatusValidator,
 		externalCustomerId: v.optional(v.string()),
-		externalSubscriptionId: v.optional(v.string()),
+		externalTransactionId: v.optional(v.string()),
 		currentPeriodStart: v.optional(v.number()),
 		currentPeriodEnd: v.optional(v.number()),
 		canceledAt: v.optional(v.number()),
 	})
 		.index("by_user", ["userId"])
 		.index("by_external_customer", ["externalCustomerId"])
-		.index("by_external_subscription", ["externalSubscriptionId"]),
+		.index("by_external_transaction", ["externalTransactionId"]),
 
 	processedWebhookEvents: defineTable({
 		eventId: v.string(),

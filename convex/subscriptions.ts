@@ -64,6 +64,39 @@ export const isSubscribed = query({
 	},
 });
 
+export const getSubscription = query({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await requireAuth(ctx);
+
+		const subscription = await ctx.db
+			.query("subscriptions")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!subscription) {
+			return {
+				isSubscribed: false,
+				status: "inactive" as const,
+				externalCustomerId: undefined,
+				currentPeriodEnd: undefined,
+				canceledAt: undefined,
+			};
+		}
+
+		const isSubscribed =
+			subscription.status === "active" || subscription.status === "trialing";
+
+		return {
+			isSubscribed,
+			status: subscription.status,
+			externalCustomerId: subscription.externalCustomerId,
+			currentPeriodEnd: subscription.currentPeriodEnd,
+			canceledAt: subscription.canceledAt,
+		};
+	},
+});
+
 export const getSubscriptionByUserId = internalQuery({
 	args: { userId: v.id("users") },
 	handler: async (ctx, args) => {

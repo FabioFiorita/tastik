@@ -5,6 +5,7 @@ import { ConvexError } from "convex/values";
 import type { MutationCtx } from "./_generated/server";
 import { ResendOTP } from "./email";
 import { appError } from "./lib/errors";
+import { normalizeEmail } from "./lib/validation";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 	providers: [
@@ -33,7 +34,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
 			const termsAcceptedAt = user.termsAcceptedAt ?? Date.now();
 
+			// Normalize email if present
+			const normalizedEmail = user.email
+				? normalizeEmail(user.email)
+				: undefined;
+
 			await ctx.db.patch(userId, {
+				email: normalizedEmail,
 				termsAcceptedAt,
 				lastSeenAt: Date.now(),
 			});

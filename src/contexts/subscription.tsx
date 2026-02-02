@@ -5,6 +5,10 @@ import { api } from "../../convex/_generated/api";
 
 type SubscriptionContextValue = {
 	isSubscribed: boolean;
+	status: "inactive" | "trialing" | "active" | "past_due" | "canceled";
+	externalCustomerId?: string;
+	currentPeriodEnd?: number;
+	canceledAt?: number;
 };
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(
@@ -12,12 +16,12 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(
 );
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-	const { data: isSubscribed } = useSuspenseQuery(
-		convexQuery(api.subscriptions.isSubscribed, {}),
+	const { data: subscription } = useSuspenseQuery(
+		convexQuery(api.subscriptions.getSubscription, {}),
 	);
 	const value = useMemo<SubscriptionContextValue>(
-		() => ({ isSubscribed }),
-		[isSubscribed],
+		() => subscription,
+		[subscription],
 	);
 	return (
 		<SubscriptionContext.Provider value={value}>

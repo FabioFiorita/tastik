@@ -1,5 +1,6 @@
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { logError } from "./lib/logger";
 
 function parseEvent(body: unknown): {
 	eventId: string;
@@ -79,7 +80,15 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
 			event,
 		});
 		return new Response(null, { status: 200 });
-	} catch {
+	} catch (error) {
+		logError(error as Error, {
+			operation: "handleRevenueCatWebhook",
+			additionalInfo: {
+				eventId: event.eventId,
+				eventType: event.type,
+				appUserId: event.app_user_id,
+			},
+		});
 		return new Response(null, { status: 500 });
 	}
 });

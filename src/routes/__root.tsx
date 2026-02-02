@@ -7,6 +7,8 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { NotFoundPage } from "@/components/common/not-found";
+import { ErrorBoundary } from "@/components/layout/error-boundary";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRouteWithContext<{
@@ -32,6 +34,12 @@ export const Route = createRootRouteWithContext<{
 			},
 		],
 	}),
+
+	errorComponent: ({ error, reset }) => (
+		<ErrorBoundary error={error} reset={reset} />
+	),
+
+	notFoundComponent: () => <NotFoundPage />,
 
 	shellComponent: RootDocument,
 });

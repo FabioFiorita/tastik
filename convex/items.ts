@@ -3,6 +3,7 @@ import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { requireListAccess, requireSubscription } from "./lib/permissions";
+import { validateItemName, validateNotes } from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
 
 /**
@@ -70,6 +71,14 @@ export const createItem = mutation({
 		const { userId } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
 
+		// Validate item name
+		validateItemName(args.name);
+
+		// Validate notes if provided
+		if (args.notes) {
+			validateNotes(args.notes);
+		}
+
 		// Get the highest sort order in the list
 		const existingItems = await ctx.db
 			.query("items")
@@ -85,7 +94,7 @@ export const createItem = mutation({
 
 		await ctx.db.insert("items", {
 			listId: args.listId,
-			name: args.name,
+			name: args.name.trim(),
 			type: itemType,
 			completed: false,
 			sortOrder: maxSortOrder + 1,
@@ -125,10 +134,26 @@ export const updateItem = mutation({
 		const { userId } = await requireListAccess(ctx, item.listId);
 		await requireSubscription(ctx, userId);
 
+		// Validate name if provided
+		if (args.name !== undefined) {
+			validateItemName(args.name);
+		}
+
+		// Validate notes if provided (and not null)
+		if (args.notes !== undefined && args.notes !== null) {
+			validateNotes(args.notes);
+		}
+
 		const { itemId, tagId, notes, ...updates } = args;
 
 		// Build updates object, handling null values for optional fields
 		const patchData: Record<string, unknown> = { ...updates };
+
+		// Trim name if it's being updated
+		if (patchData.name && typeof patchData.name === "string") {
+			patchData.name = patchData.name.trim();
+		}
+
 		if (tagId !== undefined) {
 			patchData.tagId = tagId === null ? undefined : tagId;
 		}

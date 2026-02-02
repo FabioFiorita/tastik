@@ -6,6 +6,7 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
+import { validateTagName } from "./lib/validation";
 
 /**
  * Get all tags for a list.
@@ -41,10 +42,15 @@ export const createTag = mutation({
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
 
+		// Validate tag name
+		validateTagName(args.name);
+
+		const trimmedName = args.name.trim();
+
 		const existingTag = await ctx.db
 			.query("listTags")
 			.withIndex("by_list_and_name", (q) =>
-				q.eq("listId", args.listId).eq("name", args.name),
+				q.eq("listId", args.listId).eq("name", trimmedName),
 			)
 			.unique();
 
@@ -56,7 +62,7 @@ export const createTag = mutation({
 
 		await ctx.db.insert("listTags", {
 			listId: args.listId,
-			name: args.name,
+			name: trimmedName,
 			color: args.color,
 		});
 	},
@@ -80,7 +86,12 @@ export const updateTag = mutation({
 		const { userId } = await requireListOwner(ctx, tag.listId);
 		await requireSubscription(ctx, userId);
 
-		const newName = args.name;
+		// Validate name if provided
+		if (args.name !== undefined) {
+			validateTagName(args.name);
+		}
+
+		const newName = args.name?.trim();
 		if (newName && newName !== tag.name) {
 			const existingTag = await ctx.db
 				.query("listTags")
@@ -97,8 +108,8 @@ export const updateTag = mutation({
 		}
 
 		const updates: { name?: string; color?: string } = {};
-		if (args.name !== undefined) {
-			updates.name = args.name;
+		if (newName !== undefined) {
+			updates.name = newName;
 		}
 		if (args.color !== undefined) {
 			updates.color = args.color === null ? undefined : args.color;

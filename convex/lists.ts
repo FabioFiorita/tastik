@@ -6,6 +6,7 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
+import { validateListName } from "./lib/validation";
 import {
 	listStatusValidator,
 	listTypeValidator,
@@ -95,9 +96,12 @@ export const createList = mutation({
 		const userId = await requireAuth(ctx);
 		await requireSubscription(ctx, userId);
 
+		// Validate list name
+		validateListName(args.name);
+
 		await ctx.db.insert("lists", {
 			ownerId: userId,
-			name: args.name,
+			name: args.name.trim(),
 			icon: args.icon,
 			type: args.type ?? "simple",
 			status: "active",
@@ -125,12 +129,22 @@ export const updateList = mutation({
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
 
+		// Validate name if provided
+		if (args.name !== undefined) {
+			validateListName(args.name);
+		}
+
 		const { listId, ...updates } = args;
 
-		// Filter out undefined values
+		// Filter out undefined values and trim name
 		const filteredUpdates = Object.fromEntries(
 			Object.entries(updates).filter(([, value]) => value !== undefined),
 		);
+
+		// Trim name if it's being updated
+		if (filteredUpdates.name && typeof filteredUpdates.name === "string") {
+			filteredUpdates.name = filteredUpdates.name.trim();
+		}
 
 		if (Object.keys(filteredUpdates).length > 0) {
 			await ctx.db.patch(listId, filteredUpdates);

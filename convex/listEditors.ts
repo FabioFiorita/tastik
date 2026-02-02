@@ -7,6 +7,11 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
+import {
+	isValidEmail,
+	normalizeEmail,
+	validateNickname,
+} from "./lib/validation";
 
 /**
  * Get all editors for a list with their user details.
@@ -57,6 +62,11 @@ export const addListEditor = mutation({
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, ownerId);
+
+		// Validate nickname if provided
+		if (args.nickname) {
+			validateNickname(args.nickname);
+		}
 
 		if (args.userId === ownerId) {
 			throw new ConvexError(
@@ -110,13 +120,27 @@ export const addListEditorByEmail = mutation({
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, ownerId);
 
-		const users = await ctx.db.query("users").collect();
-		const user = users.find(
-			(u) => u.email?.toLowerCase() === args.email.toLowerCase(),
-		);
+		// Validate email format
+		if (!isValidEmail(args.email)) {
+			throw new ConvexError(appError("INVALID_EMAIL", "Invalid email address"));
+		}
+
+		// Use email index for efficient lookup
+		const normalizedEmail = normalizeEmail(args.email);
+		const user = await ctx.db
+			.query("users")
+			.withIndex("email", (q) => q.eq("email", normalizedEmail))
+			.unique();
 
 		if (!user) {
-			throw new ConvexError(appError("USER_NOT_FOUND", "User not found"));
+			throw new ConvexError(
+				appError("USER_NOT_FOUND", "No user found with that email address"),
+			);
+		}
+
+		// Validate nickname if provided
+		if (args.nickname) {
+			validateNickname(args.nickname);
 		}
 
 		if (user._id === ownerId) {
@@ -171,6 +195,11 @@ export const updateEditorNickname = mutation({
 
 		const { userId } = await requireListOwner(ctx, editor.listId);
 		await requireSubscription(ctx, userId);
+
+		// Validate nickname if it's a string
+		if (args.nickname !== null && args.nickname !== undefined) {
+			validateNickname(args.nickname);
+		}
 
 		await ctx.db.patch(args.editorId, {
 			nickname: args.nickname === null ? undefined : args.nickname,

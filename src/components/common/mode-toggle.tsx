@@ -16,7 +16,7 @@ export function ModeToggle() {
 		<DropdownMenu>
 			<DropdownMenuTrigger
 				className={cn(
-					buttonVariants({ variant: "outline", size: "icon" }),
+					buttonVariants({ variant: "outline", size: "sm" }),
 					"relative",
 				)}
 			>

@@ -32,7 +32,7 @@ export const ResendOTP = Email({
 	apiKey: process.env.AUTH_RESEND_KEY,
 	maxAge: 60 * 20,
 	async generateVerificationToken() {
-		return generateRandomString(8, alphabet("0-9"));
+		return generateRandomString(6, alphabet("0-9"));
 	},
 	sendVerificationRequest: async (
 		params: SendVerificationParams,

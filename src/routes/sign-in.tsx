@@ -57,8 +57,8 @@ function SignIn() {
 
 	const handleCodeVerify = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (!code || code.length !== 8) {
-			setError("Please enter the 8-digit code from your email");
+		if (!code || code.length !== 6) {
+			setError("Please enter the 6-digit code from your email");
 			return;
 		}
 
@@ -94,7 +94,7 @@ function SignIn() {
 					<CardDescription className="text-center">
 						{step === "initial"
 							? "Choose your preferred sign-in method"
-							: `We sent an 8-digit code to ${email}`}
+							: `We sent a 6-digit code to ${email}`}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -143,25 +143,25 @@ function SignIn() {
 								<Field>
 									<Input
 										type="text"
-										placeholder="Enter 8-digit code"
+										placeholder="Enter 6-digit code"
 										value={code}
 										onChange={(e) => {
 											const value = e.target.value.replace(/\D/g, "");
-											if (value.length <= 8) {
+											if (value.length <= 6) {
 												setCode(value);
 											}
 										}}
 										disabled={isLoading}
 										autoComplete="one-time-code"
 										className="h-14 text-center font-mono text-xl tabular-nums tracking-[0.5em]"
-										maxLength={8}
+										maxLength={6}
 										inputMode="numeric"
 									/>
 								</Field>
 								<Button
 									type="submit"
 									size="lg"
-									disabled={isLoading || code.length !== 8}
+									disabled={isLoading || code.length !== 6}
 									className="w-full"
 								>
 									Verify Code

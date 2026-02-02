@@ -34,7 +34,7 @@ export function SignInHeader({
 			<FieldDescription>
 				{step === "initial"
 					? "Choose your preferred sign-in method"
-					: `We sent an 8-digit code to ${email}`}
+					: `We sent a 6-digit code to ${email}`}
 			</FieldDescription>
 		</div>
 	);

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { assertListsUnderLimit } from "./lib/limits";
 import {
 	requireAuth,
 	requireListAccess,
@@ -95,10 +96,8 @@ export const createList = mutation({
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 		await requireSubscription(ctx, userId);
-
-		// Validate list name
+		await assertListsUnderLimit(ctx, userId);
 		validateListName(args.name);
-
 		await ctx.db.insert("lists", {
 			ownerId: userId,
 			name: args.name.trim(),

@@ -14,6 +14,7 @@ import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_limits from "../lib/limits.js";
 import type * as lib_logger from "../lib/logger.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_validation from "../lib/validation.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   items: typeof items;
   "lib/errors": typeof lib_errors;
+  "lib/limits": typeof lib_limits;
   "lib/logger": typeof lib_logger;
   "lib/permissions": typeof lib_permissions;
   "lib/validation": typeof lib_validation;

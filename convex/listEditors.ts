@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
+import { assertEditorsUnderLimit } from "./lib/limits";
 import {
 	requireAuth,
 	requireListAccess,
@@ -97,7 +98,7 @@ export const addListEditor = mutation({
 		if (!user) {
 			throw new ConvexError(appError("USER_NOT_FOUND", "User not found"));
 		}
-
+		await assertEditorsUnderLimit(ctx, args.listId);
 		await ctx.db.insert("listEditors", {
 			listId: args.listId,
 			userId: args.userId,
@@ -167,7 +168,7 @@ export const addListEditorByEmail = mutation({
 				),
 			);
 		}
-
+		await assertEditorsUnderLimit(ctx, args.listId);
 		await ctx.db.insert("listEditors", {
 			listId: args.listId,
 			userId: user._id,

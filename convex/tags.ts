@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
+import { assertTagsUnderLimit } from "./lib/limits";
 import {
 	requireListAccess,
 	requireListOwner,
@@ -41,8 +42,7 @@ export const createTag = mutation({
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, userId);
-
-		// Validate tag name
+		await assertTagsUnderLimit(ctx, args.listId);
 		validateTagName(args.name);
 
 		const trimmedName = args.name.trim();

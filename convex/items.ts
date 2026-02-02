@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
+import { assertItemsUnderLimit } from "./lib/limits";
 import { requireListAccess, requireSubscription } from "./lib/permissions";
 import { validateItemName, validateNotes } from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
@@ -70,8 +71,7 @@ export const createItem = mutation({
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
-
-		// Validate item name
+		await assertItemsUnderLimit(ctx, args.listId);
 		validateItemName(args.name);
 
 		// Validate notes if provided

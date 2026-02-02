@@ -7,6 +7,7 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
+import { assertRateLimit } from "./lib/rateLimiter";
 import { validateListName } from "./lib/validation";
 import {
 	listStatusValidator,
@@ -96,6 +97,7 @@ export const createList = mutation({
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 		await requireSubscription(ctx, userId);
+		await assertRateLimit(ctx, "createList", userId);
 		await assertListsUnderLimit(ctx, userId);
 		validateListName(args.name);
 		await ctx.db.insert("lists", {

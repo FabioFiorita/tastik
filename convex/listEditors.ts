@@ -8,6 +8,7 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
+import { assertRateLimit } from "./lib/rateLimiter";
 import {
 	isValidEmail,
 	normalizeEmail,
@@ -63,8 +64,8 @@ export const addListEditor = mutation({
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, ownerId);
+		await assertRateLimit(ctx, "addListEditor", ownerId);
 
-		// Validate nickname if provided
 		if (args.nickname) {
 			validateNickname(args.nickname);
 		}
@@ -120,8 +121,8 @@ export const addListEditorByEmail = mutation({
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
 		await requireSubscription(ctx, ownerId);
+		await assertRateLimit(ctx, "addListEditor", ownerId);
 
-		// Validate email format
 		if (!isValidEmail(args.email)) {
 			throw new ConvexError(appError("INVALID_EMAIL", "Invalid email address"));
 		}

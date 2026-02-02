@@ -4,6 +4,7 @@ import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import { requireListAccess, requireSubscription } from "./lib/permissions";
+import { assertRateLimit } from "./lib/rateLimiter";
 import { validateItemName, validateNotes } from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
 
@@ -71,6 +72,7 @@ export const createItem = mutation({
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
 		await requireSubscription(ctx, userId);
+		await assertRateLimit(ctx, "createItem", userId);
 		await assertItemsUnderLimit(ctx, args.listId);
 		validateItemName(args.name);
 

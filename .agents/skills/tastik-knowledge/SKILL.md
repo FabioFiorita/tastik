@@ -26,6 +26,7 @@ description: Tastik app domain knowledge - a non-deadline task companion with mu
 - Auth and subscription: `references/auth-subscription.md`
 - Feature behavior: `references/features.md`
 - Permissions: `references/permissions.md`
+- Account deletion: `references/account-deletion.md`
 - Source of truth and verification: `references/source-of-truth.md`
 
 ## Last Verified

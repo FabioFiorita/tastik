@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { LEGAL_CONTACT } from "@/lib/constants/legal";
 
 type FooterSectionProps = {
 	title: string;
@@ -59,7 +60,7 @@ export function PublicFooter() {
 							Help Center
 						</Link>
 						<a
-							href="mailto:fabiolfp@gmail.com"
+							href={`mailto:${LEGAL_CONTACT.supportEmail}`}
 							className="text-muted-foreground text-sm transition-colors hover:text-foreground"
 						>
 							Contact Us
@@ -84,7 +85,8 @@ export function PublicFooter() {
 
 				<div className="mt-12 border-border border-t pt-8">
 					<p className="text-center text-muted-foreground text-sm">
-						© {new Date().getFullYear()} Tastik. All rights reserved.
+						© {LEGAL_CONTACT.copyrightYear} {LEGAL_CONTACT.companyName}. All
+						rights reserved.
 					</p>
 				</div>
 			</div>

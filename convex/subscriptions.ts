@@ -67,7 +67,17 @@ export const isSubscribed = query({
 export const getSubscription = query({
 	args: {},
 	handler: async (ctx) => {
-		const userId = await requireAuth(ctx);
+		const userId = await getAuthUserId(ctx);
+
+		if (!userId) {
+			return {
+				isSubscribed: false,
+				status: "inactive" as const,
+				externalCustomerId: undefined,
+				currentPeriodEnd: undefined,
+				canceledAt: undefined,
+			};
+		}
 
 		const subscription = await ctx.db
 			.query("subscriptions")

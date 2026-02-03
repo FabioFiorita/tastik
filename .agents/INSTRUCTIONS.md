@@ -7,7 +7,26 @@ These instructions apply to any assistant working in this repository. Keep rules
 - Prefer skills for product/domain knowledge and deeper context (example: `tastik-knowledge`).
 - Keep this file focused on stable rules, project conventions, and must-follow constraints.
 
+## Workflow
+
+- Plan before coding for non-trivial tasks; explore the codebase during planning.
+- Keep scope focused; if context grows large, summarize progress and ask before continuing.
+
+## Learning from Mistakes
+
+When you make a mistake and the developer corrects you:
+
+1. Acknowledge the mistake and apply the correct approach
+2. After fixing the issue, **proactively ask**: "Should I run `/capture-mistake` to add this correction to INSTRUCTIONS.md so I don't repeat this mistake?"
+3. If the developer agrees, run the command to capture the learning
+
+This helps build institutional knowledge and prevents repeated errors.
+
+Available commands:
+- `/capture-mistake` - Document a correction to prevent future mistakes
+
 ## Frontend Standards
+- Do not use `void` on function calls; it is unnecessary.
 - No deprecated APIs. Example: use `React.SyntheticEvent<HTMLFormElement>` for form submits (not `FormEvent`).
 - Tailwind/shadcn: prefer design tokens (`primary`, `muted`, `muted-foreground`, `foreground`) and standard scales (`text-xs`, `text-sm`, `size-5`). Avoid arbitrary values unless behind a theme variable or a shared component.
 - Mobile-first: base styles for mobile; use `md:` or `lg:` for larger breakpoints. Avoid `sm:` for layout.

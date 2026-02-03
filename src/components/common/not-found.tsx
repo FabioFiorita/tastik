@@ -6,6 +6,7 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { LEGAL_CONTACT } from "@/lib/constants/legal";
 import { cn } from "@/lib/utils/cn";
 
 type NotFoundPageProps = {
@@ -69,7 +70,7 @@ export function NotFoundPage({ className }: NotFoundPageProps) {
 						Need help?{" "}
 						<a
 							className="font-medium text-foreground underline underline-offset-4"
-							href="mailto:fabiolfp@gmail.com"
+							href={`mailto:${LEGAL_CONTACT.supportEmail}`}
 						>
 							Contact support
 						</a>

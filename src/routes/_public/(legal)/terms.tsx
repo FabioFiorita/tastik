@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LEGAL_CONTACT, LEGAL_METADATA } from "@/lib/constants/legal";
 
 export const Route = createFileRoute("/_public/(legal)/terms")({
 	head: () => ({
@@ -17,7 +18,7 @@ function TermsPage() {
 							Terms of Service
 						</h1>
 						<p className="text-muted-foreground">
-							Last updated: January 11, 2026
+							Last updated: {LEGAL_METADATA.lastUpdated}
 						</p>
 					</div>
 
@@ -40,6 +41,40 @@ function TermsPage() {
 								cost tracking, and kanban boards. The App may include features
 								for sharing and collaborating on lists with other users.
 							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">
+								Subscription and Payment
+							</h2>
+							<p className="text-muted-foreground">
+								Tastik offers a subscription service priced at $1.99 per month,
+								processed through RevenueCat. New subscribers may be eligible
+								for a free trial period.
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>
+									Subscriptions automatically renew unless cancelled before the
+									end of the current billing period
+								</li>
+								<li>
+									You can manage your subscription and cancel at any time
+									through your account settings or the RevenueCat consumer
+									portal
+								</li>
+								<li>
+									Refund requests can be made through your RevenueCat consumer
+									portal or by emailing {LEGAL_CONTACT.supportEmail}
+								</li>
+								<li>
+									We reserve the right to change subscription pricing with at
+									least 30 days' notice to active subscribers
+								</li>
+								<li>
+									When you cancel, you'll retain access until the end of your
+									current billing period
+								</li>
+							</ul>
 						</section>
 
 						<section className="space-y-3">
@@ -72,6 +107,44 @@ function TermsPage() {
 							<p className="text-muted-foreground">
 								The App is intended for personal use; excessive automated usage
 								may be limited.
+							</p>
+						</section>
+
+						<section className="space-y-3">
+							<h2 className="font-semibold text-2xl">
+								Account Suspension and Termination
+							</h2>
+							<p className="text-muted-foreground">
+								We may suspend or terminate your account under the following
+								conditions:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>Violation of these Terms of Service</li>
+								<li>Non-payment of subscription fees</li>
+								<li>Security threats or unauthorized access attempts</li>
+								<li>Legal requirement or court order</li>
+							</ul>
+							<p className="text-muted-foreground">
+								You may delete your account at any time through your account
+								settings. When you delete your account:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>
+									All your personal data and lists you own are permanently
+									deleted immediately
+								</li>
+								<li>
+									You are immediately removed from all lists where you were an
+									editor
+								</li>
+								<li>No backups or recovery options are available</li>
+								<li>This action cannot be undone</li>
+							</ul>
+							<p className="text-muted-foreground">
+								Upon termination, you must immediately cease all use of the App.
+								Certain provisions of these Terms (including intellectual
+								property rights, disclaimers, and limitations of liability) will
+								survive termination.
 							</p>
 						</section>
 
@@ -151,10 +224,10 @@ function TermsPage() {
 							<p className="text-muted-foreground">
 								For questions about these Terms, please contact us at{" "}
 								<a
-									href="mailto:fabiolfp@gmail.com"
+									href={`mailto:${LEGAL_CONTACT.supportEmail}`}
 									className="text-primary hover:underline"
 								>
-									fabiolfp@gmail.com
+									{LEGAL_CONTACT.supportEmail}
 								</a>
 								.
 							</p>

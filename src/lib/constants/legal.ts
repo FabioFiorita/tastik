@@ -1,0 +1,39 @@
+export const LEGAL_CONTACT = {
+	supportEmail: "team@tastikapp.com",
+	companyName: "Tastik",
+	copyrightYear: new Date().getFullYear(),
+};
+
+export const LEGAL_METADATA = {
+	lastUpdated: "February 3, 2026",
+	termsVersion: "2.0",
+	privacyVersion: "2.0",
+};
+
+export const DATA_RETENTION = {
+	activeAccounts: "Your data is retained as long as your account is active.",
+	deletedAccounts:
+		"When you delete your account, all personal data and lists are permanently deleted immediately. There is no recovery period.",
+};
+
+export const THIRD_PARTY_SERVICES = [
+	{
+		name: "Convex",
+		purpose: "Backend database and real-time sync infrastructure",
+		dataShared:
+			"Account information, lists, items, tags, and collaboration data",
+		privacyPolicyUrl: "https://www.convex.dev/privacy",
+	},
+	{
+		name: "RevenueCat",
+		purpose: "Subscription management and payment processing",
+		dataShared: "Email address, subscription status, and transaction data",
+		privacyPolicyUrl: "https://www.revenuecat.com/privacy",
+	},
+	{
+		name: "Resend",
+		purpose: "Transactional email delivery (OTP codes, account notifications)",
+		dataShared: "Email address and message content",
+		privacyPolicyUrl: "https://resend.com/legal/privacy-policy",
+	},
+];

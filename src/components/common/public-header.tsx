@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { AuthButton } from "@/components/common/auth-button";
 import { ModeToggle } from "@/components/common/mode-toggle";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils/cn";
 
 export function PublicHeader() {
 	return (
@@ -44,12 +43,7 @@ export function PublicHeader() {
 
 				<div className="flex items-center gap-3">
 					<ModeToggle />
-					<Link
-						to="/sign-in"
-						className={cn(buttonVariants({ variant: "default", size: "sm" }))}
-					>
-						Sign in
-					</Link>
+					<AuthButton />
 				</div>
 			</div>
 		</header>

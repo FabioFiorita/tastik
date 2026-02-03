@@ -31,22 +31,23 @@ export const getListEditors = query({
 			.withIndex("by_list", (q) => q.eq("listId", args.listId))
 			.collect();
 
-		// Fetch user details for each editor
-		const editorsWithUsers = await Promise.all(
-			editors.map(async (editor) => {
-				const user = await ctx.db.get(editor.userId);
-				return {
-					...editor,
-					user: user
-						? {
-								_id: user._id,
-								email: user.email,
-								name: user.name,
-							}
-						: null,
-				};
-			}),
-		);
+		// Batch fetch user details for each editor
+		const userIds = editors.map((editor) => editor.userId);
+		const users = await Promise.all(userIds.map((id) => ctx.db.get(id)));
+
+		const editorsWithUsers = editors.map((editor, index) => {
+			const user = users[index];
+			return {
+				...editor,
+				user: user
+					? {
+							_id: user._id,
+							email: user.email,
+							name: user.name,
+						}
+					: null,
+			};
+		});
 
 		return editorsWithUsers;
 	},

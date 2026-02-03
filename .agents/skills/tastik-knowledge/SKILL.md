@@ -1,0 +1,32 @@
+---
+name: tastik-knowledge
+description: Tastik app domain knowledge - a non-deadline task companion with multi-type lists (simple checkbox, stepper, calculator, kanban, multi), list sharing with privacy-first nicknames, tags, and subscription-based access. Use when working on Tastik codebase, implementing features, fixing bugs, understanding the data model, or planning new functionality. Covers product vision, business model, Convex backend architecture, subscription flow, and feature specifications.
+---
+
+# Tastik Knowledge
+
+## Scope
+- Use this skill for product/domain decisions, feature behavior, and data-model reasoning.
+- If any detail is uncertain, verify against the codebase before implementing.
+- Do not duplicate schema details or file-level instructions here; always read the source of truth.
+
+## Quick Facts
+- Non-deadline task companion; not competing with iOS Reminders, Todoist, or TickTick.
+- Hard paywall subscription via RevenueCat at $1.99/month.
+- Passwordless auth: email OTP, Google OAuth, Apple Sign In.
+
+## Hard Constraints
+- 500 items per list.
+- 50 tags per list.
+- 10 editors per list.
+- All data operations are paywalled (no public operations).
+
+## References
+- Product and positioning: `references/product.md`
+- Auth and subscription: `references/auth-subscription.md`
+- Feature behavior: `references/features.md`
+- Permissions: `references/permissions.md`
+- Source of truth and verification: `references/source-of-truth.md`
+
+## Last Verified
+- 2026-02-03

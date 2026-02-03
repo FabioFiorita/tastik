@@ -1,6 +1,8 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { assertListsUnderLimit } from "./lib/limits";
+import { appError } from "./lib/errors";
+import { assertListsUnderLimit, MAX_ITEMS_PER_LIST } from "./lib/limits";
 import {
 	requireAuth,
 	requireListAccess,
@@ -44,12 +46,9 @@ export const getUserLists = query({
 			.withIndex("by_user", (q) => q.eq("userId", userId))
 			.collect();
 
-		const sharedLists = await Promise.all(
-			editorEntries.map(async (entry) => {
-				const list = await ctx.db.get(entry.listId);
-				return list;
-			}),
-		);
+		// Batch fetch lists (more efficient than N+1 queries)
+		const listIds = editorEntries.map((entry) => entry.listId);
+		const sharedLists = await Promise.all(listIds.map((id) => ctx.db.get(id)));
 
 		// Filter out nulls and apply status filter
 		const validSharedLists = sharedLists.filter(
@@ -93,6 +92,8 @@ export const createList = mutation({
 		name: v.string(),
 		type: v.optional(listTypeValidator),
 		icon: v.optional(v.string()),
+		hideCheckbox: v.optional(v.boolean()),
+		showTotal: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
@@ -109,6 +110,8 @@ export const createList = mutation({
 			sortBy: "created_at",
 			sortAscending: true,
 			showCompleted: true,
+			hideCheckbox: args.hideCheckbox ?? false,
+			showTotal: args.showTotal ?? false,
 		});
 	},
 });
@@ -125,6 +128,8 @@ export const updateList = mutation({
 		sortBy: v.optional(sortByValidator),
 		sortAscending: v.optional(v.boolean()),
 		showCompleted: v.optional(v.boolean()),
+		hideCheckbox: v.optional(v.boolean()),
+		showTotal: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
@@ -225,3 +230,272 @@ export const restoreList = mutation({
 		await ctx.db.patch(args.listId, { status: "active" });
 	},
 });
+
+/**
+ * Duplicate a list with all its items and tags (owner only).
+ * Editors are NOT copied for privacy.
+ */
+export const duplicateList = mutation({
+	args: {
+		listId: v.id("lists"),
+	},
+	handler: async (ctx, args) => {
+		const { userId, list } = await requireListOwner(ctx, args.listId);
+		await requireSubscription(ctx, userId);
+		await assertRateLimit(ctx, "duplicateList", userId);
+		await assertListsUnderLimit(ctx, userId);
+
+		// Fetch source items
+		const sourceItems = await ctx.db
+			.query("items")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Check items limit
+		if (sourceItems.length > MAX_ITEMS_PER_LIST) {
+			throw new ConvexError(
+				appError(
+					"ITEMS_LIMIT_EXCEEDED",
+					`Cannot duplicate list with more than ${MAX_ITEMS_PER_LIST} items`,
+				),
+			);
+		}
+
+		// Fetch source tags
+		const sourceTags = await ctx.db
+			.query("listTags")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Create new list with " (copy)" suffix
+		const newListId = await ctx.db.insert("lists", {
+			ownerId: userId,
+			name: `${list.name} (copy)`,
+			icon: list.icon,
+			type: list.type,
+			status: list.status,
+			sortBy: list.sortBy,
+			sortAscending: list.sortAscending,
+			showCompleted: list.showCompleted,
+			hideCheckbox: list.hideCheckbox,
+			showTotal: list.showTotal,
+		});
+
+		// Duplicate tags and build ID mapping
+		const tagIdMap = new Map<Id<"listTags">, Id<"listTags">>();
+		for (const sourceTag of sourceTags) {
+			const newTagId = await ctx.db.insert("listTags", {
+				listId: newListId,
+				name: sourceTag.name,
+				color: sourceTag.color,
+			});
+			tagIdMap.set(sourceTag._id, newTagId);
+		}
+
+		// Copy all items with remapped tag IDs
+		for (const item of sourceItems) {
+			await ctx.db.insert("items", {
+				listId: newListId,
+				name: item.name,
+				type: item.type,
+				completed: item.completed,
+				completedAt: item.completedAt,
+				currentValue: item.currentValue,
+				targetValue: item.targetValue,
+				step: item.step,
+				calculatorValue: item.calculatorValue,
+				status: item.status,
+				tagId: item.tagId ? tagIdMap.get(item.tagId) : undefined,
+				description: item.description,
+				url: item.url,
+				notes: item.notes,
+				sortOrder: item.sortOrder,
+			});
+		}
+
+		return newListId;
+	},
+});
+
+/**
+ * Export a list as plain text, markdown, or CSV.
+ */
+export const exportList = query({
+	args: {
+		listId: v.id("lists"),
+		format: v.optional(
+			v.union(v.literal("txt"), v.literal("md"), v.literal("csv")),
+		),
+	},
+	handler: async (ctx, args) => {
+		const { userId, list } = await requireListAccess(ctx, args.listId);
+		await requireSubscription(ctx, userId);
+
+		// Fetch items
+		const items = await ctx.db
+			.query("items")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Fetch tags
+		const tags = await ctx.db
+			.query("listTags")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Build tag map for quick lookup
+		const tagMap = new Map(tags.map((tag) => [tag._id, tag]));
+
+		// Sort items by sortOrder
+		const sortedItems = items.sort((a, b) => a.sortOrder - b.sortOrder);
+
+		// Format based on requested format
+		const format = args.format ?? "txt";
+		if (format === "txt") {
+			return formatPlainText(list, sortedItems, tagMap);
+		}
+		if (format === "md") {
+			return formatMarkdown(list, sortedItems, tagMap);
+		}
+		return formatCsv(sortedItems, tagMap);
+	},
+});
+
+/**
+ * Format list as plain text.
+ */
+function formatPlainText(
+	list: Doc<"lists">,
+	items: Doc<"items">[],
+	tagMap: Map<string, Doc<"listTags">>,
+): string {
+	let output = `${list.name}\n`;
+	output += `${"=".repeat(list.name.length)}\n\n`;
+
+	for (const item of items) {
+		const checkbox = item.completed ? "[x]" : "[ ]";
+		const tag = item.tagId ? tagMap.get(item.tagId) : undefined;
+		const tagStr = tag ? ` [${tag.name}]` : "";
+
+		output += `${checkbox} ${item.name}${tagStr}\n`;
+
+		if (item.description) {
+			output += `    ${item.description}\n`;
+		}
+
+		if (item.type === "stepper") {
+			const current = item.currentValue ?? 0;
+			const target = item.targetValue ?? 0;
+			const step = item.step ?? 1;
+			output += `    Progress: ${current}/${target} (step: ${step})\n`;
+		} else if (item.type === "calculator") {
+			output += `    Value: ${item.calculatorValue ?? 0}\n`;
+		} else if (item.type === "kanban") {
+			output += `    Status: ${item.status ?? "todo"}\n`;
+		}
+
+		if (item.url) {
+			output += `    URL: ${item.url}\n`;
+		}
+
+		if (item.notes) {
+			output += `    Notes: ${item.notes}\n`;
+		}
+
+		output += "\n";
+	}
+
+	return output;
+}
+
+/**
+ * Format list as markdown.
+ */
+function formatMarkdown(
+	list: Doc<"lists">,
+	items: Doc<"items">[],
+	tagMap: Map<string, Doc<"listTags">>,
+): string {
+	let output = `# ${list.name}\n\n`;
+
+	for (const item of items) {
+		const checkbox = item.completed ? "[x]" : "[ ]";
+		const tag = item.tagId ? tagMap.get(item.tagId) : undefined;
+		const tagStr = tag ? ` \`${tag.name}\`` : "";
+
+		output += `- ${checkbox} **${item.name}**${tagStr}\n`;
+
+		if (item.description) {
+			output += `  - ${item.description}\n`;
+		}
+
+		if (item.type === "stepper") {
+			const current = item.currentValue ?? 0;
+			const target = item.targetValue ?? 0;
+			const step = item.step ?? 1;
+			output += `  - Progress: ${current}/${target} (step: ${step})\n`;
+		} else if (item.type === "calculator") {
+			output += `  - Value: ${item.calculatorValue ?? 0}\n`;
+		} else if (item.type === "kanban") {
+			output += `  - Status: ${item.status ?? "todo"}\n`;
+		}
+
+		if (item.url) {
+			output += `  - [Link](${item.url})\n`;
+		}
+
+		if (item.notes) {
+			output += `  - Notes: ${item.notes}\n`;
+		}
+
+		output += "\n";
+	}
+
+	return output;
+}
+
+/**
+ * Format list as CSV.
+ */
+function formatCsv(
+	items: Doc<"items">[],
+	tagMap: Map<string, Doc<"listTags">>,
+): string {
+	// CSV header
+	let output =
+		"Name,Completed,Type,Tag,Description,URL,Notes,CurrentValue,TargetValue,Step,CalculatorValue,Status\n";
+
+	for (const item of items) {
+		const tag = item.tagId ? tagMap.get(item.tagId) : undefined;
+
+		const row = [
+			csvEscape(item.name),
+			item.completed ? "Yes" : "No",
+			item.type,
+			tag ? csvEscape(tag.name) : "",
+			item.description ? csvEscape(item.description) : "",
+			item.url ? csvEscape(item.url) : "",
+			item.notes ? csvEscape(item.notes) : "",
+			item.currentValue?.toString() ?? "",
+			item.targetValue?.toString() ?? "",
+			item.step?.toString() ?? "",
+			item.calculatorValue?.toString() ?? "",
+			item.status ?? "",
+		];
+
+		output += `${row.join(",")}\n`;
+	}
+
+	return output;
+}
+
+/**
+ * Escape CSV values.
+ */
+function csvEscape(value: string): string {
+	// If value contains comma, quote, or newline, wrap in quotes and escape quotes
+	if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+		return `"${value.replace(/"/g, '""')}"`;
+	}
+	return value;
+}

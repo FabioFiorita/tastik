@@ -10,6 +10,8 @@ export const VALIDATION_LIMITS = {
 	NOTES_MAX: 2000,
 	NICKNAME_MAX: 50,
 	TAG_NAME_MAX: 30,
+	DESCRIPTION_MAX: 500,
+	URL_MAX: 2048,
 } as const;
 
 /**
@@ -114,6 +116,62 @@ export function validateTagName(name: string): void {
 				"INVALID_INPUT",
 				`Tag name must be ${VALIDATION_LIMITS.TAG_NAME_MAX} characters or less`,
 			),
+		);
+	}
+}
+
+/**
+ * Validate description field.
+ */
+export function validateDescription(description: string): void {
+	if (description.length > VALIDATION_LIMITS.DESCRIPTION_MAX) {
+		throw new ConvexError(
+			appError(
+				"INVALID_INPUT",
+				`Description must be ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters or less`,
+			),
+		);
+	}
+}
+
+/**
+ * Validate URL field.
+ */
+export function validateUrl(url: string): void {
+	if (url.length > VALIDATION_LIMITS.URL_MAX) {
+		throw new ConvexError(
+			appError(
+				"INVALID_INPUT",
+				`URL must be ${VALIDATION_LIMITS.URL_MAX} characters or less`,
+			),
+		);
+	}
+
+	// Validate URL format (http/https only)
+	try {
+		const parsedUrl = new URL(url);
+		if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+			throw new Error("Invalid protocol");
+		}
+	} catch {
+		throw new ConvexError(
+			appError("INVALID_INPUT", "URL must be a valid http or https URL"),
+		);
+	}
+}
+
+/**
+ * Validate step field for stepper items.
+ */
+export function validateStep(step: number): void {
+	if (!Number.isFinite(step)) {
+		throw new ConvexError(
+			appError("INVALID_INPUT", "Step must be a finite number"),
+		);
+	}
+	if (step <= 0) {
+		throw new ConvexError(
+			appError("INVALID_INPUT", "Step must be a positive number"),
 		);
 	}
 }

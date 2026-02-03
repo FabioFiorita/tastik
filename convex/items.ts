@@ -5,7 +5,13 @@ import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import { requireListAccess, requireSubscription } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
-import { validateItemName, validateNotes } from "./lib/validation";
+import {
+	validateDescription,
+	validateItemName,
+	validateNotes,
+	validateStep,
+	validateUrl,
+} from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
 
 /**
@@ -66,7 +72,10 @@ export const createItem = mutation({
 		name: v.string(),
 		type: v.optional(itemTypeValidator),
 		targetValue: v.optional(v.number()),
+		step: v.optional(v.number()),
 		tagId: v.optional(v.id("listTags")),
+		description: v.optional(v.string()),
+		url: v.optional(v.string()),
 		notes: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
@@ -76,21 +85,28 @@ export const createItem = mutation({
 		await assertItemsUnderLimit(ctx, args.listId);
 		validateItemName(args.name);
 
-		// Validate notes if provided
+		// Validate optional fields if provided
 		if (args.notes) {
 			validateNotes(args.notes);
 		}
+		if (args.description) {
+			validateDescription(args.description);
+		}
+		if (args.url) {
+			validateUrl(args.url);
+		}
+		if (args.step !== undefined) {
+			validateStep(args.step);
+		}
 
-		// Get the highest sort order in the list
-		const existingItems = await ctx.db
+		// Get the highest sort order in the list (optimized with index)
+		const lastItem = await ctx.db
 			.query("items")
-			.withIndex("by_list", (q) => q.eq("listId", args.listId))
-			.collect();
+			.withIndex("by_list_and_sortOrder", (q) => q.eq("listId", args.listId))
+			.order("desc")
+			.first();
 
-		const maxSortOrder = existingItems.reduce(
-			(max, item) => Math.max(max, item.sortOrder),
-			0,
-		);
+		const maxSortOrder = lastItem?.sortOrder ?? 0;
 
 		const itemType = args.type ?? "simple";
 
@@ -103,12 +119,15 @@ export const createItem = mutation({
 			// Stepper defaults
 			currentValue: itemType === "stepper" ? 0 : undefined,
 			targetValue: itemType === "stepper" ? args.targetValue : undefined,
+			step: itemType === "stepper" ? (args.step ?? 1.0) : undefined,
 			// Calculator defaults
 			calculatorValue: itemType === "calculator" ? 0 : undefined,
 			// Kanban defaults
 			status: itemType === "kanban" ? "todo" : undefined,
 			// Optional fields
 			tagId: args.tagId,
+			description: args.description,
+			url: args.url,
 			notes: args.notes,
 		});
 	},
@@ -123,7 +142,10 @@ export const updateItem = mutation({
 		name: v.optional(v.string()),
 		type: v.optional(itemTypeValidator),
 		targetValue: v.optional(v.number()),
+		step: v.optional(v.union(v.number(), v.null())),
 		tagId: v.optional(v.union(v.id("listTags"), v.null())),
+		description: v.optional(v.union(v.string(), v.null())),
+		url: v.optional(v.union(v.string(), v.null())),
 		notes: v.optional(v.union(v.string(), v.null())),
 		sortOrder: v.optional(v.number()),
 	},
@@ -141,12 +163,21 @@ export const updateItem = mutation({
 			validateItemName(args.name);
 		}
 
-		// Validate notes if provided (and not null)
+		// Validate optional fields if provided (and not null)
 		if (args.notes !== undefined && args.notes !== null) {
 			validateNotes(args.notes);
 		}
+		if (args.description !== undefined && args.description !== null) {
+			validateDescription(args.description);
+		}
+		if (args.url !== undefined && args.url !== null) {
+			validateUrl(args.url);
+		}
+		if (args.step !== undefined && args.step !== null) {
+			validateStep(args.step);
+		}
 
-		const { itemId, tagId, notes, ...updates } = args;
+		const { itemId, tagId, description, url, notes, step, ...updates } = args;
 
 		// Build updates object, handling null values for optional fields
 		const patchData: Record<string, unknown> = { ...updates };
@@ -159,8 +190,17 @@ export const updateItem = mutation({
 		if (tagId !== undefined) {
 			patchData.tagId = tagId === null ? undefined : tagId;
 		}
+		if (description !== undefined) {
+			patchData.description = description === null ? undefined : description;
+		}
+		if (url !== undefined) {
+			patchData.url = url === null ? undefined : url;
+		}
 		if (notes !== undefined) {
 			patchData.notes = notes === null ? undefined : notes;
+		}
+		if (step !== undefined) {
+			patchData.step = step === null ? undefined : step;
 		}
 
 		// Filter out undefined values from updates
@@ -226,7 +266,8 @@ export const incrementItemValue = mutation({
 		if (args.setValue !== undefined) {
 			newValue = args.setValue;
 		} else {
-			const delta = args.delta ?? 1;
+			// Use custom step if provided, otherwise fall back to item.step, then 1
+			const delta = args.delta ?? item.step ?? 1;
 			newValue = (item.currentValue ?? 0) + delta;
 		}
 

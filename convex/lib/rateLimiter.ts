@@ -23,6 +23,12 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 		rate: 20,
 		period: HOUR,
 	},
+	duplicateList: {
+		kind: "token bucket",
+		rate: 5,
+		period: MINUTE,
+		capacity: 2,
+	},
 	otpRequest: {
 		kind: "fixed window",
 		rate: 5,
@@ -34,7 +40,7 @@ export { rateLimiter };
 
 export async function assertRateLimit(
 	ctx: MutationCtx,
-	name: "createList" | "createItem" | "addListEditor",
+	name: "createList" | "createItem" | "addListEditor" | "duplicateList",
 	key: Id<"users">,
 ): Promise<void> {
 	const status = await rateLimiter.limit(ctx, name, { key });

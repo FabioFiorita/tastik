@@ -67,6 +67,8 @@ const schema = defineSchema({
 		sortBy: sortByValidator,
 		sortAscending: v.boolean(),
 		showCompleted: v.boolean(),
+		hideCheckbox: v.optional(v.boolean()),
+		showTotal: v.optional(v.boolean()),
 	})
 		.index("by_owner", ["ownerId"])
 		.index("by_owner_and_status", ["ownerId", "status"]),
@@ -101,13 +103,16 @@ const schema = defineSchema({
 		// For stepper items
 		currentValue: v.optional(v.number()),
 		targetValue: v.optional(v.number()),
+		step: v.optional(v.number()),
 		// For calculator items
 		calculatorValue: v.optional(v.number()),
 		// For kanban items
 		status: v.optional(itemStatusValidator),
 		// Tag reference
 		tagId: v.optional(v.id("listTags")),
-		// Notes
+		// Optional fields
+		description: v.optional(v.string()),
+		url: v.optional(v.string()),
 		notes: v.optional(v.string()),
 		// Ordering
 		sortOrder: v.number(),
@@ -115,7 +120,8 @@ const schema = defineSchema({
 		.index("by_list", ["listId"])
 		.index("by_list_and_completed", ["listId", "completed"])
 		.index("by_list_and_tag", ["listId", "tagId"])
-		.index("by_list_and_status", ["listId", "status"]),
+		.index("by_list_and_status", ["listId", "status"])
+		.index("by_list_and_sortOrder", ["listId", "sortOrder"]),
 
 	// Payment/subscription data
 	subscriptions: defineTable({

@@ -3,15 +3,20 @@
 Skill Initializer - Creates a new skill from template
 
 Usage:
-    init_skill.py <skill-name> --path <path>
+    init_skill.py <skill-name>
 
 Examples:
-    init_skill.py my-new-skill --path skills/public
-    init_skill.py my-api-helper --path skills/private
-    init_skill.py custom-skill --path /custom/location
+    init_skill.py my-new-skill
+    init_skill.py my-api-helper
+
+The skill will be created in .agents/skills/ with automatic symlinks in:
+- .claude/skills/
+- .cursor/skills/
+- .codex/skills/
 """
 
 import sys
+import os
 from pathlib import Path
 
 
@@ -191,19 +196,59 @@ def title_case_skill_name(skill_name):
     return ' '.join(word.capitalize() for word in skill_name.split('-'))
 
 
-def init_skill(skill_name, path):
+def find_project_root():
+    """Find the project root by looking for .agents directory."""
+    current = Path.cwd()
+    while current != current.parent:
+        if (current / '.agents').exists():
+            return current
+        current = current.parent
+    return None
+
+
+def create_symlinks(skill_name, skill_dir, project_root):
+    """Create symlinks in .claude, .cursor, and .codex directories."""
+    symlink_dirs = ['.claude/skills', '.cursor/skills', '.codex/skills']
+
+    for symlink_base in symlink_dirs:
+        symlink_dir = project_root / symlink_base
+        if not symlink_dir.exists():
+            print(f"⚠️  Skipping {symlink_base} (directory doesn't exist)")
+            continue
+
+        symlink_path = symlink_dir / skill_name
+        if symlink_path.exists():
+            print(f"⚠️  Symlink already exists: {symlink_path}")
+            continue
+
+        try:
+            # Create relative symlink: ../../.agents/skills/<skill_name>
+            relative_target = Path('../../.agents/skills') / skill_name
+            symlink_path.symlink_to(relative_target)
+            print(f"✅ Created symlink: {symlink_base}/{skill_name}")
+        except Exception as e:
+            print(f"❌ Error creating symlink in {symlink_base}: {e}")
+
+
+def init_skill(skill_name):
     """
     Initialize a new skill directory with template SKILL.md.
 
     Args:
         skill_name: Name of the skill
-        path: Path where the skill directory should be created
 
     Returns:
         Path to created skill directory, or None if error
     """
-    # Determine skill directory path
-    skill_dir = Path(path).resolve() / skill_name
+    # Find project root
+    project_root = find_project_root()
+    if not project_root:
+        print("❌ Error: Could not find project root (no .agents directory found)")
+        return None
+
+    # Determine skill directory path in .agents/skills
+    agents_skills_dir = project_root / '.agents' / 'skills'
+    skill_dir = agents_skills_dir / skill_name
 
     # Check if directory already exists
     if skill_dir.exists():
@@ -260,6 +305,10 @@ def init_skill(skill_name, path):
         print(f"❌ Error creating resource directories: {e}")
         return None
 
+    # Create symlinks in .claude, .cursor, and .codex
+    print()
+    create_symlinks(skill_name, skill_dir, project_root)
+
     # Print next steps
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
@@ -271,27 +320,30 @@ def init_skill(skill_name, path):
 
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[2] != '--path':
-        print("Usage: init_skill.py <skill-name> --path <path>")
+    if len(sys.argv) < 2:
+        print("Usage: init_skill.py <skill-name>")
         print("\nSkill name requirements:")
         print("  - Hyphen-case identifier (e.g., 'data-analyzer')")
         print("  - Lowercase letters, digits, and hyphens only")
         print("  - Max 40 characters")
         print("  - Must match directory name exactly")
         print("\nExamples:")
-        print("  init_skill.py my-new-skill --path skills/public")
-        print("  init_skill.py my-api-helper --path skills/private")
-        print("  init_skill.py custom-skill --path /custom/location")
+        print("  init_skill.py my-new-skill")
+        print("  init_skill.py my-api-helper")
+        print("  init_skill.py custom-skill")
+        print("\nThe skill will be created in .agents/skills/ with symlinks in:")
+        print("  - .claude/skills/")
+        print("  - .cursor/skills/")
+        print("  - .codex/skills/")
         sys.exit(1)
 
     skill_name = sys.argv[1]
-    path = sys.argv[3]
 
     print(f"🚀 Initializing skill: {skill_name}")
-    print(f"   Location: {path}")
+    print(f"   Location: .agents/skills/")
     print()
 
-    result = init_skill(skill_name, path)
+    result = init_skill(skill_name)
 
     if result:
         sys.exit(0)

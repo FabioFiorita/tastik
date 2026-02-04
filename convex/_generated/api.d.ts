@@ -24,6 +24,7 @@ import type * as lists from "../lists.js";
 import type * as revenuecatWebhook from "../revenuecatWebhook.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
+import type * as testHelpers from "../testHelpers.js";
 import type * as users from "../users.js";
 
 import type {
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   revenuecatWebhook: typeof revenuecatWebhook;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
+  testHelpers: typeof testHelpers;
   users: typeof users;
 }>;
 

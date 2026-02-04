@@ -7,6 +7,7 @@
 		"build": "vite build",
 		"typecheck": "tsc --noEmit",
 		"preview": "vite preview",
+		"test": "vitest",
 		"test:once": "vitest run",
 		"test:debug": "vitest --inspect-brk --no-file-parallelism",
 		"test:coverage": "vitest run --coverage --coverage.reporter=text",

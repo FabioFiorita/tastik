@@ -122,6 +122,39 @@ Available commands:
 - Do not use deprecated `ctx.storage.getMetadata`; query `_storage` via `ctx.db.system.get` instead.
 - Convert to/from `Blob` for storage operations.
 
+## Testing
+
+### Test Organization
+- All tests must be organized within `describe` blocks.
+- Every test file must have a parent `describe` block that wraps all tests (e.g., `describe("items", () => { ... })`).
+- The parent `describe` block should contain all `let` variable declarations and `beforeEach` hooks.
+- Individual `it` tests should be grouped under nested `describe` blocks that describe the function or feature being tested.
+- Use descriptive names for `describe` blocks that clearly indicate what is being tested.
+
+```typescript
+// ❌ BAD - tests without parent describe block
+let asAlice: TestIdentity;
+beforeEach(async () => { ... });
+
+describe("items.createItem", () => {
+  it("creates item", async () => { ... });
+});
+
+// ✅ GOOD - parent describe wraps everything
+describe("items", () => {
+  let asAlice: TestIdentity;
+  let listId: Id<"lists">;
+
+  beforeEach(async () => {
+    // setup code
+  });
+
+  describe("items.createItem", () => {
+    it("creates item and it appears in getListItems", async () => { ... });
+  });
+});
+```
+
 ## Post-Change Checks
 After any code change, run:
 - `bun typecheck`

@@ -5,11 +5,13 @@ import { LoadingState } from "@/components/common/loading-state";
 import { LandingPage } from "@/components/landing/landing-page";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { SubscriptionPage } from "@/components/subscription/subscription-page";
+import { Button } from "@/components/ui/button";
 import {
 	Subscribed,
 	SubscriptionProvider,
 	Unsubscribed,
 } from "@/contexts/subscription";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
 	component: App,
@@ -41,6 +43,8 @@ function App() {
 }
 
 function SubscribedView() {
+	const { signOut } = useAuth();
+
 	return (
 		<div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center">
 			<div className="container text-center">
@@ -50,6 +54,15 @@ function SubscribedView() {
 				<p className="mt-4 text-lg text-muted-foreground">
 					Your subscribed view is being built!
 				</p>
+				<Button
+					variant="secondary"
+					size="sm"
+					onClick={() => signOut()}
+					data-testid="auth-button-sign-out"
+					className="mt-6"
+				>
+					Sign out
+				</Button>
 			</div>
 		</div>
 	);

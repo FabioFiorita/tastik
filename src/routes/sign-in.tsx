@@ -99,7 +99,11 @@ function SignIn() {
 				</CardHeader>
 				<CardContent>
 					{error && (
-						<Alert variant="destructive" className="mb-6">
+						<Alert
+							variant="destructive"
+							className="mb-6"
+							data-testid="sign-in-error"
+						>
 							<AlertCircleIcon className="size-4" />
 							<AlertDescription>{error}</AlertDescription>
 						</Alert>
@@ -119,6 +123,7 @@ function SignIn() {
 											type="email"
 											placeholder="Enter your email"
 											value={email}
+											data-testid="sign-in-email-input"
 											onChange={(e) => setEmail(e.target.value)}
 											disabled={isLoading}
 											autoComplete="email"
@@ -130,6 +135,7 @@ function SignIn() {
 										size="lg"
 										disabled={isLoading}
 										className="w-full"
+										data-testid="sign-in-email-submit"
 									>
 										<MailIcon className="size-5" />
 										Continue with Email
@@ -145,6 +151,7 @@ function SignIn() {
 										type="text"
 										placeholder="Enter 6-digit code"
 										value={code}
+										data-testid="sign-in-otp-input"
 										onChange={(e) => {
 											const value = e.target.value.replace(/\D/g, "");
 											if (value.length <= 6) {
@@ -163,6 +170,7 @@ function SignIn() {
 									size="lg"
 									disabled={isLoading || code.length !== 6}
 									className="w-full"
+									data-testid="sign-in-otp-submit"
 								>
 									Verify Code
 								</Button>
@@ -173,6 +181,7 @@ function SignIn() {
 									onClick={handleBackToEmail}
 									disabled={isLoading}
 									className="w-full"
+									data-testid="sign-in-back-to-email"
 								>
 									<ArrowLeftIcon className="size-4" />
 									Use a different email

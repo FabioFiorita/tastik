@@ -15,10 +15,12 @@ describe("error-state", () => {
 
 	it("renders default title and description", () => {
 		renderWithUser(<ErrorState />);
-		expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-		expect(
-			screen.getByText("We couldn't load the data. Please try again."),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("error-state-title")).toHaveTextContent(
+			"Something went wrong",
+		);
+		expect(screen.getByTestId("error-state-description")).toHaveTextContent(
+			"We couldn't load the data. Please try again.",
+		);
 	});
 
 	it("renders custom title and description", () => {
@@ -28,10 +30,12 @@ describe("error-state", () => {
 				description="This is a custom error message"
 			/>,
 		);
-		expect(screen.getByText("Custom Error")).toBeInTheDocument();
-		expect(
-			screen.getByText("This is a custom error message"),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("error-state-title")).toHaveTextContent(
+			"Custom Error",
+		);
+		expect(screen.getByTestId("error-state-description")).toHaveTextContent(
+			"This is a custom error message",
+		);
 	});
 
 	it("renders retry button when onRetry is provided", () => {
@@ -77,8 +81,10 @@ describe("error-state", () => {
 				goBackLabel="Back"
 			/>,
 		);
-		expect(screen.getByText("Retry Now")).toBeInTheDocument();
-		expect(screen.getByText("Back")).toBeInTheDocument();
+		expect(screen.getByTestId("error-state-retry")).toHaveTextContent(
+			"Retry Now",
+		);
+		expect(screen.getByTestId("error-state-go-back")).toHaveTextContent("Back");
 	});
 
 	it("does not render buttons when no actions are provided", () => {
@@ -89,9 +95,9 @@ describe("error-state", () => {
 
 	it("does not render description when not provided", () => {
 		renderWithUser(<ErrorState title="Error" description="" />);
-		expect(screen.getByText("Error")).toBeInTheDocument();
+		expect(screen.getByTestId("error-state-title")).toHaveTextContent("Error");
 		expect(
-			screen.queryByText("We couldn't load the data. Please try again."),
+			screen.queryByTestId("error-state-description"),
 		).not.toBeInTheDocument();
 	});
 });

@@ -7,8 +7,10 @@ describe("pricing-features", () => {
 	it("renders all pricing features from constant", () => {
 		renderWithUser(<PricingFeatures />);
 		PRICING_FEATURES.forEach((feature) => {
-			expect(screen.getByText(feature.title)).toBeInTheDocument();
-			expect(screen.getByText(feature.description)).toBeInTheDocument();
+			const testId = `pricing-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`;
+			const el = screen.getByTestId(testId);
+			expect(el).toHaveTextContent(feature.title);
+			expect(el).toHaveTextContent(feature.description);
 		});
 	});
 

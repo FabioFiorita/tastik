@@ -8,16 +8,22 @@ describe("plan-card", () => {
 		renderWithUser(
 			<PlanCard plan={mockPlanMonthly} renderAction={() => <div />} />,
 		);
-		expect(screen.getByText("Monthly")).toBeInTheDocument();
-		expect(screen.getByText("$1.99")).toBeInTheDocument();
-		expect(screen.getByText("/month")).toBeInTheDocument();
+		expect(screen.getByTestId("plan-card-name")).toHaveTextContent("Monthly");
+		expect(screen.getByTestId("plan-card-price-period")).toHaveTextContent(
+			"$1.99",
+		);
+		expect(screen.getByTestId("plan-card-price-period")).toHaveTextContent(
+			"/month",
+		);
 	});
 
 	it("renders free trial information", () => {
 		renderWithUser(
 			<PlanCard plan={mockPlanMonthly} renderAction={() => <div />} />,
 		);
-		expect(screen.getByText("7-day free trial")).toBeInTheDocument();
+		expect(screen.getByTestId("plan-card-trial")).toHaveTextContent(
+			"7-day free trial",
+		);
 	});
 
 	it("renders popular badge when plan is popular", () => {
@@ -61,7 +67,9 @@ describe("plan-card", () => {
 				renderAction={() => <button type="button">Custom Action</button>}
 			/>,
 		);
-		expect(screen.getByText("Custom Action")).toBeInTheDocument();
+		expect(screen.getByTestId("plan-card-action")).toHaveTextContent(
+			"Custom Action",
+		);
 	});
 
 	it("applies popular border styling when plan is popular", () => {

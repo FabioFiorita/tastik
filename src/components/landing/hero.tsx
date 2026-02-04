@@ -16,14 +16,21 @@ export function Hero() {
 							src="/logo.png"
 							alt="Tastik"
 							className="h-24 w-24 rounded-3xl shadow-2xl md:h-32 md:w-32"
+							data-testid="hero-logo"
 						/>
 					</div>
 
-					<h1 className="mb-6 font-bold text-4xl text-foreground tracking-tight md:text-6xl lg:text-7xl">
+					<h1
+						className="mb-6 font-bold text-4xl text-foreground tracking-tight md:text-6xl lg:text-7xl"
+						data-testid="hero-heading"
+					>
 						Lists without deadlines
 					</h1>
 
-					<p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
+					<p
+						className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl"
+						data-testid="hero-tagline"
+					>
 						Tastik is the quiet companion to your reminder app. Track what
 						matters, not just when it's due. Less pressure, more clarity.
 					</p>
@@ -32,6 +39,7 @@ export function Hero() {
 						<Link
 							to="/sign-in"
 							className={cn(buttonVariants({ variant: "default", size: "lg" }))}
+							data-testid="hero-get-started"
 						>
 							Get Started
 						</Link>
@@ -42,6 +50,7 @@ export function Hero() {
 								buttonVariants({ variant: "outline", size: "lg" }),
 								"gap-2",
 							)}
+							data-testid="hero-download-ios"
 						>
 							<Smartphone className="h-5 w-5" />
 							Download for iOS
@@ -50,7 +59,10 @@ export function Hero() {
 				</div>
 
 				<div className="mt-16 hidden items-end justify-center gap-6 md:flex">
-					<div className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm">
+					<div
+						className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
+						data-testid="hero-demo-grocery"
+					>
 						<div className="mb-3 font-semibold text-foreground text-sm">
 							Grocery List
 						</div>
@@ -98,7 +110,10 @@ export function Hero() {
 						</div>
 					</div>
 
-					<div className="w-72 -translate-y-8 rounded-2xl bg-card/95 p-4 shadow-2xl backdrop-blur-sm">
+					<div
+						className="w-72 -translate-y-8 rounded-2xl bg-card/95 p-4 shadow-2xl backdrop-blur-sm"
+						data-testid="hero-demo-packing"
+					>
 						<div className="mb-3 font-semibold text-foreground text-sm">
 							Packing List
 						</div>
@@ -122,7 +137,10 @@ export function Hero() {
 						</div>
 					</div>
 
-					<div className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm">
+					<div
+						className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
+						data-testid="hero-demo-party"
+					>
 						<div className="mb-3 font-semibold text-foreground text-sm">
 							Party Budget
 						</div>

@@ -13,22 +13,23 @@ vi.mock("@tanstack/react-router", () => ({
 describe("pricing", () => {
 	it("renders section heading", () => {
 		renderWithUser(<Pricing />);
-		expect(screen.getByText("Simple, transparent pricing")).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-section-heading")).toHaveTextContent(
+			"Simple, transparent pricing",
+		);
 	});
 
 	it("renders section subtitle", () => {
 		renderWithUser(<Pricing />);
-		expect(
-			screen.getByText(
-				/All features included. Choose monthly flexibility or save with yearly/i,
-			),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-section-heading")).toHaveTextContent(
+			/All features included. Choose monthly flexibility or save with yearly/i,
+		);
 	});
 
 	it("renders PricingFeatures component", () => {
 		renderWithUser(<Pricing />);
-		// Check for a known pricing feature
-		expect(screen.getByText("5 list types")).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-features")).toHaveTextContent(
+			"5 list types",
+		);
 	});
 
 	it("renders PlanCards component", () => {
@@ -39,16 +40,24 @@ describe("pricing", () => {
 
 	it("renders PricingFooter component", () => {
 		renderWithUser(<Pricing />);
-		expect(
-			screen.getByText("Cancel anytime. No questions asked."),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-footer")).toHaveTextContent(
+			"Cancel anytime. No questions asked.",
+		);
 	});
 
 	it("plan action buttons link to sign-in", () => {
 		renderWithUser(<Pricing />);
-		const ctaButtons = screen.getAllByText(/Start.*Trial/i);
-		ctaButtons.forEach((button) => {
-			expect(button).toHaveAttribute("href", "/sign-in");
-		});
+		const monthlyAction = screen
+			.getByTestId("plan-card-monthly")
+			.querySelector('[data-testid="plan-card-action"]');
+		const yearlyAction = screen
+			.getByTestId("plan-card-yearly")
+			.querySelector('[data-testid="plan-card-action"]');
+		expect(
+			monthlyAction?.querySelector('a[href="/sign-in"]'),
+		).toBeInTheDocument();
+		expect(
+			yearlyAction?.querySelector('a[href="/sign-in"]'),
+		).toBeInTheDocument();
 	});
 });

@@ -25,10 +25,16 @@ export function SubscriptionPage() {
 
 			<div className="container relative mx-auto px-4 py-16 md:px-6 lg:px-8">
 				<div className="mx-auto max-w-3xl text-center">
-					<h1 className="mb-4 font-bold text-3xl text-foreground tracking-tight md:text-5xl">
+					<h1
+						className="mb-4 font-bold text-3xl text-foreground tracking-tight md:text-5xl"
+						data-testid="subscription-page-heading"
+					>
 						Unlock every list, everywhere.
 					</h1>
-					<p className="text-lg text-muted-foreground">
+					<p
+						className="text-lg text-muted-foreground"
+						data-testid="subscription-page-subheading"
+					>
 						Your lists are ready. Choose a plan to sync across devices, share
 						with others, and keep everything organized without deadlines.
 					</p>
@@ -45,7 +51,7 @@ export function SubscriptionPage() {
 							</span>
 						</div>
 
-						<div className="mb-8">
+						<div className="mb-8" data-testid="subscription-page-features">
 							<PricingFeatures />
 						</div>
 
@@ -56,6 +62,7 @@ export function SubscriptionPage() {
 									<div
 										key={perk.title}
 										className="rounded-2xl border border-border/60 bg-background/70 p-4"
+										data-testid={`subscription-perk-${perk.title.toLowerCase().replace(/\s+/g, "-")}`}
 									>
 										<Icon className="mb-3 size-5 text-primary" />
 										<p className="font-semibold text-sm">{perk.title}</p>
@@ -107,12 +114,18 @@ export function SubscriptionPage() {
 
 						<PricingFooter />
 
-						<div className="mt-6 rounded-2xl border border-border/60 bg-background/70 p-4">
+						<div
+							className="mt-6 rounded-2xl border border-border/60 bg-background/70 p-4"
+							data-testid="subscription-page-signed-in"
+						>
 							<p className="text-muted-foreground text-xs">
 								Signed in as{" "}
 								<span className="font-medium">{email || "user"}</span>
 							</p>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p
+								className="mt-1 text-muted-foreground text-xs"
+								data-testid="subscription-page-checkout-disclaimer"
+							>
 								Checkout opens in a secure RevenueCat window.
 							</p>
 						</div>

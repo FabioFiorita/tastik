@@ -13,14 +13,21 @@ export function CTA() {
 						src="/logo.png"
 						alt="Tastik"
 						className="h-20 w-20 rounded-2xl shadow-xl"
+						data-testid="cta-logo"
 					/>
 				</div>
 
-				<h2 className="mb-4 font-bold text-3xl text-foreground md:text-4xl">
+				<h2
+					className="mb-4 font-bold text-3xl text-foreground md:text-4xl"
+					data-testid="cta-heading"
+				>
 					Ready to simplify your lists?
 				</h2>
 
-				<p className="mx-auto mb-8 max-w-xl text-muted-foreground">
+				<p
+					className="mx-auto mb-8 max-w-xl text-muted-foreground"
+					data-testid="cta-description"
+				>
 					Create your free account and start organizing. Your lists sync
 					seamlessly across web and iOS.
 				</p>
@@ -29,6 +36,7 @@ export function CTA() {
 					<Link
 						to="/sign-in"
 						className={cn(buttonVariants({ variant: "default", size: "lg" }))}
+						data-testid="cta-sign-in"
 					>
 						Sign in to continue
 					</Link>
@@ -39,6 +47,7 @@ export function CTA() {
 							buttonVariants({ variant: "outline", size: "lg" }),
 							"gap-2",
 						)}
+						data-testid="cta-download-ios"
 					>
 						<Smartphone className="h-5 w-5" />
 						Download for iOS

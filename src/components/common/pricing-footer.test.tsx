@@ -5,15 +5,15 @@ import { PricingFooter } from "./pricing-footer";
 describe("pricing-footer", () => {
 	it("renders cancellation message", () => {
 		renderWithUser(<PricingFooter />);
-		expect(
-			screen.getByText("Cancel anytime. No questions asked."),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-footer")).toHaveTextContent(
+			"Cancel anytime. No questions asked.",
+		);
 	});
 
 	it("renders as paragraph element", () => {
-		const { container } = renderWithUser(<PricingFooter />);
-		const paragraph = container.querySelector("p");
-		expect(paragraph).toBeInTheDocument();
-		expect(paragraph?.textContent).toBe("Cancel anytime. No questions asked.");
+		renderWithUser(<PricingFooter />);
+		const paragraph = screen.getByTestId("pricing-footer");
+		expect(paragraph.tagName).toBe("P");
+		expect(paragraph).toHaveTextContent("Cancel anytime. No questions asked.");
 	});
 });

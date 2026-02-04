@@ -38,10 +38,16 @@ export function NotFoundPage({ className }: NotFoundPageProps) {
 		>
 			<div className="w-full max-w-md rounded-2xl border bg-linear-to-b from-background via-background to-muted/30 p-8 text-center shadow-sm">
 				<div className="mx-auto flex max-w-sm flex-col items-center gap-3">
-					<h1 className="font-semibold text-lg tracking-tight">
+					<h1
+						className="font-semibold text-lg tracking-tight"
+						data-testid="not-found-heading"
+					>
 						404 - Not Found
 					</h1>
-					<p className="text-balance text-muted-foreground text-sm">
+					<p
+						className="text-balance text-muted-foreground text-sm"
+						data-testid="not-found-description"
+					>
 						The page you're looking for doesn't exist.
 					</p>
 					<p className="text-balance text-muted-foreground text-sm">

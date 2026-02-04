@@ -7,8 +7,9 @@ describe("plan-cards", () => {
 	it("renders all plans from constant", () => {
 		renderWithUser(<PlanCards renderAction={() => <div />} />);
 		PLANS.forEach((plan) => {
-			expect(screen.getByText(plan.name)).toBeInTheDocument();
-			expect(screen.getByText(plan.price)).toBeInTheDocument();
+			const card = screen.getByTestId(`plan-card-${plan.name.toLowerCase()}`);
+			expect(card).toHaveTextContent(plan.name);
+			expect(card).toHaveTextContent(plan.price);
 		});
 	});
 
@@ -30,7 +31,8 @@ describe("plan-cards", () => {
 			/>,
 		);
 		PLANS.forEach((plan) => {
-			expect(screen.getByText(`Action for ${plan.name}`)).toBeInTheDocument();
+			const card = screen.getByTestId(`plan-card-${plan.name.toLowerCase()}`);
+			expect(card).toHaveTextContent(`Action for ${plan.name}`);
 		});
 	});
 });

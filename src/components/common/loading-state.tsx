@@ -27,16 +27,18 @@ export function LoadingState({
 				"flex min-h-(--empty-state-min-height) items-center justify-center",
 				className,
 			)}
-			data-testid={testId}
+			data-testid={testId ?? "loading-state"}
 		>
 			<Empty className="w-full max-w-lg flex-none bg-muted/40">
 				<EmptyHeader>
 					<EmptyMedia variant="icon">
 						<Spinner className="size-5 text-muted-foreground" />
 					</EmptyMedia>
-					<EmptyTitle>{title}</EmptyTitle>
+					<EmptyTitle data-testid="loading-state-title">{title}</EmptyTitle>
 					{description ? (
-						<EmptyDescription>{description}</EmptyDescription>
+						<EmptyDescription data-testid="loading-state-description">
+							{description}
+						</EmptyDescription>
 					) : null}
 				</EmptyHeader>
 			</Empty>

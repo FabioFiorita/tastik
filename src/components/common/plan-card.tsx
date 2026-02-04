@@ -29,7 +29,12 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 			)}
 
 			<div className="mb-4 flex items-center justify-between">
-				<h3 className="font-semibold text-foreground text-lg">{plan.name}</h3>
+				<h3
+					className="font-semibold text-foreground text-lg"
+					data-testid="plan-card-name"
+				>
+					{plan.name}
+				</h3>
 				{plan.badge ? (
 					<span
 						className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary text-xs"
@@ -40,17 +45,23 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 				) : null}
 			</div>
 
-			<div className="mb-4 flex items-baseline gap-1">
+			<div
+				className="mb-4 flex items-baseline gap-1"
+				data-testid="plan-card-price-period"
+			>
 				<span className="font-bold text-4xl text-foreground">{plan.price}</span>
 				<span className="text-muted-foreground">/{plan.period}</span>
 			</div>
 
-			<div className="mb-6 flex items-center gap-2 text-muted-foreground text-sm">
+			<div
+				className="mb-6 flex items-center gap-2 text-muted-foreground text-sm"
+				data-testid="plan-card-trial"
+			>
 				<Check className="size-4 text-primary" />
 				<span>{plan.trial} free trial</span>
 			</div>
 
-			{renderAction(plan)}
+			<div data-testid="plan-card-action">{renderAction(plan)}</div>
 		</div>
 	);
 }

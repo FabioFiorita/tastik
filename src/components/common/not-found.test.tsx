@@ -15,10 +15,12 @@ describe("not-found", () => {
 
 	it("renders 404 message and search form", () => {
 		renderWithUser(<NotFoundPage />);
-		expect(screen.getByText("404 - Not Found")).toBeInTheDocument();
-		expect(
-			screen.getByText("The page you're looking for doesn't exist."),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("not-found-heading")).toHaveTextContent(
+			"404 - Not Found",
+		);
+		expect(screen.getByTestId("not-found-description")).toHaveTextContent(
+			"The page you're looking for doesn't exist.",
+		);
 		expect(screen.getByTestId("not-found-search-form")).toBeInTheDocument();
 		expect(screen.getByTestId("not-found-search-input")).toBeInTheDocument();
 	});

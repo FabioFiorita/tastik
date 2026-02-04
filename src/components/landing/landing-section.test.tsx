@@ -19,7 +19,9 @@ describe("landing-section", () => {
 				<div>Test content</div>
 			</LandingSection>,
 		);
-		expect(screen.getByText("Test content")).toBeInTheDocument();
+		expect(screen.getByTestId("test-section-content")).toHaveTextContent(
+			"Test content",
+		);
 	});
 
 	it("renders title and subtitle when provided", () => {
@@ -33,8 +35,9 @@ describe("landing-section", () => {
 				<div>Content</div>
 			</LandingSection>,
 		);
-		expect(screen.getByText("Section Title")).toBeInTheDocument();
-		expect(screen.getByText("Section subtitle text")).toBeInTheDocument();
+		const heading = screen.getByTestId("test-section-heading");
+		expect(heading).toHaveTextContent("Section Title");
+		expect(heading).toHaveTextContent("Section subtitle text");
 	});
 
 	it("does not render title/subtitle when not provided", () => {
@@ -43,8 +46,9 @@ describe("landing-section", () => {
 				<div>Content</div>
 			</LandingSection>,
 		);
-		const headings = screen.queryByRole("heading");
-		expect(headings).not.toBeInTheDocument();
+		expect(
+			screen.queryByTestId("test-section-heading"),
+		).not.toBeInTheDocument();
 	});
 
 	it("applies custom background class", () => {

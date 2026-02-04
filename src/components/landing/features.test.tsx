@@ -6,23 +6,25 @@ import { Features } from "./features";
 describe("features", () => {
 	it("renders section heading", () => {
 		renderWithUser(<Features />);
-		expect(screen.getByText("Built for everyday lists")).toBeInTheDocument();
+		expect(screen.getByTestId("features-section-heading")).toHaveTextContent(
+			"Built for everyday lists",
+		);
 	});
 
 	it("renders section subtitle", () => {
 		renderWithUser(<Features />);
-		expect(
-			screen.getByText(
-				/Powerful features that stay out of your way. Focus on what matters/i,
-			),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("features-section-heading")).toHaveTextContent(
+			/Powerful features that stay out of your way. Focus on what matters/i,
+		);
 	});
 
 	it("renders all features from constant", () => {
 		renderWithUser(<Features />);
 		LANDING_FEATURES.forEach((feature) => {
-			expect(screen.getByText(feature.title)).toBeInTheDocument();
-			expect(screen.getByText(feature.description)).toBeInTheDocument();
+			const testId = `feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`;
+			const el = screen.getByTestId(testId);
+			expect(el).toHaveTextContent(feature.title);
+			expect(el).toHaveTextContent(feature.description);
 		});
 	});
 

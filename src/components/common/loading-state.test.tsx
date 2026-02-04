@@ -5,17 +5,23 @@ import { LoadingState } from "./loading-state";
 describe("loading-state", () => {
 	it("renders default loading title", () => {
 		renderWithUser(<LoadingState />);
-		expect(screen.getByText("Loading...")).toBeInTheDocument();
+		expect(screen.getByTestId("loading-state-title")).toHaveTextContent(
+			"Loading...",
+		);
 	});
 
 	it("renders custom title", () => {
 		renderWithUser(<LoadingState title="Please wait" />);
-		expect(screen.getByText("Please wait")).toBeInTheDocument();
+		expect(screen.getByTestId("loading-state-title")).toHaveTextContent(
+			"Please wait",
+		);
 	});
 
 	it("renders custom description when provided", () => {
 		renderWithUser(<LoadingState description="Fetching your data..." />);
-		expect(screen.getByText("Fetching your data...")).toBeInTheDocument();
+		expect(screen.getByTestId("loading-state-description")).toHaveTextContent(
+			"Fetching your data...",
+		);
 	});
 
 	it("does not render description when not provided", () => {

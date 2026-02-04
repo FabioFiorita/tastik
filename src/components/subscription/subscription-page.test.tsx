@@ -38,29 +38,32 @@ describe("subscription-page", () => {
 	it("renders main heading and subheading", () => {
 		mockUseCurrentUser.mockReturnValue(mockUser);
 		renderWithUser(<SubscriptionPage />);
+		expect(screen.getByTestId("subscription-page-heading")).toHaveTextContent(
+			"Unlock every list, everywhere.",
+		);
 		expect(
-			screen.getByText("Unlock every list, everywhere."),
-		).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				/Your lists are ready. Choose a plan to sync across devices/i,
-			),
-		).toBeInTheDocument();
+			screen.getByTestId("subscription-page-subheading"),
+		).toHaveTextContent(
+			/Your lists are ready. Choose a plan to sync across devices/i,
+		);
 	});
 
 	it("renders PricingFeatures component", () => {
 		mockUseCurrentUser.mockReturnValue(mockUser);
 		renderWithUser(<SubscriptionPage />);
-		// PricingFeatures should render features from PRICING_FEATURES constant
-		expect(screen.getByText("5 list types")).toBeInTheDocument();
+		expect(screen.getByTestId("subscription-page-features")).toHaveTextContent(
+			"5 list types",
+		);
 	});
 
 	it("renders all subscription perk items", () => {
 		mockUseCurrentUser.mockReturnValue(mockUser);
 		renderWithUser(<SubscriptionPage />);
 		SUBSCRIPTION_PERK_ITEMS.forEach((perk) => {
-			expect(screen.getByText(perk.title)).toBeInTheDocument();
-			expect(screen.getByText(perk.description)).toBeInTheDocument();
+			const testId = `subscription-perk-${perk.title.toLowerCase().replace(/\s+/g, "-")}`;
+			const el = screen.getByTestId(testId);
+			expect(el).toHaveTextContent(perk.title);
+			expect(el).toHaveTextContent(perk.description);
 		});
 	});
 
@@ -75,16 +78,20 @@ describe("subscription-page", () => {
 	it("renders user email information", () => {
 		mockUseCurrentUser.mockReturnValue(mockUser);
 		renderWithUser(<SubscriptionPage />);
-		expect(screen.getByText("test@example.com")).toBeInTheDocument();
+		expect(screen.getByTestId("subscription-page-signed-in")).toHaveTextContent(
+			"test@example.com",
+		);
 		expect(
-			screen.getByText("Checkout opens in a secure RevenueCat window."),
-		).toBeInTheDocument();
+			screen.getByTestId("subscription-page-checkout-disclaimer"),
+		).toHaveTextContent("Checkout opens in a secure RevenueCat window.");
 	});
 
 	it("handles missing email gracefully", () => {
 		mockUseCurrentUser.mockReturnValue({ _id: "user_123", email: null });
 		renderWithUser(<SubscriptionPage />);
-		expect(screen.getByText("user")).toBeInTheDocument();
+		expect(screen.getByTestId("subscription-page-signed-in")).toHaveTextContent(
+			"user",
+		);
 	});
 
 	it("renders RevenueCat checkout links for plans", () => {

@@ -14,6 +14,7 @@ export function Features() {
 					<div
 						key={feature.title}
 						className="group rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
+						data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
 					>
 						<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
 							<feature.icon className="h-6 w-6" />

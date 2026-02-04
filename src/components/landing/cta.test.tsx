@@ -13,34 +13,35 @@ vi.mock("@tanstack/react-router", () => ({
 describe("cta", () => {
 	it("renders main heading", () => {
 		renderWithUser(<CTA />);
-		expect(
-			screen.getByText("Ready to simplify your lists?"),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("cta-heading")).toHaveTextContent(
+			"Ready to simplify your lists?",
+		);
 	});
 
 	it("renders description", () => {
 		renderWithUser(<CTA />);
-		expect(
-			screen.getByText(
-				/Create your free account and start organizing. Your lists sync seamlessly/i,
-			),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("cta-description")).toHaveTextContent(
+			/Create your free account and start organizing. Your lists sync seamlessly/i,
+		);
 	});
 
 	it("renders Sign in button with link to sign-in", () => {
 		renderWithUser(<CTA />);
-		const signInButton = screen.getByText("Sign in to continue");
-		expect(signInButton).toBeInTheDocument();
-		expect(signInButton).toHaveAttribute("href", "/sign-in");
+		const signInLink = screen.getByTestId("cta-sign-in");
+		expect(signInLink).toBeInTheDocument();
+		expect(signInLink).toHaveAttribute("href", "/sign-in");
+		expect(signInLink).toHaveTextContent("Sign in to continue");
 	});
 
 	it("renders Download for iOS link", () => {
 		renderWithUser(<CTA />);
-		expect(screen.getByText("Download for iOS")).toBeInTheDocument();
+		const downloadLink = screen.getByTestId("cta-download-ios");
+		expect(downloadLink).toBeInTheDocument();
+		expect(downloadLink).toHaveTextContent("Download for iOS");
 	});
 
 	it("renders Tastik logo", () => {
 		renderWithUser(<CTA />);
-		expect(screen.getByAltText("Tastik")).toBeInTheDocument();
+		expect(screen.getByTestId("cta-logo")).toHaveAttribute("alt", "Tastik");
 	});
 });

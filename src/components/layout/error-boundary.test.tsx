@@ -16,7 +16,9 @@ describe("error-boundary", () => {
 	it("renders error boundary with default message", () => {
 		const error = new Error("Test error");
 		renderWithUser(<ErrorBoundary error={error} />);
-		expect(screen.getByText("Oops! Something went wrong")).toBeInTheDocument();
+		expect(screen.getByTestId("error-boundary-heading")).toHaveTextContent(
+			"Oops! Something went wrong",
+		);
 	});
 
 	it("displays error message", () => {
@@ -38,15 +40,17 @@ describe("error-boundary", () => {
 	it("renders Try Again button", () => {
 		const error = new Error("Test error");
 		renderWithUser(<ErrorBoundary error={error} />);
-		expect(screen.getByTestId("error-boundary-reset")).toBeInTheDocument();
-		expect(screen.getByText("Try Again")).toBeInTheDocument();
+		const resetButton = screen.getByTestId("error-boundary-reset");
+		expect(resetButton).toBeInTheDocument();
+		expect(resetButton).toHaveTextContent("Try Again");
 	});
 
 	it("renders Go Home button", () => {
 		const error = new Error("Test error");
 		renderWithUser(<ErrorBoundary error={error} />);
-		expect(screen.getByTestId("error-boundary-home")).toBeInTheDocument();
-		expect(screen.getByText("Go Home")).toBeInTheDocument();
+		const homeButton = screen.getByTestId("error-boundary-home");
+		expect(homeButton).toBeInTheDocument();
+		expect(homeButton).toHaveTextContent("Go Home");
 	});
 
 	it("calls reset function when Try Again is clicked", async () => {

@@ -6,28 +6,26 @@ import { UseCases } from "./use-cases";
 describe("use-cases", () => {
 	it("renders section heading", () => {
 		renderWithUser(<UseCases />);
-		expect(screen.getByText("Made for real life")).toBeInTheDocument();
+		expect(screen.getByTestId("use-cases-section-heading")).toHaveTextContent(
+			"Made for real life",
+		);
 	});
 
 	it("renders section subtitle", () => {
 		renderWithUser(<UseCases />);
-		expect(
-			screen.getByText(
-				/From groceries to projects, Tastik adapts to how you actually use lists/i,
-			),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("use-cases-section-heading")).toHaveTextContent(
+			/From groceries to projects, Tastik adapts to how you actually use lists/i,
+		);
 	});
 
 	it("renders all use cases from constant", () => {
 		renderWithUser(<UseCases />);
 		LANDING_USE_CASES.forEach((useCase) => {
-			expect(screen.getByText(useCase.title)).toBeInTheDocument();
-			expect(screen.getByText(useCase.description)).toBeInTheDocument();
-		});
-		// Check that all list types are present (some may be duplicated)
-		const listTypes = new Set(LANDING_USE_CASES.map((uc) => uc.listType));
-		listTypes.forEach((listType) => {
-			expect(screen.getAllByText(listType).length).toBeGreaterThan(0);
+			const testId = `use-case-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`;
+			const el = screen.getByTestId(testId);
+			expect(el).toHaveTextContent(useCase.title);
+			expect(el).toHaveTextContent(useCase.description);
+			expect(el).toHaveTextContent(useCase.listType);
 		});
 	});
 

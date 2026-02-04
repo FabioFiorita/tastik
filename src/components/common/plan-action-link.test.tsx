@@ -20,7 +20,9 @@ describe("plan-action-link", () => {
 				Start Trial
 			</PlanActionLink>,
 		);
-		expect(screen.getByText("Start Trial")).toBeInTheDocument();
+		expect(screen.getByTestId("plan-action-link")).toHaveTextContent(
+			"Start Trial",
+		);
 	});
 
 	it("applies default variant styling when not popular", () => {

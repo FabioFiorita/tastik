@@ -9,6 +9,7 @@ export function PricingFeatures() {
 					<div
 						key={feature.title}
 						className="flex items-start gap-3 rounded-lg border bg-card/50 p-4"
+						data-testid={`pricing-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
 					>
 						<div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10">
 							<Icon className="size-4 text-primary" />

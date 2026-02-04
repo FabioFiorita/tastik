@@ -14,6 +14,7 @@ export function UseCases() {
 					<div
 						key={useCase.title}
 						className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
+						data-testid={`use-case-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`}
 					>
 						<div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary/80 text-primary-foreground shadow-md">
 							<useCase.icon className="h-7 w-7" />

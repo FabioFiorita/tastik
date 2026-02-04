@@ -43,7 +43,10 @@ export function ErrorBoundary({ error, reset, className }: ErrorBoundaryProps) {
 					<div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
 						<AlertCircle className="size-6 text-destructive" />
 					</div>
-					<h1 className="font-semibold text-lg tracking-tight">
+					<h1
+						className="font-semibold text-lg tracking-tight"
+						data-testid="error-boundary-heading"
+					>
 						Oops! Something went wrong
 					</h1>
 					<p

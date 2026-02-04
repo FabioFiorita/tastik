@@ -15,7 +15,7 @@ export function Pricing() {
 			subtitle="All features included. Choose monthly flexibility or save with yearly."
 			headingClassName="mb-12"
 		>
-			<div className="mx-auto mb-12 max-w-4xl">
+			<div className="mx-auto mb-12 max-w-4xl" data-testid="pricing-features">
 				<PricingFeatures />
 			</div>
 

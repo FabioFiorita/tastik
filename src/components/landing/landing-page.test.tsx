@@ -13,28 +13,36 @@ vi.mock("@tanstack/react-router", () => ({
 describe("landing-page", () => {
 	it("renders hero section", () => {
 		renderWithUser(<LandingPage />);
-		expect(screen.getByText("Lists without deadlines")).toBeInTheDocument();
+		expect(screen.getByTestId("hero-heading")).toHaveTextContent(
+			"Lists without deadlines",
+		);
 	});
 
 	it("renders features section", () => {
 		renderWithUser(<LandingPage />);
-		expect(screen.getByText("Built for everyday lists")).toBeInTheDocument();
+		expect(screen.getByTestId("features-section-heading")).toHaveTextContent(
+			"Built for everyday lists",
+		);
 	});
 
 	it("renders use cases section", () => {
 		renderWithUser(<LandingPage />);
-		expect(screen.getByText("Made for real life")).toBeInTheDocument();
+		expect(screen.getByTestId("use-cases-section-heading")).toHaveTextContent(
+			"Made for real life",
+		);
 	});
 
 	it("renders pricing section", () => {
 		renderWithUser(<LandingPage />);
-		expect(screen.getByText("Simple, transparent pricing")).toBeInTheDocument();
+		expect(screen.getByTestId("pricing-section-heading")).toHaveTextContent(
+			"Simple, transparent pricing",
+		);
 	});
 
 	it("renders CTA section", () => {
 		renderWithUser(<LandingPage />);
-		expect(
-			screen.getByText("Ready to simplify your lists?"),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("cta-heading")).toHaveTextContent(
+			"Ready to simplify your lists?",
+		);
 	});
 });

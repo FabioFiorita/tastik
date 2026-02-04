@@ -51,6 +51,7 @@ export function OAuthButtons({
 				onClick={() => handleOAuthSignIn("google")}
 				disabled={disabled || isLoading}
 				className="w-full"
+				data-testid="oauth-button-google"
 			>
 				<Google className="size-5" />
 				Continue with Google
@@ -62,6 +63,7 @@ export function OAuthButtons({
 				onClick={() => handleOAuthSignIn("apple")}
 				disabled={disabled || isLoading}
 				className="w-full"
+				data-testid="oauth-button-apple"
 			>
 				<Apple className="size-5" />
 				Continue with Apple

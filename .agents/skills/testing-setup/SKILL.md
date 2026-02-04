@@ -107,6 +107,14 @@ describe("my-component", () => {
 8. **Always use `async/await`** - User interactions are asynchronous
 9. **Reuse mocks and fixtures** - Add common mocks/fixtures to helpers when used in multiple tests
 
+## Advanced Topics
+
+For detailed information on specific testing patterns, see:
+
+- **[Environment-Dependent Tests](references/environment-dependent-tests.md)** - How to test components that depend on environment variables
+- **[Test Organization](references/test-organization.md)** - Complete guide to organizing tests with describe blocks, examples, and best practices
+- **[Modern Testing APIs](references/modern-testing-apis.md)** - Comprehensive guide to userEvent, async queries, and modern testing patterns
+
 ## Testing Commands
 
 - `bun test` - Run tests in watch mode

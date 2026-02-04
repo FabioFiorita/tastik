@@ -60,12 +60,20 @@ export function ErrorState({
 					<EmptyContent>
 						<div className="flex flex-col gap-2 md:flex-row md:justify-center">
 							{onRetry ? (
-								<Button variant="outline" onClick={onRetry}>
+								<Button
+									variant="outline"
+									onClick={onRetry}
+									data-testid="error-state-retry"
+								>
 									{retryLabel}
 								</Button>
 							) : null}
 							{onGoBack ? (
-								<Button variant="ghost" onClick={handleGoBack}>
+								<Button
+									variant="ghost"
+									onClick={handleGoBack}
+									data-testid="error-state-go-back"
+								>
 									{goBackLabel}
 								</Button>
 							) : null}

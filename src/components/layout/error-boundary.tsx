@@ -46,7 +46,10 @@ export function ErrorBoundary({ error, reset, className }: ErrorBoundaryProps) {
 					<h1 className="font-semibold text-lg tracking-tight">
 						Oops! Something went wrong
 					</h1>
-					<p className="text-balance text-muted-foreground text-sm">
+					<p
+						className="text-balance text-muted-foreground text-sm"
+						data-testid="error-boundary-message"
+					>
 						{errorMessage}
 					</p>
 					{process.env.NODE_ENV === "development" && (
@@ -60,11 +63,21 @@ export function ErrorBoundary({ error, reset, className }: ErrorBoundaryProps) {
 						</details>
 					)}
 					<div className="mt-2 flex w-full flex-col gap-2 sm:flex-row">
-						<Button onClick={handleReset} className="flex-1" variant="default">
+						<Button
+							onClick={handleReset}
+							className="flex-1"
+							variant="default"
+							data-testid="error-boundary-reset"
+						>
 							<RefreshCw className="mr-2 size-4" />
 							Try Again
 						</Button>
-						<Button onClick={handleGoHome} className="flex-1" variant="outline">
+						<Button
+							onClick={handleGoHome}
+							className="flex-1"
+							variant="outline"
+							data-testid="error-boundary-home"
+						>
 							<Home className="mr-2 size-4" />
 							Go Home
 						</Button>
@@ -74,6 +87,7 @@ export function ErrorBoundary({ error, reset, className }: ErrorBoundaryProps) {
 						<a
 							className="font-medium text-foreground underline underline-offset-4"
 							href={`mailto:${LEGAL_CONTACT.supportEmail}`}
+							data-testid="error-boundary-support"
 						>
 							Contact support
 						</a>

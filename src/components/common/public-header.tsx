@@ -4,11 +4,15 @@ import { ModeToggle } from "@/components/common/mode-toggle";
 
 export function PublicHeader() {
 	return (
-		<header className="sticky top-0 z-50 w-full border-border/50 border-b bg-background/80 backdrop-blur-lg">
+		<header
+			className="sticky top-0 z-50 w-full border-border/50 border-b bg-background/80 backdrop-blur-lg"
+			data-testid="public-header"
+		>
 			<div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
 				<Link
 					to="/"
 					className="flex items-center gap-3 transition-opacity hover:opacity-80"
+					data-testid="public-header-logo"
 				>
 					<img src="/logo.png" alt="Tastik" className="h-10 w-10 rounded-lg" />
 					<span className="font-semibold text-foreground text-xl">Tastik</span>
@@ -18,24 +22,28 @@ export function PublicHeader() {
 					<Link
 						to="/"
 						className="font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+						data-testid="public-header-link-home"
 					>
 						Home
 					</Link>
 					<Link
 						to="/support"
 						className="font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+						data-testid="public-header-link-support"
 					>
 						Support
 					</Link>
 					<Link
 						to="/privacy"
 						className="font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+						data-testid="public-header-link-privacy"
 					>
 						Privacy
 					</Link>
 					<Link
 						to="/terms"
 						className="font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+						data-testid="public-header-link-terms"
 					>
 						Terms
 					</Link>

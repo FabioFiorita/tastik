@@ -15,9 +15,13 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 				"relative flex flex-col rounded-2xl border bg-card p-6 transition-all duration-200 hover:shadow-lg",
 				plan.popular ? "border-primary shadow-md" : "border-border",
 			)}
+			data-testid={`plan-card-${plan.name.toLowerCase()}`}
 		>
 			{plan.popular && (
-				<div className="absolute -top-3 left-1/2 -translate-x-1/2">
+				<div
+					className="absolute -top-3 left-1/2 -translate-x-1/2"
+					data-testid="plan-card-popular-badge"
+				>
 					<span className="rounded-full bg-primary px-4 py-1 font-semibold text-primary-foreground text-xs">
 						Best Value
 					</span>
@@ -27,7 +31,10 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 			<div className="mb-4 flex items-center justify-between">
 				<h3 className="font-semibold text-foreground text-lg">{plan.name}</h3>
 				{plan.badge ? (
-					<span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary text-xs">
+					<span
+						className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary text-xs"
+						data-testid="plan-card-badge"
+					>
 						{plan.badge}
 					</span>
 				) : null}

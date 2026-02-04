@@ -8,7 +8,12 @@ export function AuthButton() {
 
 	if (isLoading) {
 		return (
-			<Button variant="secondary" size="sm" disabled>
+			<Button
+				variant="secondary"
+				size="sm"
+				disabled
+				data-testid="auth-button-loading"
+			>
 				...
 			</Button>
 		);
@@ -16,7 +21,12 @@ export function AuthButton() {
 
 	if (isAuthenticated) {
 		return (
-			<Button variant="secondary" size="sm" onClick={() => signOut()}>
+			<Button
+				variant="secondary"
+				size="sm"
+				onClick={() => signOut()}
+				data-testid="auth-button-sign-out"
+			>
 				Sign out
 			</Button>
 		);
@@ -26,6 +36,7 @@ export function AuthButton() {
 		<Link
 			to="/sign-in"
 			className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+			data-testid="auth-button-sign-in"
 		>
 			Sign in
 		</Link>

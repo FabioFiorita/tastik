@@ -23,6 +23,7 @@ export function PlanActionLink({
 				}),
 				"w-full",
 			)}
+			data-testid="plan-action-link"
 		>
 			{children}
 		</a>

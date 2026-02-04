@@ -124,11 +124,74 @@ Available commands:
 
 ## Testing
 
+### Test Utilities
+- **Import from `@/test-utils`** instead of `@testing-library/react` for component tests.
+- **Use `renderWithUser()`** - automatically sets up `userEvent` for you.
+- **Global cleanup is automatic** - no need to manually call `cleanup()` in tests.
+- **Shared mocks** live in `src/__tests__/helpers/mocks.ts` - use them instead of duplicating mocks.
+- **Shared fixtures** live in `src/__tests__/helpers/fixtures.ts` - reuse test data across tests.
+
+```typescript
+// ✅ GOOD - using test utilities
+import { renderWithUser, screen } from "@/test-utils";
+
+it("interacts with button", async () => {
+  const { user } = renderWithUser(<MyComponent />);
+  await user.click(screen.getByRole("button"));
+  expect(screen.getByText("Clicked")).toBeInTheDocument();
+});
+
+// ❌ BAD - manual setup
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+it("interacts with button", async () => {
+  const user = userEvent.setup();
+  render(<MyComponent />);
+  await user.click(screen.getByRole("button"));
+});
+```
+
+### Test Selectors
+- Always use `data-testid` attributes on interactive components and key UI elements that need to be tested.
+- Prefer `getByTestId` or `queryByTestId` over role-based queries when components are complex or have multiple similar elements.
+- Use descriptive, kebab-case names for test IDs (e.g., `data-testid="mode-toggle-trigger"`).
+
+### Modern Testing APIs
+- Use `userEvent` instead of `fireEvent` for all user interactions.
+- Always use `async/await` with user interactions - they are asynchronous.
+- Use `renderWithUser()` from `@/test-utils` to get userEvent set up automatically.
+- Prefer `findBy*` queries over `waitFor` + `getBy*` - they have built-in waiting.
+- Never manually wrap with `act()` - React Testing Library handles this automatically.
+- Mock external dependencies at module level using `vi.mock()`.
+
+```typescript
+// ❌ BAD - using deprecated fireEvent
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+
+it("clicks button", () => {
+  render(<Button />);
+  fireEvent.click(screen.getByRole("button"));
+  await waitFor(() => {
+    expect(screen.getByText("Clicked")).toBeInTheDocument();
+  });
+});
+
+// ✅ GOOD - using renderWithUser from test-utils
+import { renderWithUser, screen } from "@/test-utils";
+
+it("clicks button", async () => {
+  const { user } = renderWithUser(<Button />);
+  await user.click(screen.getByRole("button"));
+  expect(await screen.findByText("Clicked")).toBeInTheDocument();
+});
+```
+
 ### Test Organization
 - All tests must be organized within `describe` blocks.
 - Every test file must have a parent `describe` block that wraps all tests (e.g., `describe("items", () => { ... })`).
 - The parent `describe` block should contain all `let` variable declarations and `beforeEach` hooks.
-- Individual `it` tests should be grouped under nested `describe` blocks that describe the function or feature being tested.
+- Use nested `describe` blocks only when grouping multiple functions or features - if all tests are for a single function, the parent `describe` is sufficient.
 - Use descriptive names for `describe` blocks that clearly indicate what is being tested.
 
 ```typescript

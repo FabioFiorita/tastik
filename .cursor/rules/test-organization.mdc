@@ -12,7 +12,7 @@ All tests must be organized within `describe` blocks. This provides clear struct
 
 - Every test file must have a parent `describe` block that wraps all tests (e.g., `describe("items", () => { ... })`)
 - The parent `describe` block should contain all `let` variable declarations and `beforeEach` hooks
-- Individual `it` tests should be grouped under nested `describe` blocks that describe the function or feature being tested
+- Use nested `describe` blocks only when grouping multiple functions or features - if all tests are for a single function, the parent `describe` is sufficient
 - Use descriptive names for `describe` blocks that clearly indicate what is being tested
 
 ## Examples
@@ -56,6 +56,18 @@ Test files should follow this structure:
 ```typescript
 import { describe, it, expect, beforeEach } from "vitest";
 
+// For a single function with multiple tests
+describe("functionName", () => {
+  it("should do something", () => {
+    // test code
+  });
+
+  it("should handle edge case", () => {
+    // test code
+  });
+});
+
+// For multiple functions or features
 describe("moduleName", () => {
   let asAlice: TestIdentity;
   let listId: Id<"lists">;
@@ -66,6 +78,12 @@ describe("moduleName", () => {
 
   describe("moduleName.functionName", () => {
     it("should do something", async () => {
+      // test code
+    });
+  });
+
+  describe("moduleName.anotherFunction", () => {
+    it("should do something else", async () => {
       // test code
     });
   });

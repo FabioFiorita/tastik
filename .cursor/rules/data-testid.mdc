@@ -1,0 +1,36 @@
+---
+description: Always use data-testid for testable components
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# Use data-testid for Testable Components
+
+Always add `data-testid` attributes to interactive components and key UI elements that need to be tested.
+
+## Why
+
+- `data-testid` provides stable, reliable selectors for tests
+- Avoids flaky tests that rely on accessible names, text content, or DOM structure
+- Makes tests more resilient to UI changes that don't affect functionality
+
+## Rules
+
+- Add `data-testid` to all interactive components (buttons, links, inputs, dropdowns, etc.)
+- Use descriptive, kebab-case names (e.g., `data-testid="mode-toggle-trigger"`)
+- Prefer `data-testid` over role-based queries when the component is complex or has multiple similar elements
+- Use `getByTestId` or `queryByTestId` in tests instead of fragile selectors
+
+```typescript
+// ❌ BAD - relying on accessible name matching
+const triggers = screen.getAllByRole("button", { name: /toggle theme/i });
+expect(triggers[0]).toBeInTheDocument();
+
+// ✅ GOOD - using data-testid
+<DropdownMenuTrigger data-testid="mode-toggle-trigger">
+  ...
+</DropdownMenuTrigger>
+
+const trigger = screen.getByTestId("mode-toggle-trigger");
+expect(trigger).toBeInTheDocument();
+```

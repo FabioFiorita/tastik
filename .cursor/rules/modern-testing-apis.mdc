@@ -1,0 +1,147 @@
+---
+description: Modern React Testing Library APIs and best practices
+globs: **/*.{test,spec}.{ts,tsx}
+alwaysApply: false
+---
+
+# Modern Testing APIs
+
+Use the latest React Testing Library APIs and best practices for 2026.
+
+## User Interactions
+
+- **Use `userEvent` instead of `fireEvent`**: `userEvent` simulates real user interactions more accurately.
+- **Always use `async/await`**: User interactions are asynchronous and must be awaited.
+- **Use `userEvent.setup()`**: Create a user instance at the start of each test.
+
+```typescript
+// ❌ BAD - using deprecated fireEvent
+import { fireEvent, render, screen } from "@testing-library/react";
+
+it("clicks button", () => {
+  render(<Button />);
+  fireEvent.click(screen.getByRole("button"));
+  expect(screen.getByText("Clicked")).toBeInTheDocument();
+});
+
+// ✅ GOOD - using modern userEvent with async/await
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+it("clicks button", async () => {
+  const user = userEvent.setup();
+  render(<Button />);
+  await user.click(screen.getByRole("button"));
+  expect(screen.getByText("Clicked")).toBeInTheDocument();
+});
+```
+
+## Avoid waitFor When Possible
+
+- **Prefer `findBy*` queries**: They have built-in waiting and are more readable.
+- **Only use `waitFor` for complex async conditions**: When you need to wait for something that isn't a DOM element.
+
+```typescript
+// ❌ BAD - using waitFor unnecessarily
+import { render, screen, waitFor } from "@testing-library/react";
+
+it("shows content", async () => {
+  render(<Component />);
+  await waitFor(() => {
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+});
+
+// ✅ GOOD - using findBy* with built-in waiting
+import { render, screen } from "@testing-library/react";
+
+it("shows content", async () => {
+  render(<Component />);
+  expect(await screen.findByText("Content")).toBeInTheDocument();
+});
+```
+
+## Avoid act() Wrapper
+
+- **Don't manually wrap with `act()`**: React Testing Library handles this automatically.
+- **Only use `act()` if explicitly needed**: For testing React internals or edge cases.
+
+```typescript
+// ❌ BAD - unnecessary act() wrapper
+import { act, render, screen } from "@testing-library/react";
+
+it("updates state", () => {
+  render(<Component />);
+  act(() => {
+    screen.getByRole("button").click();
+  });
+});
+
+// ✅ GOOD - React Testing Library handles act() automatically
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+it("updates state", async () => {
+  const user = userEvent.setup();
+  render(<Component />);
+  await user.click(screen.getByRole("button"));
+});
+```
+
+## Mock External Dependencies
+
+- **Mock external components/libraries**: Use `vi.mock()` to mock third-party dependencies.
+- **Mock at module level**: Place mocks before imports when possible.
+- **Provide realistic mock implementations**: Mocks should behave like the real thing.
+
+```typescript
+// ✅ GOOD - mocking external dependency
+import { vi } from "vitest";
+
+const mockSetTheme = vi.fn();
+
+vi.mock("next-themes", () => ({
+  useTheme: () => ({
+    setTheme: mockSetTheme,
+    theme: "light",
+  }),
+}));
+
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ModeToggle } from "./mode-toggle";
+
+it("calls setTheme", async () => {
+  const user = userEvent.setup();
+  render(<ModeToggle />);
+  await user.click(screen.getByRole("button", { name: /toggle theme/i }));
+  await user.click(await screen.findByText("Dark"));
+  expect(mockSetTheme).toHaveBeenCalledWith("dark");
+});
+```
+
+## DOM Matchers
+
+- **Use `@testing-library/jest-dom` matchers**: Provides better assertions like `toBeInTheDocument()`, `toHaveClass()`, etc.
+- **Setup in test configuration**: Import `@testing-library/jest-dom/vitest` in your test setup file.
+
+```typescript
+// ✅ GOOD - using jest-dom matchers
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+it("renders component", () => {
+  render(<Component />);
+  expect(screen.getByRole("button")).toBeInTheDocument();
+  expect(screen.getByText("Hello")).toHaveClass("text-lg");
+});
+```
+
+## Best Practices Summary
+
+1. Use `userEvent.setup()` and `await` all interactions
+2. Prefer `findBy*` queries over `waitFor` + `getBy*`
+3. Never manually wrap with `act()`
+4. Mock external dependencies at module level
+5. All test functions should be `async` when using user interactions
+6. Use `@testing-library/jest-dom` matchers for better assertions

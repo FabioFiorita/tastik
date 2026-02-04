@@ -15,6 +15,7 @@ export function ModeToggle() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
+				data-testid="mode-toggle-trigger"
 				className={cn(
 					buttonVariants({ variant: "outline", size: "sm" }),
 					"relative",
@@ -25,13 +26,22 @@ export function ModeToggle() {
 				<span className="sr-only">Toggle theme</span>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => setTheme("light")}>
+				<DropdownMenuItem
+					data-testid="mode-toggle-light"
+					onClick={() => setTheme("light")}
+				>
 					Light
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme("dark")}>
+				<DropdownMenuItem
+					data-testid="mode-toggle-dark"
+					onClick={() => setTheme("dark")}
+				>
 					Dark
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme("system")}>
+				<DropdownMenuItem
+					data-testid="mode-toggle-system"
+					onClick={() => setTheme("system")}
+				>
 					System
 				</DropdownMenuItem>
 			</DropdownMenuContent>

@@ -2,12 +2,17 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
-import { assertListsUnderLimit, MAX_ITEMS_PER_LIST } from "./lib/limits";
 import {
+	assertListsUnderLimit,
+	FREE_ALLOWED_LIST_TYPES,
+	MAX_ITEMS_PER_LIST,
+} from "./lib/limits";
+import {
+	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
-	requireSubscription,
+	requirePaidFeature,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import { validateListName } from "./lib/validation";
@@ -26,7 +31,6 @@ export const getUserLists = query({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		await requireSubscription(ctx, userId);
 
 		// Get owned lists
 		const ownedListsQuery = ctx.db
@@ -78,8 +82,7 @@ export const getList = query({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId, list, isOwner } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		const { list, isOwner } = await requireListAccess(ctx, args.listId);
 		return { ...list, isOwner };
 	},
 });
@@ -97,15 +100,23 @@ export const createList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		await requireSubscription(ctx, userId);
+		const isSubscribed = await isUserSubscribed(ctx, userId);
 		await assertRateLimit(ctx, "createList", userId);
-		await assertListsUnderLimit(ctx, userId);
+		await assertListsUnderLimit(ctx, userId, isSubscribed);
+
+		const listType = args.type ?? "simple";
+		if (!isSubscribed && !FREE_ALLOWED_LIST_TYPES.includes(listType)) {
+			throw new ConvexError(
+				appError("UPGRADE_REQUIRED", "Upgrade to Pro to use this list type"),
+			);
+		}
+
 		validateListName(args.name);
 		await ctx.db.insert("lists", {
 			ownerId: userId,
 			name: args.name.trim(),
 			icon: args.icon,
-			type: args.type ?? "simple",
+			type: listType,
 			status: "active",
 			sortBy: "created_at",
 			sortAscending: true,
@@ -133,7 +144,13 @@ export const updateList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+
+		if (
+			args.type !== undefined &&
+			!FREE_ALLOWED_LIST_TYPES.includes(args.type)
+		) {
+			await requirePaidFeature(ctx, userId, "this list type");
+		}
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -166,8 +183,7 @@ export const deleteList = mutation({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, args.listId);
 
 		// Delete all items in the list
 		const items = await ctx.db
@@ -211,8 +227,7 @@ export const archiveList = mutation({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, args.listId);
 		await ctx.db.patch(args.listId, { status: "archived" });
 	},
 });
@@ -225,8 +240,7 @@ export const restoreList = mutation({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, args.listId);
 		await ctx.db.patch(args.listId, { status: "active" });
 	},
 });
@@ -241,9 +255,18 @@ export const duplicateList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId, list } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		const isSubscribed = await isUserSubscribed(ctx, userId);
 		await assertRateLimit(ctx, "duplicateList", userId);
-		await assertListsUnderLimit(ctx, userId);
+		await assertListsUnderLimit(ctx, userId, isSubscribed);
+
+		if (!isSubscribed && !FREE_ALLOWED_LIST_TYPES.includes(list.type)) {
+			throw new ConvexError(
+				appError(
+					"UPGRADE_REQUIRED",
+					"Upgrade to Pro to duplicate this list type",
+				),
+			);
+		}
 
 		// Fetch source items
 		const sourceItems = await ctx.db
@@ -328,8 +351,7 @@ export const exportList = query({
 		),
 	},
 	handler: async (ctx, args) => {
-		const { userId, list } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		const { list } = await requireListAccess(ctx, args.listId);
 
 		// Fetch items
 		const items = await ctx.db

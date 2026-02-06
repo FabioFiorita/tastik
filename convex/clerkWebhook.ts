@@ -1,0 +1,385 @@
+import { v } from "convex/values";
+import { Webhook } from "svix";
+import { internal } from "./_generated/api";
+import { httpAction, internalMutation } from "./_generated/server";
+import { normalizeEmail } from "./lib/validation";
+
+type ClerkUserEvent = {
+	data: {
+		id: string;
+		email_addresses: Array<{
+			email_address: string;
+			id: string;
+		}>;
+		primary_email_address_id: string;
+		first_name: string | null;
+		last_name: string | null;
+		image_url: string | null;
+	};
+	type: string;
+};
+
+type ClerkDeleteEvent = {
+	data: {
+		id: string;
+	};
+	type: string;
+};
+
+type BillingPayer = {
+	user_id?: string;
+	organization_id?: string;
+};
+
+type BillingPlan = {
+	id: string;
+	slug: string;
+	name: string;
+};
+
+type BillingSubscriptionItemWebhookData = {
+	id: string;
+	status: string;
+	plan_period: "month" | "annual";
+	period_start: number;
+	period_end?: number;
+	canceled_at?: number;
+	plan?: BillingPlan | null;
+	plan_id?: string | null;
+	payer?: BillingPayer;
+	amount: { amount: number };
+};
+
+type BillingSubscriptionWebhookData = {
+	id: string;
+	status: string;
+	payer_id: string;
+	payer: BillingPayer;
+	items: BillingSubscriptionItemWebhookData[];
+};
+
+type ClerkBillingEvent = {
+	data: BillingSubscriptionWebhookData | BillingSubscriptionItemWebhookData;
+	type: string;
+};
+
+export const upsertUser = internalMutation({
+	args: {
+		clerkId: v.string(),
+		email: v.optional(v.string()),
+		name: v.optional(v.string()),
+		image: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const existingUser = await ctx.db
+			.query("users")
+			.withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+			.unique();
+
+		if (existingUser) {
+			await ctx.db.patch(existingUser._id, {
+				email: args.email,
+				name: args.name,
+				image: args.image,
+				lastSeenAt: Date.now(),
+			});
+		} else {
+			await ctx.db.insert("users", {
+				clerkId: args.clerkId,
+				email: args.email,
+				name: args.name,
+				image: args.image,
+				termsAcceptedAt: Date.now(),
+				lastSeenAt: Date.now(),
+			});
+		}
+	},
+});
+
+export const deleteUserData = internalMutation({
+	args: { clerkId: v.string() },
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+			.unique();
+		if (!user) return;
+
+		const userId = user._id;
+
+		// Delete owned lists and their related data
+		const ownedLists = ctx.db
+			.query("lists")
+			.withIndex("by_owner", (q) => q.eq("ownerId", userId));
+		for await (const list of ownedLists) {
+			const items = ctx.db
+				.query("items")
+				.withIndex("by_list", (q) => q.eq("listId", list._id));
+			for await (const item of items) {
+				await ctx.db.delete(item._id);
+			}
+			const tags = ctx.db
+				.query("listTags")
+				.withIndex("by_list", (q) => q.eq("listId", list._id));
+			for await (const tag of tags) {
+				await ctx.db.delete(tag._id);
+			}
+			const editors = ctx.db
+				.query("listEditors")
+				.withIndex("by_list", (q) => q.eq("listId", list._id));
+			for await (const editor of editors) {
+				await ctx.db.delete(editor._id);
+			}
+			await ctx.db.delete(list._id);
+		}
+
+		// Delete editor entries where this user was added to others' lists
+		const editorEntries = ctx.db
+			.query("listEditors")
+			.withIndex("by_user", (q) => q.eq("userId", userId));
+		for await (const entry of editorEntries) {
+			await ctx.db.delete(entry._id);
+		}
+
+		// Delete subscription
+		const subscription = await ctx.db
+			.query("subscriptions")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.unique();
+		if (subscription) {
+			await ctx.db.delete(subscription._id);
+		}
+
+		// Delete user document
+		await ctx.db.delete(userId);
+	},
+});
+
+export const handleBillingEvent = internalMutation({
+	args: {
+		eventId: v.string(),
+		eventType: v.string(),
+		clerkUserId: v.string(),
+		clerkSubscriptionId: v.optional(v.string()),
+		clerkSubscriptionItemId: v.optional(v.string()),
+		planSlug: v.optional(v.string()),
+		periodStart: v.optional(v.number()),
+		periodEnd: v.optional(v.number()),
+		canceledAt: v.optional(v.number()),
+		itemStatus: v.optional(v.string()),
+		isFreeTrial: v.optional(v.boolean()),
+	},
+	handler: async (ctx, args) => {
+		// Idempotency check
+		const existing = await ctx.db
+			.query("processedWebhookEvents")
+			.withIndex("by_event_id", (q) => q.eq("eventId", args.eventId))
+			.unique();
+		if (existing) return;
+
+		// Find user by Clerk ID
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkUserId))
+			.unique();
+		if (!user) {
+			await ctx.db.insert("processedWebhookEvents", {
+				eventId: args.eventId,
+			});
+			return;
+		}
+
+		const userId = user._id;
+		const existingSubscription = await ctx.db
+			.query("subscriptions")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.unique();
+
+		type SubscriptionStatus =
+			| "inactive"
+			| "trialing"
+			| "active"
+			| "past_due"
+			| "canceled";
+
+		let status: SubscriptionStatus | undefined;
+		let canceledAt: number | undefined;
+
+		switch (args.eventType) {
+			// Subscription-level events
+			case "subscription.created":
+			case "subscription.active": {
+				status = "active";
+				break;
+			}
+			case "subscription.pastDue": {
+				status = "past_due";
+				break;
+			}
+			// Subscription item events
+			case "subscriptionItem.created": {
+				status = args.isFreeTrial ? "trialing" : "active";
+				break;
+			}
+			case "subscriptionItem.active": {
+				status = "active";
+				break;
+			}
+			case "subscriptionItem.canceled": {
+				// Keep current status until period ends, just record canceledAt
+				canceledAt = args.canceledAt ?? Date.now();
+				status =
+					existingSubscription?.status === "trialing"
+						? "trialing"
+						: existingSubscription?.status === "active"
+							? "active"
+							: "canceled";
+				break;
+			}
+			case "subscriptionItem.ended": {
+				status = "inactive";
+				break;
+			}
+			case "subscriptionItem.pastDue": {
+				status = "past_due";
+				break;
+			}
+			case "subscriptionItem.abandoned":
+			case "subscriptionItem.incomplete": {
+				// No subscription change needed
+				await ctx.db.insert("processedWebhookEvents", {
+					eventId: args.eventId,
+				});
+				return;
+			}
+			default: {
+				await ctx.db.insert("processedWebhookEvents", {
+					eventId: args.eventId,
+				});
+				return;
+			}
+		}
+
+		const payload = {
+			status,
+			clerkSubscriptionId: args.clerkSubscriptionId,
+			clerkSubscriptionItemId: args.clerkSubscriptionItemId,
+			planSlug: args.planSlug,
+			currentPeriodStart: args.periodStart,
+			currentPeriodEnd: args.periodEnd,
+			canceledAt,
+		};
+
+		if (existingSubscription) {
+			await ctx.db.patch(existingSubscription._id, payload);
+		} else {
+			await ctx.db.insert("subscriptions", {
+				userId,
+				...payload,
+			});
+		}
+
+		await ctx.db.insert("processedWebhookEvents", {
+			eventId: args.eventId,
+		});
+	},
+});
+
+export const handleClerkWebhook = httpAction(async (ctx, request) => {
+	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+	if (!webhookSecret) {
+		return new Response("Webhook secret not configured", { status: 500 });
+	}
+
+	const svixId = request.headers.get("svix-id");
+	const svixTimestamp = request.headers.get("svix-timestamp");
+	const svixSignature = request.headers.get("svix-signature");
+
+	if (!svixId || !svixTimestamp || !svixSignature) {
+		return new Response("Missing svix headers", { status: 400 });
+	}
+
+	const body = await request.text();
+
+	const wh = new Webhook(webhookSecret);
+	let event: ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
+	try {
+		event = wh.verify(body, {
+			"svix-id": svixId,
+			"svix-timestamp": svixTimestamp,
+			"svix-signature": svixSignature,
+		}) as ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
+	} catch {
+		return new Response("Invalid webhook signature", { status: 400 });
+	}
+
+	const { type, data } = event;
+
+	if (type === "user.created" || type === "user.updated") {
+		const userData = data as ClerkUserEvent["data"];
+		const clerkId = userData.id;
+		const primaryEmail = userData.email_addresses.find(
+			(e) => e.id === userData.primary_email_address_id,
+		);
+		const email = primaryEmail
+			? normalizeEmail(primaryEmail.email_address)
+			: undefined;
+		const firstName = userData.first_name ?? "";
+		const lastName = userData.last_name ?? "";
+		const name = `${firstName} ${lastName}`.trim() || undefined;
+		const image = userData.image_url ?? undefined;
+
+		await ctx.runMutation(internal.clerkWebhook.upsertUser, {
+			clerkId,
+			email,
+			name,
+			image,
+		});
+	} else if (type === "user.deleted") {
+		const clerkId = data.id;
+		await ctx.runMutation(internal.clerkWebhook.deleteUserData, {
+			clerkId,
+		});
+	} else if (type.startsWith("subscription.")) {
+		const subscriptionData = data as BillingSubscriptionWebhookData;
+		const clerkUserId = subscriptionData.payer?.user_id;
+		if (!clerkUserId) {
+			return new Response(null, { status: 200 });
+		}
+
+		const firstItem = subscriptionData.items?.[0];
+
+		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
+			eventId: svixId,
+			eventType: type,
+			clerkUserId,
+			clerkSubscriptionId: subscriptionData.id,
+			clerkSubscriptionItemId: firstItem?.id,
+			planSlug: firstItem?.plan?.slug,
+			periodStart: firstItem?.period_start,
+			periodEnd: firstItem?.period_end,
+			isFreeTrial: firstItem?.amount?.amount === 0,
+		});
+	} else if (type.startsWith("subscriptionItem.")) {
+		const itemData = data as BillingSubscriptionItemWebhookData;
+		const clerkUserId = itemData.payer?.user_id;
+		if (!clerkUserId) {
+			return new Response(null, { status: 200 });
+		}
+
+		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
+			eventId: svixId,
+			eventType: type,
+			clerkUserId,
+			clerkSubscriptionItemId: itemData.id,
+			planSlug: itemData.plan?.slug,
+			periodStart: itemData.period_start,
+			periodEnd: itemData.period_end,
+			canceledAt: itemData.canceled_at,
+			itemStatus: itemData.status,
+			isFreeTrial: itemData.amount?.amount === 0,
+		});
+	}
+
+	return new Response(null, { status: 200 });
+});

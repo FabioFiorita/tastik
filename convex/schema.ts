@@ -1,12 +1,11 @@
-import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 // Enum validators for reuse
 export const itemTypeValidator = v.union(
 	v.literal("simple"),
-	v.literal("stepper"),
 	v.literal("calculator"),
+	v.literal("stepper"),
 	v.literal("kanban"),
 );
 
@@ -18,8 +17,8 @@ export const itemStatusValidator = v.union(
 
 export const listTypeValidator = v.union(
 	v.literal("simple"),
-	v.literal("stepper"),
 	v.literal("calculator"),
+	v.literal("stepper"),
 	v.literal("kanban"),
 	v.literal("multi"),
 );
@@ -44,19 +43,16 @@ export const subscriptionStatusValidator = v.union(
 );
 
 const schema = defineSchema({
-	...authTables,
 	users: defineTable({
+		clerkId: v.string(),
 		name: v.optional(v.string()),
 		image: v.optional(v.string()),
-		imageStorageId: v.optional(v.id("_storage")),
 		email: v.optional(v.string()),
-		emailVerificationTime: v.optional(v.number()),
-		phone: v.optional(v.string()),
-		phoneVerificationTime: v.optional(v.number()),
-		isAnonymous: v.optional(v.boolean()),
 		termsAcceptedAt: v.optional(v.number()),
 		lastSeenAt: v.optional(v.number()),
-	}).index("email", ["email"]),
+	})
+		.index("email", ["email"])
+		.index("by_clerk_id", ["clerkId"]),
 
 	// User lists with type, icon, settings
 	lists: defineTable({
@@ -132,15 +128,15 @@ const schema = defineSchema({
 	subscriptions: defineTable({
 		userId: v.id("users"),
 		status: subscriptionStatusValidator,
-		externalCustomerId: v.optional(v.string()),
-		externalTransactionId: v.optional(v.string()),
+		clerkSubscriptionId: v.optional(v.string()),
+		clerkSubscriptionItemId: v.optional(v.string()),
+		planSlug: v.optional(v.string()),
 		currentPeriodStart: v.optional(v.number()),
 		currentPeriodEnd: v.optional(v.number()),
 		canceledAt: v.optional(v.number()),
 	})
 		.index("by_user", ["userId"])
-		.index("by_external_customer", ["externalCustomerId"])
-		.index("by_external_transaction", ["externalTransactionId"]),
+		.index("by_clerk_subscription", ["clerkSubscriptionId"]),
 
 	processedWebhookEvents: defineTable({
 		eventId: v.string(),

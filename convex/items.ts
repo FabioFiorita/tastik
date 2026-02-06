@@ -4,9 +4,9 @@ import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import {
+	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
-	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import {
@@ -27,8 +27,7 @@ export const getListItems = query({
 		includeCompleted: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, args.listId);
 
 		let items: Doc<"items">[];
 		if (args.includeCompleted === false) {
@@ -61,8 +60,7 @@ export const getItem = query({
 		const item = await ctx.db.get(args.itemId);
 		if (!item) return null;
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 		return item;
 	},
 });
@@ -84,9 +82,9 @@ export const createItem = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		const isSubscribed = await isUserSubscribed(ctx, userId);
 		await assertRateLimit(ctx, "createItem", userId);
-		await assertItemsUnderLimit(ctx, args.listId);
+		await assertItemsUnderLimit(ctx, args.listId, isSubscribed);
 		validateItemName(args.name);
 
 		// Validate optional fields if provided
@@ -159,8 +157,7 @@ export const updateItem = mutation({
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -231,8 +228,7 @@ export const toggleItemComplete = mutation({
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 
 		const newCompleted = !item.completed;
 		await ctx.db.patch(args.itemId, {
@@ -263,8 +259,7 @@ export const incrementItemValue = mutation({
 			);
 		}
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 
 		let newValue: number;
 		if (args.setValue !== undefined) {
@@ -307,8 +302,7 @@ export const updateItemStatus = mutation({
 			);
 		}
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 
 		const completed = args.status === "done";
 		await ctx.db.patch(args.itemId, {
@@ -332,8 +326,7 @@ export const deleteItem = mutation({
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
-		const { userId } = await requireListAccess(ctx, item.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, item.listId);
 		await ctx.db.delete(args.itemId);
 	},
 });
@@ -348,7 +341,6 @@ export const searchItems = query({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		await requireSubscription(ctx, userId);
 
 		const searchQuery = args.query.trim();
 		if (!searchQuery) {

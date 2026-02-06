@@ -9,18 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
 import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
 import { Route as ProtectedListsListIdRouteImport } from './routes/_protected/lists.$listId'
 
-const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
+const SubscriptionRoute = SubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRoute = PublicRouteImport.update({
@@ -35,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PublicSignInRoute = PublicSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => PublicRoute,
 } as any)
 const PubliclegalTermsRoute = PubliclegalTermsRouteImport.update({
   id: '/(legal)/terms',
@@ -59,7 +65,8 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
+  '/subscription': typeof SubscriptionRoute
+  '/sign-in': typeof PublicSignInRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
@@ -67,7 +74,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
+  '/subscription': typeof SubscriptionRoute
+  '/sign-in': typeof PublicSignInRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
@@ -78,7 +86,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/sign-in': typeof SignInRoute
+  '/subscription': typeof SubscriptionRoute
+  '/_public/sign-in': typeof PublicSignInRoute
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
@@ -88,19 +97,28 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/subscription'
     | '/sign-in'
     | '/lists/$listId'
     | '/privacy'
     | '/support'
     | '/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/lists/$listId' | '/privacy' | '/support' | '/terms'
+  to:
+    | '/'
+    | '/subscription'
+    | '/sign-in'
+    | '/lists/$listId'
+    | '/privacy'
+    | '/support'
+    | '/terms'
   id:
     | '__root__'
     | '/'
     | '/_protected'
     | '/_public'
-    | '/sign-in'
+    | '/subscription'
+    | '/_public/sign-in'
     | '/_protected/lists/$listId'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
@@ -111,16 +129,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  SignInRoute: typeof SignInRoute
+  SubscriptionRoute: typeof SubscriptionRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
+    '/subscription': {
+      id: '/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof SubscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -143,6 +161,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_public/sign-in': {
+      id: '/_public/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof PublicSignInRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_public/(legal)/terms': {
       id: '/_public/(legal)/terms'
@@ -188,12 +213,14 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
+  PublicSignInRoute: typeof PublicSignInRoute
   PubliclegalPrivacyRoute: typeof PubliclegalPrivacyRoute
   PubliclegalSupportRoute: typeof PubliclegalSupportRoute
   PubliclegalTermsRoute: typeof PubliclegalTermsRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
+  PublicSignInRoute: PublicSignInRoute,
   PubliclegalPrivacyRoute: PubliclegalPrivacyRoute,
   PubliclegalSupportRoute: PubliclegalSupportRoute,
   PubliclegalTermsRoute: PubliclegalTermsRoute,
@@ -206,17 +233,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  SignInRoute: SignInRoute,
+  SubscriptionRoute: SubscriptionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

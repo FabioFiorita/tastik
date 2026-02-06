@@ -6,7 +6,7 @@ import {
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
-	requireSubscription,
+	requirePaidFeature,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import {
@@ -23,8 +23,7 @@ export const getListEditors = query({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, args.listId);
 
 		const editors = await ctx.db
 			.query("listEditors")
@@ -64,7 +63,7 @@ export const addListEditor = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, ownerId);
+		await requirePaidFeature(ctx, ownerId, "sharing");
 		await assertRateLimit(ctx, "addListEditor", ownerId);
 
 		if (args.nickname) {
@@ -121,7 +120,7 @@ export const addListEditorByEmail = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, ownerId);
+		await requirePaidFeature(ctx, ownerId, "sharing");
 		await assertRateLimit(ctx, "addListEditor", ownerId);
 
 		if (!isValidEmail(args.email)) {
@@ -196,8 +195,7 @@ export const updateEditorNickname = mutation({
 			);
 		}
 
-		const { userId } = await requireListOwner(ctx, editor.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, editor.listId);
 
 		// Validate nickname if it's a string
 		if (args.nickname !== null && args.nickname !== undefined) {
@@ -222,8 +220,7 @@ export const removeListEditor = mutation({
 			);
 		}
 
-		const { userId } = await requireListOwner(ctx, editor.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, editor.listId);
 		await ctx.db.delete(args.editorId);
 	},
 });
@@ -237,7 +234,6 @@ export const leaveList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		await requireSubscription(ctx, userId);
 
 		// Find the editor entry for current user
 		const editorEntry = await ctx.db

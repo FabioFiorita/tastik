@@ -92,25 +92,6 @@ export function mockNextThemes(overrides?: {
 }
 
 /**
- * Mock for @/hooks/use-auth
- * Returns controllable mock function that can be used with mockReturnValue
- * Use this in component tests that use authentication
- *
- * @example
- * const { mockUseAuth } = mockUseAuth();
- * mockUseAuth.mockReturnValue({ isLoading: false, isAuthenticated: true, ... });
- */
-export function mockUseAuth() {
-	const mockAuthFn = vi.fn();
-
-	vi.mock("@/hooks/use-auth", () => ({
-		useAuth: () => mockAuthFn(),
-	}));
-
-	return { mockUseAuth: mockAuthFn };
-}
-
-/**
  * Mock for @/hooks/queries/use-current-user
  * Returns controllable mock function that can be used with mockReturnValue
  * Use this in component tests that need user data

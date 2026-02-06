@@ -25,15 +25,10 @@ export const THIRD_PARTY_SERVICES = [
 		privacyPolicyUrl: "https://www.convex.dev/privacy",
 	},
 	{
-		name: "RevenueCat",
-		purpose: "Subscription management and payment processing",
-		dataShared: "Email address, subscription status, and transaction data",
-		privacyPolicyUrl: "https://www.revenuecat.com/privacy",
-	},
-	{
-		name: "Resend",
-		purpose: "Transactional email delivery (OTP codes, account notifications)",
-		dataShared: "Email address and message content",
-		privacyPolicyUrl: "https://resend.com/legal/privacy-policy",
+		name: "Clerk",
+		purpose: "Authentication, account management, and subscription billing",
+		dataShared:
+			"Email address, name, profile image, subscription status, and transaction data",
+		privacyPolicyUrl: "https://clerk.com/legal/privacy",
 	},
 ];

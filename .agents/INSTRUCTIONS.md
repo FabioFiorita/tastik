@@ -62,6 +62,7 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - One component per file. Split multiple components into separate files.
 - No duplication. Extract repeated layout/structure into a reusable component.
 - Navigation: Use TanStack Router's `useNavigate()` hook for navigation. Never use `window.location.href` or `window.location` for navigation. Use `navigate({ to: "/path" })` or `navigate({ to: "/path", replace: true })` as needed.
+- Routes: define `pendingComponent` and `errorComponent` on every route; keep route `component` focused on rendering loaded data.
 
 ## Component Files
 - Component files should contain only the component and small, component-specific helpers.
@@ -100,7 +101,6 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - Use helpers from `@/lib/helpers/mocks` instead of manually mocking common modules.
 - `mockReactRouterLink()` - Mocks TanStack Router Link component (use when rendering Link components).
 - `mockReactRouter()` - Mocks navigation hooks (useNavigate, useLocation, useParams).
-- `mockUseAuth()` - Returns controllable mock for `useAuth` hook (use `mockReturnValue` in tests).
 - `mockUseCurrentUser()` - Returns controllable mock for `useCurrentUser` hook (use `mockReturnValue` in tests).
 - `mockNextThemes()` - Mocks next-themes (use `returnFunction: true` if you need controllable `useTheme`).
 - Never manually mock these modules - always use the helpers to avoid duplication.

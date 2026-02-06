@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -7,11 +6,18 @@ import { appError } from "./errors";
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
 ): Promise<Id<"users">> {
-	const userId = await getAuthUserId(ctx);
-	if (!userId) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) {
 		throw new ConvexError(appError("NOT_AUTHENTICATED", "Not authenticated"));
 	}
-	return userId;
+	const user = await ctx.db
+		.query("users")
+		.withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+		.unique();
+	if (!user) {
+		throw new ConvexError(appError("NOT_AUTHENTICATED", "User not found"));
+	}
+	return user._id;
 }
 
 export async function requireListOwner(
@@ -66,6 +72,44 @@ export async function requireListAccess(
 	}
 
 	return { userId, list, isOwner };
+}
+
+export async function isUserSubscribed(
+	ctx: QueryCtx | MutationCtx,
+	userId: Id<"users">,
+): Promise<boolean> {
+	const subscription = await ctx.db
+		.query("subscriptions")
+		.withIndex("by_user", (q) => q.eq("userId", userId))
+		.unique();
+
+	if (!subscription) return false;
+
+	if (subscription.status !== "active" && subscription.status !== "trialing") {
+		return false;
+	}
+
+	if (
+		subscription.currentPeriodEnd !== undefined &&
+		subscription.currentPeriodEnd <= Date.now()
+	) {
+		return false;
+	}
+
+	return true;
+}
+
+export async function requirePaidFeature(
+	ctx: QueryCtx | MutationCtx,
+	userId: Id<"users">,
+	featureName: string,
+): Promise<void> {
+	const subscribed = await isUserSubscribed(ctx, userId);
+	if (!subscribed) {
+		throw new ConvexError(
+			appError("UPGRADE_REQUIRED", `Upgrade to Pro to use ${featureName}`),
+		);
+	}
 }
 
 export async function requireSubscription(

@@ -5,7 +5,7 @@ import { assertTagsUnderLimit } from "./lib/limits";
 import {
 	requireListAccess,
 	requireListOwner,
-	requireSubscription,
+	requirePaidFeature,
 } from "./lib/permissions";
 import { validateTagName } from "./lib/validation";
 
@@ -17,8 +17,7 @@ export const getListTags = query({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListAccess(ctx, args.listId);
 
 		const tags = await ctx.db
 			.query("listTags")
@@ -41,7 +40,7 @@ export const createTag = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requirePaidFeature(ctx, userId, "tags");
 		await assertTagsUnderLimit(ctx, args.listId);
 		validateTagName(args.name);
 
@@ -84,7 +83,7 @@ export const updateTag = mutation({
 		}
 
 		const { userId } = await requireListOwner(ctx, tag.listId);
-		await requireSubscription(ctx, userId);
+		await requirePaidFeature(ctx, userId, "tags");
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -135,7 +134,7 @@ export const deleteTag = mutation({
 		}
 
 		const { userId } = await requireListOwner(ctx, tag.listId);
-		await requireSubscription(ctx, userId);
+		await requirePaidFeature(ctx, userId, "tags");
 
 		const itemsWithTag = await ctx.db
 			.query("items")

@@ -17,18 +17,20 @@ export const modules = Object.fromEntries(
 export async function createTestEnv() {
 	const t = convexTest(schema, modules);
 	rateLimiterTest.register(t);
-	const aliceUserId = await t.run(async (ctx) => {
-		return await ctx.db.insert("users", {});
+	const aliceClerkId = "clerk_alice_123";
+	await t.run(async (ctx) => {
+		await ctx.db.insert("users", { clerkId: aliceClerkId });
 	});
 	const asAlice = t.withIdentity({
-		subject: aliceUserId,
+		subject: aliceClerkId,
 		name: "Alice",
 	});
 	async function createUserIdentity(name: string) {
-		const userId = await t.run(async (ctx) => {
-			return await ctx.db.insert("users", {});
+		const clerkId = `clerk_${name.toLowerCase()}_${Date.now()}`;
+		await t.run(async (ctx) => {
+			await ctx.db.insert("users", { clerkId });
 		});
-		return t.withIdentity({ subject: userId, name });
+		return t.withIdentity({ subject: clerkId, name });
 	}
 	return { t, asAlice, createUserIdentity };
 }

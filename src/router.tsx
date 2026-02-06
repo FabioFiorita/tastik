@@ -1,16 +1,21 @@
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { Toaster } from "sonner";
+import { LoadingState } from "@/components/common/loading-state";
+import { RouteErrorComponent } from "@/components/layout/route-error-component";
 import { env } from "@/lib/env";
 import { ThemeProvider } from "./components/common/theme-provider";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
 	const CONVEX_URL = env.VITE_CONVEX_URL;
-	const convexQueryClient = new ConvexQueryClient(CONVEX_URL);
+	const convexClient = new ConvexReactClient(CONVEX_URL);
+	const convexQueryClient = new ConvexQueryClient(convexClient);
 
 	const queryClient: QueryClient = new QueryClient({
 		defaultOptions: {
@@ -26,15 +31,19 @@ export function getRouter() {
 		createRouter({
 			routeTree,
 			defaultPreload: "intent",
-			context: { queryClient },
+			defaultPendingComponent: LoadingState,
+			defaultErrorComponent: RouteErrorComponent,
+			context: { queryClient, convexClient, convexQueryClient },
 			scrollRestoration: true,
-			Wrap: ({ children }) => (
-				<ConvexAuthProvider client={convexQueryClient.convexClient}>
-					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-						{children}
-						<Toaster richColors position="top-right" />
-					</ThemeProvider>
-				</ConvexAuthProvider>
+			InnerWrap: ({ children }) => (
+				<ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+					<ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
+						<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+							{children}
+							<Toaster richColors position="top-right" />
+						</ThemeProvider>
+					</ConvexProviderWithClerk>
+				</ClerkProvider>
 			),
 		}),
 		queryClient,

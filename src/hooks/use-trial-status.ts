@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useSubscription } from "@/contexts/subscription";
+import { useSubscriptionQuery } from "@/hooks/queries/use-subscription";
 
 export function useTrialStatus() {
-	const { status, currentPeriodEnd } = useSubscription();
+	const { status, currentPeriodEnd } = useSubscriptionQuery();
 	return useMemo(() => {
 		const isTrialing = status === "trialing";
 		const trialEnd = currentPeriodEnd ? new Date(currentPeriodEnd) : null;

@@ -2,10 +2,10 @@ import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useTrialStatus } from "./use-trial-status";
 
-const mockUseSubscription = vi.fn();
+const mockUseSubscriptionQuery = vi.fn();
 
-vi.mock("@/contexts/subscription", () => ({
-	useSubscription: () => mockUseSubscription(),
+vi.mock("@/hooks/queries/use-subscription", () => ({
+	useSubscriptionQuery: () => mockUseSubscriptionQuery(),
 }));
 
 describe("use-trial-status", () => {
@@ -19,7 +19,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns isTrialing true when status is trialing", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: Date.now() + 7 * 24 * 60 * 60 * 1000,
 		});
@@ -33,7 +33,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns isTrialing false when status is active", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "active",
 			currentPeriodEnd: Date.now() + 30 * 24 * 60 * 60 * 1000,
 		});
@@ -44,7 +44,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns null trialLabel when currentPeriodEnd is not provided", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: undefined,
 		});
@@ -59,7 +59,7 @@ describe("use-trial-status", () => {
 
 	it("calculates correct trial days left", () => {
 		const daysLeft = 5;
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: Date.now() + daysLeft * 24 * 60 * 60 * 1000,
 		});
@@ -71,7 +71,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns singular 'day' for 1 day left", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: Date.now() + 24 * 60 * 60 * 1000,
 		});
@@ -83,7 +83,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns 0 days left when trial has ended", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: Date.now() - 24 * 60 * 60 * 1000,
 		});
@@ -95,7 +95,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("returns 0 days left when currentPeriodEnd is in the past", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "trialing",
 			currentPeriodEnd: Date.now() - 1000,
 		});
@@ -106,7 +106,7 @@ describe("use-trial-status", () => {
 	});
 
 	it("handles inactive status", () => {
-		mockUseSubscription.mockReturnValue({
+		mockUseSubscriptionQuery.mockReturnValue({
 			status: "inactive",
 			currentPeriodEnd: undefined,
 		});

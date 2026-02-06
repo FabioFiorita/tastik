@@ -1,25 +1,58 @@
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	mockNextThemes,
-	mockReactRouterLink,
-	mockUseAuth,
-} from "@/lib/helpers/mocks";
+import { mockNextThemes } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { PublicHeader } from "./public-header";
 
 mockNextThemes();
-mockReactRouterLink();
-const { mockUseAuth: mockAuth } = mockUseAuth();
+
+const mockUseAuth = vi.fn();
+
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("@tanstack/react-router")>();
+	return {
+		...actual,
+		Link: ({
+			to,
+			children,
+			className,
+			...props
+		}: {
+			to: string;
+			children: React.ReactNode;
+			className?: string;
+			[key: string]: unknown;
+		}) => React.createElement("a", { href: to, className, ...props }, children),
+	};
+});
+
+vi.mock("@clerk/tanstack-react-start", () => ({
+	useAuth: () => mockUseAuth(),
+	SignInButton: ({
+		children,
+	}: {
+		children: React.ReactNode;
+		mode?: string;
+		forceRedirectUrl?: string;
+	}) =>
+		React.createElement(
+			"div",
+			{ "data-testid": "clerk-sign-in-button" },
+			children,
+		),
+	UserButton: () =>
+		React.createElement("div", { "data-testid": "clerk-user-button" }),
+}));
+
+vi.mock("@clerk/themes", () => ({
+	shadcn: {},
+}));
 
 describe("public-header", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: false,
-			signIn: vi.fn(),
-			signOut: vi.fn(),
-		});
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 	});
 
 	it("renders header element", () => {
@@ -71,25 +104,15 @@ describe("public-header", () => {
 		expect(screen.getByTestId("mode-toggle-trigger")).toBeInTheDocument();
 	});
 
-	it("renders AuthButton component when not authenticated", () => {
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: false,
-			signIn: vi.fn(),
-			signOut: vi.fn(),
-		});
+	it("renders sign in button when not authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 		renderWithUser(<PublicHeader />);
 		expect(screen.getByTestId("auth-button-sign-in")).toBeInTheDocument();
 	});
 
-	it("renders AuthButton component when authenticated", () => {
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: true,
-			signIn: vi.fn(),
-			signOut: vi.fn(),
-		});
+	it("renders UserButton when authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
 		renderWithUser(<PublicHeader />);
-		expect(screen.getByTestId("auth-button-sign-out")).toBeInTheDocument();
+		expect(screen.getByTestId("auth-button-user")).toBeInTheDocument();
 	});
 });

@@ -87,18 +87,6 @@ export function validateNotes(notes: string): void {
 	}
 }
 
-export function validateUserName(name: string): void {
-	const trimmed = name.trim();
-	if (trimmed.length > VALIDATION_LIMITS.USER_NAME_MAX) {
-		throw new ConvexError(
-			appError(
-				"INVALID_INPUT",
-				`Name must be ${VALIDATION_LIMITS.USER_NAME_MAX} characters or less`,
-			),
-		);
-	}
-}
-
 export function validateNickname(nickname: string): void {
 	if (nickname.length > VALIDATION_LIMITS.NICKNAME_MAX) {
 		throw new ConvexError(

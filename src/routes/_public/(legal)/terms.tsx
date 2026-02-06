@@ -44,13 +44,35 @@ function TermsPage() {
 						</section>
 
 						<section className="space-y-3">
-							<h2 className="font-semibold text-2xl">
-								Subscription and Payment
-							</h2>
+							<h2 className="font-semibold text-2xl">Plans and Pricing</h2>
 							<p className="text-muted-foreground">
-								Tastik offers a subscription service priced at $1.99 per month,
-								processed through RevenueCat. New subscribers may be eligible
-								for a free trial period.
+								Tastik offers a Free plan and a Pro plan. The Free plan is
+								available at no cost with the following limits:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>Up to 5 lists</li>
+								<li>Up to 50 items per list</li>
+								<li>Simple and calculator list types only</li>
+								<li>
+									No tags, list sharing, or premium list types (stepper, kanban,
+									multi)
+								</li>
+							</ul>
+							<p className="text-muted-foreground">
+								The Pro plan is available for $1.99 per month, processed through
+								Clerk. Pro subscribers get access to:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>Up to 50 lists</li>
+								<li>Up to 500 items per list</li>
+								<li>
+									All list types (simple, calculator, stepper, kanban, multi)
+								</li>
+								<li>Tags (up to 50 per list)</li>
+								<li>List sharing with editors (up to 10 per list)</li>
+							</ul>
+							<p className="text-muted-foreground">
+								New Pro subscribers may be eligible for a free trial period.
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>
@@ -59,12 +81,11 @@ function TermsPage() {
 								</li>
 								<li>
 									You can manage your subscription and cancel at any time
-									through your account settings or the RevenueCat consumer
-									portal
+									through your account settings or the Clerk consumer portal
 								</li>
 								<li>
-									Refund requests can be made through your RevenueCat consumer
-									portal or by emailing {LEGAL_CONTACT.supportEmail}
+									Refund requests can be made through your Clerk consumer portal
+									or by emailing {LEGAL_CONTACT.supportEmail}
 								</li>
 								<li>
 									We reserve the right to change subscription pricing with at

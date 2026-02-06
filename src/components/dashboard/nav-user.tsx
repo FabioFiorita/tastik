@@ -1,53 +1,51 @@
-import { LogOut } from "lucide-react";
-import { NavUserAccountMenu } from "@/components/dashboard/nav-user-account-menu";
-import { NavUserSupportMenu } from "@/components/dashboard/nav-user-support-menu";
-import { NavUserThemeMenu } from "@/components/dashboard/nav-user-theme-menu";
-import { NavUserTrigger } from "@/components/dashboard/nav-user-trigger";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { UserButton } from "@clerk/tanstack-react-start";
+import { shadcn } from "@clerk/themes";
+import { FileText, HelpCircle, Monitor, Moon, Shield, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
-import { useAuth } from "@/hooks/use-auth";
 
 export function NavUser() {
-	const user = useCurrentUser();
-	const { signOut } = useAuth();
-
-	if (!user) {
-		return null;
-	}
+	const { theme, setTheme } = useTheme();
 
 	return (
 		<SidebarMenu>
-			<SidebarMenuItem>
-				<DropdownMenu>
-					<NavUserTrigger />
-					<DropdownMenuContent
-						className="w-56"
-						side="top"
-						align="end"
-						data-testid="nav-user-menu"
-					>
-						<NavUserAccountMenu />
-						<DropdownMenuSeparator />
-						<NavUserThemeMenu />
-						<DropdownMenuSeparator />
-						<NavUserSupportMenu />
-						<DropdownMenuSeparator />
-						<DropdownMenuItem
-							onClick={signOut}
-							className="cursor-pointer text-destructive focus:text-destructive"
-							data-testid="nav-user-sign-out"
-						>
-							<LogOut className="mr-2 size-4" />
-							<span>Sign out</span>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+			<SidebarMenuItem data-testid="nav-user">
+				<UserButton appearance={{ theme: shadcn }} showName>
+					<UserButton.MenuItems>
+						<UserButton.Action
+							label={`Light${theme === "light" ? " ✓" : ""}`}
+							labelIcon={<Sun className="size-4" />}
+							onClick={() => setTheme("light")}
+						/>
+						<UserButton.Action
+							label={`Dark${theme === "dark" ? " ✓" : ""}`}
+							labelIcon={<Moon className="size-4" />}
+							onClick={() => setTheme("dark")}
+						/>
+						<UserButton.Action
+							label={`System${theme === "system" ? " ✓" : ""}`}
+							labelIcon={<Monitor className="size-4" />}
+							onClick={() => setTheme("system")}
+						/>
+					</UserButton.MenuItems>
+					<UserButton.MenuItems>
+						<UserButton.Link
+							label="Help Center"
+							labelIcon={<HelpCircle className="size-4" />}
+							href="/support"
+						/>
+						<UserButton.Link
+							label="Privacy Policy"
+							labelIcon={<Shield className="size-4" />}
+							href="/privacy"
+						/>
+						<UserButton.Link
+							label="Terms of Service"
+							labelIcon={<FileText className="size-4" />}
+							href="/terms"
+						/>
+					</UserButton.MenuItems>
+				</UserButton>
 			</SidebarMenuItem>
 		</SidebarMenu>
 	);

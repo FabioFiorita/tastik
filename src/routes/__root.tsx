@@ -1,3 +1,5 @@
+import { auth } from "@clerk/tanstack-react-start/server";
+import type { ConvexQueryClient } from "@convex-dev/react-query";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
@@ -7,12 +9,25 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { createServerFn } from "@tanstack/react-start";
+import type { ConvexReactClient } from "convex/react";
 import { NotFoundPage } from "@/components/common/not-found";
-import { ErrorBoundary } from "@/components/layout/error-boundary";
 import appCss from "../styles.css?url";
+
+const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
+	const clerkAuth = await auth();
+	const token = await clerkAuth.getToken({ template: "convex" });
+
+	return {
+		userId: clerkAuth.userId,
+		token,
+	};
+});
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
+	convexClient: ConvexReactClient;
+	convexQueryClient: ConvexQueryClient;
 }>()({
 	head: () => ({
 		meta: [
@@ -35,11 +50,20 @@ export const Route = createRootRouteWithContext<{
 		],
 	}),
 
-	errorComponent: ({ error, reset }) => (
-		<ErrorBoundary error={error} reset={reset} />
-	),
-
 	notFoundComponent: () => <NotFoundPage />,
+
+	beforeLoad: async (ctx) => {
+		const { userId, token } = await fetchClerkAuth();
+
+		if (token) {
+			ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+		}
+
+		return {
+			userId,
+			token,
+		};
+	},
 
 	shellComponent: RootDocument,
 });

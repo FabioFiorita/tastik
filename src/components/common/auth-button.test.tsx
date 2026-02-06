@@ -1,13 +1,31 @@
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockReactRouterLink, mockUseAuth } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { AuthButton } from "./auth-button";
 
-mockReactRouterLink();
-const { mockUseAuth: mockAuth } = mockUseAuth();
+const mockUseAuth = vi.fn();
 
-const mockSignIn = vi.fn();
-const mockSignOut = vi.fn();
+vi.mock("@clerk/tanstack-react-start", () => ({
+	useAuth: () => mockUseAuth(),
+	SignInButton: ({
+		children,
+	}: {
+		children: React.ReactNode;
+		mode?: string;
+		forceRedirectUrl?: string;
+	}) =>
+		React.createElement(
+			"div",
+			{ "data-testid": "clerk-sign-in-button" },
+			children,
+		),
+	UserButton: () =>
+		React.createElement("div", { "data-testid": "clerk-user-button" }),
+}));
+
+vi.mock("@clerk/themes", () => ({
+	shadcn: {},
+}));
 
 describe("auth-button", () => {
 	beforeEach(() => {
@@ -15,12 +33,7 @@ describe("auth-button", () => {
 	});
 
 	it("renders loading state with disabled button", () => {
-		mockAuth.mockReturnValue({
-			isLoading: true,
-			isAuthenticated: false,
-			signIn: mockSignIn,
-			signOut: mockSignOut,
-		});
+		mockUseAuth.mockReturnValue({ isLoaded: false, isSignedIn: false });
 
 		renderWithUser(<AuthButton />);
 		const loadingButton = screen.getByTestId("auth-button-loading");
@@ -29,46 +42,21 @@ describe("auth-button", () => {
 		expect(loadingButton).toHaveTextContent("...");
 	});
 
-	it("renders sign out button when authenticated", () => {
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: true,
-			signIn: mockSignIn,
-			signOut: mockSignOut,
-		});
+	it("renders UserButton when authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
 
 		renderWithUser(<AuthButton />);
-		const signOutButton = screen.getByTestId("auth-button-sign-out");
-		expect(signOutButton).toBeInTheDocument();
-		expect(signOutButton).toHaveTextContent("Sign out");
+		expect(screen.getByTestId("auth-button-user")).toBeInTheDocument();
+		expect(screen.getByTestId("clerk-user-button")).toBeInTheDocument();
 	});
 
-	it("calls signOut when sign out button is clicked", async () => {
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: true,
-			signIn: mockSignIn,
-			signOut: mockSignOut,
-		});
-
-		const { user } = renderWithUser(<AuthButton />);
-		const signOutButton = screen.getByTestId("auth-button-sign-out");
-		await user.click(signOutButton);
-		expect(mockSignOut).toHaveBeenCalledTimes(1);
-	});
-
-	it("renders sign in link when not authenticated", () => {
-		mockAuth.mockReturnValue({
-			isLoading: false,
-			isAuthenticated: false,
-			signIn: mockSignIn,
-			signOut: mockSignOut,
-		});
+	it("renders sign in button when not authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 
 		renderWithUser(<AuthButton />);
-		const signInLink = screen.getByTestId("auth-button-sign-in");
-		expect(signInLink).toBeInTheDocument();
-		expect(signInLink).toHaveTextContent("Sign in");
-		expect(signInLink).toHaveAttribute("href", "/sign-in");
+		expect(screen.getByTestId("auth-button-sign-in")).toBeInTheDocument();
+		expect(screen.getByTestId("auth-button-sign-in")).toHaveTextContent(
+			"Sign in",
+		);
 	});
 });

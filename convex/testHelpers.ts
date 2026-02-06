@@ -1,13 +1,12 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { requireAuth } from "./lib/permissions";
 
 export const seedSubscribedUser = internalMutation({
 	args: {},
 	returns: v.null(),
 	handler: async (ctx) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) return null;
+		const userId = await requireAuth(ctx);
 
 		const existing = await ctx.db
 			.query("subscriptions")

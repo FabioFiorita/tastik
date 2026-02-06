@@ -3,7 +3,11 @@ import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
-import { requireListAccess, requireSubscription } from "./lib/permissions";
+import {
+	requireAuth,
+	requireListAccess,
+	requireSubscription,
+} from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import {
 	validateDescription,
@@ -331,5 +335,73 @@ export const deleteItem = mutation({
 		const { userId } = await requireListAccess(ctx, item.listId);
 		await requireSubscription(ctx, userId);
 		await ctx.db.delete(args.itemId);
+	},
+});
+
+/**
+ * Search items across all accessible lists.
+ * Returns items with list info for grouping in search results.
+ */
+export const searchItems = query({
+	args: {
+		query: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await requireAuth(ctx);
+		await requireSubscription(ctx, userId);
+
+		const searchQuery = args.query.trim();
+		if (!searchQuery) {
+			return [];
+		}
+
+		// Get user's owned lists
+		const ownedLists = await ctx.db
+			.query("lists")
+			.withIndex("by_owner", (q) => q.eq("ownerId", userId))
+			.collect();
+
+		// Get lists where user is an editor
+		const editorEntries = await ctx.db
+			.query("listEditors")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.collect();
+
+		// Batch fetch shared lists
+		const sharedListIds = editorEntries.map((entry) => entry.listId);
+		const sharedLists = await Promise.all(
+			sharedListIds.map((id) => ctx.db.get(id)),
+		);
+
+		// Build a map of accessible lists for quick lookup
+		const accessibleListsMap = new Map<string, Doc<"lists">>();
+		for (const list of ownedLists) {
+			accessibleListsMap.set(list._id, list);
+		}
+		for (const list of sharedLists) {
+			if (list) {
+				accessibleListsMap.set(list._id, list);
+			}
+		}
+
+		// Search items using the search index
+		const searchResults = await ctx.db
+			.query("items")
+			.withSearchIndex("search_name", (q) => q.search("name", searchQuery))
+			.take(50);
+
+		// Filter to only items in accessible lists and enrich with list info
+		const accessibleItems = searchResults
+			.filter((item) => accessibleListsMap.has(item.listId))
+			.map((item) => {
+				const list = accessibleListsMap.get(item.listId);
+				return {
+					...item,
+					listName: list?.name ?? "Unknown",
+					listIcon: list?.icon,
+				};
+			});
+
+		return accessibleItems;
 	},
 });

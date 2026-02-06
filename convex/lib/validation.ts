@@ -9,6 +9,7 @@ export const VALIDATION_LIMITS = {
 	ITEM_NAME_MAX: 200,
 	NOTES_MAX: 2000,
 	NICKNAME_MAX: 50,
+	USER_NAME_MAX: 100,
 	TAG_NAME_MAX: 30,
 	DESCRIPTION_MAX: 500,
 	URL_MAX: 2048,
@@ -86,9 +87,18 @@ export function validateNotes(notes: string): void {
 	}
 }
 
-/**
- * Validate nickname.
- */
+export function validateUserName(name: string): void {
+	const trimmed = name.trim();
+	if (trimmed.length > VALIDATION_LIMITS.USER_NAME_MAX) {
+		throw new ConvexError(
+			appError(
+				"INVALID_INPUT",
+				`Name must be ${VALIDATION_LIMITS.USER_NAME_MAX} characters or less`,
+			),
+		);
+	}
+}
+
 export function validateNickname(nickname: string): void {
 	if (nickname.length > VALIDATION_LIMITS.NICKNAME_MAX) {
 		throw new ConvexError(

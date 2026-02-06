@@ -1,14 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { mockReactRouterLink } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { CTA } from "./cta";
 
-vi.mock("@tanstack/react-router", () => ({
-	Link: ({ to, children, className, ...props }: any) => (
-		<a href={to} className={className} {...props}>
-			{children}
-		</a>
-	),
-}));
+mockReactRouterLink();
 
 describe("cta", () => {
 	it("renders main heading", () => {

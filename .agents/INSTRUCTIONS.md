@@ -61,6 +61,7 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - Mobile-first: base styles for mobile; use `md:` or `lg:` for larger breakpoints. Avoid `sm:` for layout.
 - One component per file. Split multiple components into separate files.
 - No duplication. Extract repeated layout/structure into a reusable component.
+- Navigation: Use TanStack Router's `useNavigate()` hook for navigation. Never use `window.location.href` or `window.location` for navigation. Use `navigate({ to: "/path" })` or `navigate({ to: "/path", replace: true })` as needed.
 
 ## Component Files
 - Component files should contain only the component and small, component-specific helpers.
@@ -79,8 +80,13 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 ## Convex Queries in Hooks
 - Do not call Convex queries directly in components.
 - Create hooks under `src/hooks/queries/`.
-- Hooks should return the data the UI needs (not the full query result object).
+- Hooks must return only the data (or values) the UI needs—never the raw `useQuery`/`useSuspenseQuery` result. Returning the full result defeats the wrapper (e.g. simple mocks in tests).
 - One query (or related set) per hook file. Name hooks after the data they expose.
+
+## Business Logic in Hooks
+- Keep business logic out of UI components. Derived state (e.g. isTrialing, trialDaysLeft from subscription) belongs in dedicated hooks under `src/hooks/`. Components consume the hook result, not raw context plus local computation.
+- Action handlers (create, update, delete operations) belong in hooks under `src/hooks/actions/`, not in components. Components should only handle presentation and delegate business logic to hooks.
+- Mutation hooks must wrap `useMutation` with business logic (loading state, error handling, toast notifications). Never return the raw `useMutation` result—this makes hooks easier to mock and test. Example: return `{ createItem, isPending }` not `useMutation(api.items.createItem)`.
 
 ## Testing
 - Import from `@/test-utils` instead of `@testing-library/react` for component tests.
@@ -89,6 +95,15 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - Use `userEvent` instead of `fireEvent` for all user interactions (always with `async/await`).
 - Organize all tests within `describe` blocks; every test file must have a parent `describe` block.
 - For environment-dependent tests, mock the consumer module that uses env vars (see `testing-setup` skill).
+
+## Test Helpers
+- Use helpers from `@/lib/helpers/mocks` instead of manually mocking common modules.
+- `mockReactRouterLink()` - Mocks TanStack Router Link component (use when rendering Link components).
+- `mockReactRouter()` - Mocks navigation hooks (useNavigate, useLocation, useParams).
+- `mockUseAuth()` - Returns controllable mock for `useAuth` hook (use `mockReturnValue` in tests).
+- `mockUseCurrentUser()` - Returns controllable mock for `useCurrentUser` hook (use `mockReturnValue` in tests).
+- `mockNextThemes()` - Mocks next-themes (use `returnFunction: true` if you need controllable `useTheme`).
+- Never manually mock these modules - always use the helpers to avoid duplication.
 
 ## Post-Change Checks
 After any code change, run:

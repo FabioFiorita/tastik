@@ -3,21 +3,23 @@ import { SUBSCRIPTION_PERK_ITEMS } from "@/lib/constants/subscription";
 import { renderWithUser, screen } from "@/test-utils";
 import { SubscriptionPage } from "./subscription-page";
 
-const mockUser = {
+const mockUserData = {
 	_id: "user_123" as const,
 	email: "test@example.com",
 };
 
+import { mockUseCurrentUser } from "@/lib/helpers/mocks";
+
 const mockBuildRevenueCatUrl = vi.fn();
-const mockUseCurrentUser = vi.fn();
+const { mockUseCurrentUser: mockUser } = mockUseCurrentUser();
 
 // Mock the revenue-cat module to avoid env var issues
 vi.mock("@/lib/revenue-cat", () => ({
-	buildRevenueCatUrl: (...args: any[]) => mockBuildRevenueCatUrl(...args),
-}));
-
-vi.mock("@/hooks/queries/use-current-user", () => ({
-	useCurrentUser: () => mockUseCurrentUser(),
+	buildRevenueCatUrl: (params: {
+		userId: string;
+		packageId: "monthly" | "yearly";
+		email: string;
+	}) => mockBuildRevenueCatUrl(params),
 }));
 
 describe("subscription-page", () => {
@@ -30,13 +32,13 @@ describe("subscription-page", () => {
 	});
 
 	it("renders null when no user", () => {
-		mockUseCurrentUser.mockReturnValue(null);
+		mockUser.mockReturnValue(null);
 		const { container } = renderWithUser(<SubscriptionPage />);
 		expect(container.firstChild).toBeNull();
 	});
 
 	it("renders main heading and subheading", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		renderWithUser(<SubscriptionPage />);
 		expect(screen.getByTestId("subscription-page-heading")).toHaveTextContent(
 			"Unlock every list, everywhere.",
@@ -49,7 +51,7 @@ describe("subscription-page", () => {
 	});
 
 	it("renders PricingFeatures component", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		renderWithUser(<SubscriptionPage />);
 		expect(screen.getByTestId("subscription-page-features")).toHaveTextContent(
 			"5 list types",
@@ -57,7 +59,7 @@ describe("subscription-page", () => {
 	});
 
 	it("renders all subscription perk items", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		renderWithUser(<SubscriptionPage />);
 		SUBSCRIPTION_PERK_ITEMS.forEach((perk) => {
 			const testId = `subscription-perk-${perk.title.toLowerCase().replace(/\s+/g, "-")}`;
@@ -68,7 +70,7 @@ describe("subscription-page", () => {
 	});
 
 	it("renders PlanCards component", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		renderWithUser(<SubscriptionPage />);
 		// Check for plan card presence
 		expect(screen.getByTestId("plan-card-monthly")).toBeInTheDocument();
@@ -76,7 +78,7 @@ describe("subscription-page", () => {
 	});
 
 	it("renders user email information", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		renderWithUser(<SubscriptionPage />);
 		expect(screen.getByTestId("subscription-page-signed-in")).toHaveTextContent(
 			"test@example.com",
@@ -87,7 +89,7 @@ describe("subscription-page", () => {
 	});
 
 	it("handles missing email gracefully", () => {
-		mockUseCurrentUser.mockReturnValue({ _id: "user_123", email: null });
+		mockUser.mockReturnValue({ _id: "user_123", email: null });
 		renderWithUser(<SubscriptionPage />);
 		expect(screen.getByTestId("subscription-page-signed-in")).toHaveTextContent(
 			"user",
@@ -95,14 +97,14 @@ describe("subscription-page", () => {
 	});
 
 	it("renders RevenueCat checkout links for plans", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 		const { container } = renderWithUser(<SubscriptionPage />);
 		const links = container.querySelectorAll('a[href*="revenuecat"]');
 		expect(links.length).toBeGreaterThan(0);
 	});
 
 	it("builds correct RevenueCat URLs with user data", () => {
-		mockUseCurrentUser.mockReturnValue(mockUser);
+		mockUser.mockReturnValue(mockUserData);
 
 		renderWithUser(<SubscriptionPage />);
 

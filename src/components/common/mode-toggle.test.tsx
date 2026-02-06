@@ -1,15 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockNextThemes } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { ModeToggle } from "./mode-toggle";
 
-const mockSetTheme = vi.fn();
-
-vi.mock("next-themes", () => ({
-	useTheme: () => ({
-		setTheme: mockSetTheme,
-		theme: "light",
-	}),
-}));
+const { mockSetTheme } = mockNextThemes();
 
 describe("mode-toggle", () => {
 	beforeEach(() => {

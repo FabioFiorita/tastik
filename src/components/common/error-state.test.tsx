@@ -1,12 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockReactRouter } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { ErrorState } from "./error-state";
 
-const mockNavigate = vi.fn();
-
-vi.mock("@tanstack/react-router", () => ({
-	useNavigate: () => mockNavigate,
-}));
+const { mockNavigate } = mockReactRouter();
 
 describe("error-state", () => {
 	beforeEach(() => {

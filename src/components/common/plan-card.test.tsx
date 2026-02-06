@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mockPlanMonthly, mockPlanYearly } from "@/__tests__/helpers/fixtures";
+import { mockPlanMonthly, mockPlanYearly } from "@/lib/helpers/fixtures";
 import { renderWithUser, screen } from "@/test-utils";
 import { PlanCard } from "./plan-card";
 

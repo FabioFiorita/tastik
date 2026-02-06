@@ -1,19 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockUseAuth } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { OAuthButtons } from "./oauth-buttons";
 
+const { mockUseAuth: mockAuth } = mockUseAuth();
 const mockSignIn = vi.fn();
 const mockOnError = vi.fn();
-
-vi.mock("@/hooks/use-auth", () => ({
-	useAuth: () => ({
-		signIn: mockSignIn,
-	}),
-}));
 
 describe("oauth-buttons", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockAuth.mockReturnValue({ signIn: mockSignIn });
 	});
 
 	it("renders both Google and Apple buttons", () => {

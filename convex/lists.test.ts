@@ -1,8 +1,8 @@
 import { ConvexError } from "convex/values";
 import { beforeEach, describe, expect, it } from "vitest";
-import { api } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
-import { VALIDATION_LIMITS } from "../lib/validation";
+import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { VALIDATION_LIMITS } from "./lib/validation";
 import {
 	createTestEnv,
 	seedSubscribedUser,

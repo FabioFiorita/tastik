@@ -1,22 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockReactRouterLink, mockUseAuth } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { AuthButton } from "./auth-button";
 
+mockReactRouterLink();
+const { mockUseAuth: mockAuth } = mockUseAuth();
+
 const mockSignIn = vi.fn();
 const mockSignOut = vi.fn();
-const mockUseAuth = vi.fn();
-
-vi.mock("@/hooks/use-auth", () => ({
-	useAuth: () => mockUseAuth(),
-}));
-
-vi.mock("@tanstack/react-router", () => ({
-	Link: ({ to, children, className, ...props }: any) => (
-		<a href={to} className={className} {...props}>
-			{children}
-		</a>
-	),
-}));
 
 describe("auth-button", () => {
 	beforeEach(() => {
@@ -24,7 +15,7 @@ describe("auth-button", () => {
 	});
 
 	it("renders loading state with disabled button", () => {
-		mockUseAuth.mockReturnValue({
+		mockAuth.mockReturnValue({
 			isLoading: true,
 			isAuthenticated: false,
 			signIn: mockSignIn,
@@ -39,7 +30,7 @@ describe("auth-button", () => {
 	});
 
 	it("renders sign out button when authenticated", () => {
-		mockUseAuth.mockReturnValue({
+		mockAuth.mockReturnValue({
 			isLoading: false,
 			isAuthenticated: true,
 			signIn: mockSignIn,
@@ -53,7 +44,7 @@ describe("auth-button", () => {
 	});
 
 	it("calls signOut when sign out button is clicked", async () => {
-		mockUseAuth.mockReturnValue({
+		mockAuth.mockReturnValue({
 			isLoading: false,
 			isAuthenticated: true,
 			signIn: mockSignIn,
@@ -67,7 +58,7 @@ describe("auth-button", () => {
 	});
 
 	it("renders sign in link when not authenticated", () => {
-		mockUseAuth.mockReturnValue({
+		mockAuth.mockReturnValue({
 			isLoading: false,
 			isAuthenticated: false,
 			signIn: mockSignIn,

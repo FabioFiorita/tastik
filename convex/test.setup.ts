@@ -1,7 +1,7 @@
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
-import { internal } from "../_generated/api";
-import schema from "../schema";
+import { internal } from "./_generated/api";
+import schema from "./schema";
 
 const allModules = import.meta.glob("../**/*.ts");
 export const modules = Object.fromEntries(

@@ -1,0 +1,34 @@
+import { useMutation } from "convex/react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+
+export function useCreateItem() {
+	const mutation = useMutation(api.items.createItem);
+	const [isPending, setIsPending] = useState(false);
+
+	const createItem = async (args: {
+		listId: Id<"lists">;
+		name: string;
+		type?: "simple" | "stepper" | "calculator" | "kanban";
+		targetValue?: number;
+		step?: number;
+		tagId?: Id<"listTags">;
+		description?: string;
+		url?: string;
+		notes?: string;
+	}) => {
+		setIsPending(true);
+		try {
+			await mutation(args);
+			toast.success("Item added");
+		} catch {
+			toast.error("Failed to add item");
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	return { createItem, isPending };
+}

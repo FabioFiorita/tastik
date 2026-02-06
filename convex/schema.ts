@@ -48,6 +48,7 @@ const schema = defineSchema({
 	users: defineTable({
 		name: v.optional(v.string()),
 		image: v.optional(v.string()),
+		imageStorageId: v.optional(v.id("_storage")),
 		email: v.optional(v.string()),
 		emailVerificationTime: v.optional(v.number()),
 		phone: v.optional(v.string()),
@@ -121,7 +122,11 @@ const schema = defineSchema({
 		.index("by_list_and_completed", ["listId", "completed"])
 		.index("by_list_and_tag", ["listId", "tagId"])
 		.index("by_list_and_status", ["listId", "status"])
-		.index("by_list_and_sortOrder", ["listId", "sortOrder"]),
+		.index("by_list_and_sortOrder", ["listId", "sortOrder"])
+		.searchIndex("search_name", {
+			searchField: "name",
+			filterFields: ["listId"],
+		}),
 
 	// Payment/subscription data
 	subscriptions: defineTable({

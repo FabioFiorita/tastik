@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as PublicRouteImport } from './routes/_public'
+import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
 import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
+import { Route as ProtectedListsListIdRouteImport } from './routes/_protected/lists.$listId'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
@@ -23,6 +25,10 @@ const SignInRoute = SignInRouteImport.update({
 } as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -45,10 +51,16 @@ const PubliclegalPrivacyRoute = PubliclegalPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => PublicRoute,
 } as any)
+const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
+  id: '/lists/$listId',
+  path: '/lists/$listId',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -56,6 +68,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -63,22 +76,32 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
   '/_public/(legal)/terms': typeof PubliclegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/privacy' | '/support' | '/terms'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/lists/$listId'
+    | '/privacy'
+    | '/support'
+    | '/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/privacy' | '/support' | '/terms'
+  to: '/' | '/sign-in' | '/lists/$listId' | '/privacy' | '/support' | '/terms'
   id:
     | '__root__'
     | '/'
+    | '/_protected'
     | '/_public'
     | '/sign-in'
+    | '/_protected/lists/$listId'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
     | '/_public/(legal)/terms'
@@ -86,6 +109,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   SignInRoute: typeof SignInRoute
 }
@@ -104,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -134,8 +165,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PubliclegalPrivacyRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_protected/lists/$listId': {
+      id: '/_protected/lists/$listId'
+      path: '/lists/$listId'
+      fullPath: '/lists/$listId'
+      preLoaderRoute: typeof ProtectedListsListIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
   }
 }
+
+interface ProtectedRouteChildren {
+  ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
+}
+
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedListsListIdRoute: ProtectedListsListIdRoute,
+}
+
+const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
+  ProtectedRouteChildren,
+)
 
 interface PublicRouteChildren {
   PubliclegalPrivacyRoute: typeof PubliclegalPrivacyRoute
@@ -154,6 +204,7 @@ const PublicRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   SignInRoute: SignInRoute,
 }

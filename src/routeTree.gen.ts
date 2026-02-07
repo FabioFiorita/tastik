@@ -9,12 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicSignUpRouteImport } from './routes/_public/sign-up'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
+import { Route as ProtectedSubscriptionRouteImport } from './routes/_protected/subscription'
 import { Route as PublicSignUpSplatRouteImport } from './routes/_public/sign-up.$'
 import { Route as PublicSignInSplatRouteImport } from './routes/_public/sign-in.$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
@@ -22,11 +22,6 @@ import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
 import { Route as ProtectedListsListIdRouteImport } from './routes/_protected/lists.$listId'
 
-const SubscriptionRoute = SubscriptionRouteImport.update({
-  id: '/subscription',
-  path: '/subscription',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
@@ -49,6 +44,11 @@ const PublicSignInRoute = PublicSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
   getParentRoute: () => PublicRoute,
+} as any)
+const ProtectedSubscriptionRoute = ProtectedSubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => ProtectedRoute,
 } as any)
 const PublicSignUpSplatRoute = PublicSignUpSplatRouteImport.update({
   id: '/$',
@@ -83,7 +83,7 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/subscription': typeof SubscriptionRoute
+  '/subscription': typeof ProtectedSubscriptionRoute
   '/sign-in': typeof PublicSignInRouteWithChildren
   '/sign-up': typeof PublicSignUpRouteWithChildren
   '/lists/$listId': typeof ProtectedListsListIdRoute
@@ -95,7 +95,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/subscription': typeof SubscriptionRoute
+  '/subscription': typeof ProtectedSubscriptionRoute
   '/sign-in': typeof PublicSignInRouteWithChildren
   '/sign-up': typeof PublicSignUpRouteWithChildren
   '/lists/$listId': typeof ProtectedListsListIdRoute
@@ -110,7 +110,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/subscription': typeof SubscriptionRoute
+  '/_protected/subscription': typeof ProtectedSubscriptionRoute
   '/_public/sign-in': typeof PublicSignInRouteWithChildren
   '/_public/sign-up': typeof PublicSignUpRouteWithChildren
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
@@ -150,7 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_protected'
     | '/_public'
-    | '/subscription'
+    | '/_protected/subscription'
     | '/_public/sign-in'
     | '/_public/sign-up'
     | '/_protected/lists/$listId'
@@ -165,18 +165,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  SubscriptionRoute: typeof SubscriptionRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/subscription': {
-      id: '/subscription'
-      path: '/subscription'
-      fullPath: '/subscription'
-      preLoaderRoute: typeof SubscriptionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_public': {
       id: '/_public'
       path: ''
@@ -211,6 +203,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-in'
       preLoaderRoute: typeof PublicSignInRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_protected/subscription': {
+      id: '/_protected/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof ProtectedSubscriptionRouteImport
+      parentRoute: typeof ProtectedRoute
     }
     '/_public/sign-up/$': {
       id: '/_public/sign-up/$'
@@ -258,10 +257,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedRouteChildren {
+  ProtectedSubscriptionRoute: typeof ProtectedSubscriptionRoute
   ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedSubscriptionRoute: ProtectedSubscriptionRoute,
   ProtectedListsListIdRoute: ProtectedListsListIdRoute,
 }
 
@@ -316,7 +317,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  SubscriptionRoute: SubscriptionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

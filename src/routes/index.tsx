@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ProtectedLayout } from "@/components/dashboard/protected-layout";
 import { LandingPage } from "@/components/landing/landing-page";
+import { ProtectedLayout } from "@/components/layout/protected-layout";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ListsView } from "@/components/lists/lists-view";
 

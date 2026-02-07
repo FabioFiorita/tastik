@@ -127,6 +127,7 @@ const schema = defineSchema({
 	subscriptions: defineTable({
 		userId: v.id("users"),
 		status: subscriptionStatusValidator,
+		isActive: v.optional(v.boolean()),
 		freeTrial: v.optional(v.boolean()),
 		clerkSubscriptionId: v.optional(v.string()),
 		clerkSubscriptionItemId: v.optional(v.string()),

@@ -2,11 +2,7 @@ import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { appError } from "./errors";
-import {
-	hasTastikProPlan,
-	isPaidSubscriptionActive,
-	isSubscriptionStatusValid,
-} from "./subscription";
+import { isPaidSubscriptionActive } from "./subscription";
 
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
@@ -30,7 +26,7 @@ export async function requireListOwner(
 	listId: Id<"lists">,
 ) {
 	const userId = await requireAuth(ctx);
-	const list = await ctx.db.get(listId);
+	const list = await ctx.db.get("lists", listId);
 
 	if (!list) {
 		throw new ConvexError(appError("LIST_NOT_FOUND", "List not found"));
@@ -66,7 +62,7 @@ export async function getListAccessOrNull(
 	isOwner: boolean;
 } | null> {
 	const userId = await requireAuth(ctx);
-	const list = await ctx.db.get(listId);
+	const list = await ctx.db.get("lists", listId);
 
 	if (!list) {
 		return null;
@@ -130,7 +126,6 @@ export async function requireSubscription(
 		.query("subscriptions")
 		.withIndex("by_user", (q) => q.eq("userId", userId))
 		.unique();
-	const now = Date.now();
 
 	if (!subscription) {
 		throw new ConvexError(
@@ -138,19 +133,7 @@ export async function requireSubscription(
 		);
 	}
 
-	if (
-		!isSubscriptionStatusValid(subscription.status) ||
-		!hasTastikProPlan(subscription.planSlug)
-	) {
-		throw new ConvexError(
-			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
-		);
-	}
-
-	if (
-		subscription.currentPeriodEnd !== undefined &&
-		subscription.currentPeriodEnd <= now
-	) {
+	if (!isPaidSubscriptionActive(subscription)) {
 		throw new ConvexError(
 			appError("SUBSCRIPTION_EXPIRED", "Subscription expired"),
 		);

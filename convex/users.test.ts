@@ -47,7 +47,7 @@ describe("users", () => {
 			});
 
 			const result = await env.t.run(async (ctx) => {
-				const user = await ctx.db.get(userId);
+				const user = await ctx.db.get("users", userId);
 				const listsForUser = await ctx.db
 					.query("lists")
 					.withIndex("by_owner", (q) => q.eq("ownerId", userId))

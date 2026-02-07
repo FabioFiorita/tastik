@@ -70,17 +70,11 @@ export const getSubscription = query({
 			};
 		}
 
-		const isSubscribed =
-			subscription.status === "active" &&
-			hasTastikProPlan(subscription.planSlug) &&
-			(subscription.currentPeriodEnd === undefined ||
-				subscription.currentPeriodEnd > Date.now());
+		const isSubscribed = isPaidSubscriptionActive(subscription);
 		const isTrialing =
-			subscription.status === "active" &&
+			isSubscribed &&
 			subscription.freeTrial === true &&
-			hasTastikProPlan(subscription.planSlug) &&
-			(subscription.currentPeriodEnd === undefined ||
-				subscription.currentPeriodEnd > Date.now());
+			hasTastikProPlan(subscription.planSlug);
 
 		return {
 			isSubscribed,

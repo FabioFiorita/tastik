@@ -23,6 +23,7 @@ describe("subscriptions", () => {
 			await ctx.db.insert("subscriptions", {
 				userId,
 				status: "active",
+				isActive: false,
 				freeTrial: true,
 				planSlug: "free_user",
 				currentPeriodStart: now,
@@ -53,6 +54,7 @@ describe("subscriptions", () => {
 			await ctx.db.insert("subscriptions", {
 				userId,
 				status: "active",
+				isActive: true,
 				freeTrial: false,
 				planSlug: "tastik_pro",
 				currentPeriodStart: now,
@@ -83,6 +85,7 @@ describe("subscriptions", () => {
 			await ctx.db.insert("subscriptions", {
 				userId,
 				status: "active",
+				isActive: true,
 				freeTrial: true,
 				planSlug: "tastik_pro",
 				currentPeriodStart: now,

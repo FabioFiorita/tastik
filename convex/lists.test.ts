@@ -88,7 +88,7 @@ describe("lists", () => {
 
 		it("returns null for non-existent list id", async () => {
 			await env.t.run(async (ctx) => {
-				await ctx.db.delete(listId);
+				await ctx.db.delete("lists", listId);
 			});
 			const list = await asAlice.query(api.lists.getList, { listId });
 			expect(list).toBeNull();

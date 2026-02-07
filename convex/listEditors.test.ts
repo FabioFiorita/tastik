@@ -121,7 +121,7 @@ describe("listEditors", () => {
 			const bobUser = await asBob.query(api.users.getCurrentUser, {});
 			if (!bobUser) throw new Error("expected Bob user");
 			await env.t.run(async (ctx) => {
-				await ctx.db.patch(bobUser._id, { email: "bob@example.com" });
+				await ctx.db.patch("users", bobUser._id, { email: "bob@example.com" });
 			});
 			await asAlice.mutation(api.listEditors.addListEditorByEmail, {
 				listId,

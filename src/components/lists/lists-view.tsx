@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Archive, PlusCircle } from "lucide-react";
+import { Archive, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -41,7 +41,7 @@ export function ListsView() {
 					disabled={isCreating}
 					data-testid="create-list-button"
 				>
-					<PlusCircle className="mr-2 size-4" />
+					<Plus className="mr-2 size-4" />
 					New List
 				</Button>
 			</div>
@@ -59,7 +59,7 @@ export function ListsView() {
 					</EmptyHeader>
 					<EmptyContent>
 						<Button onClick={handleCreateList} disabled={isCreating}>
-							<PlusCircle className="mr-2 size-4" />
+							<Plus className="mr-2 size-4" />
 							Create List
 						</Button>
 					</EmptyContent>

@@ -32,7 +32,9 @@ export const getListEditors = query({
 
 		// Batch fetch user details for each editor
 		const userIds = editors.map((editor) => editor.userId);
-		const users = await Promise.all(userIds.map((id) => ctx.db.get(id)));
+		const users = await Promise.all(
+			userIds.map((id) => ctx.db.get("users", id)),
+		);
 
 		const editorsWithUsers = editors.map((editor, index) => {
 			const user = users[index];
@@ -121,7 +123,7 @@ export const addListEditor = mutation({
 			);
 		}
 
-		const user = await ctx.db.get(args.userId);
+		const user = await ctx.db.get("users", args.userId);
 		if (!user) {
 			throw new ConvexError(appError("USER_NOT_FOUND", "User not found"));
 		}
@@ -214,7 +216,7 @@ export const updateEditorNickname = mutation({
 		nickname: v.union(v.string(), v.null()),
 	},
 	handler: async (ctx, args) => {
-		const editor = await ctx.db.get(args.editorId);
+		const editor = await ctx.db.get("listEditors", args.editorId);
 		if (!editor) {
 			throw new ConvexError(
 				appError("EDITOR_ENTRY_NOT_FOUND", "Editor entry not found"),
@@ -228,7 +230,7 @@ export const updateEditorNickname = mutation({
 			validateNickname(args.nickname);
 		}
 
-		await ctx.db.patch(args.editorId, {
+		await ctx.db.patch("listEditors", args.editorId, {
 			nickname: args.nickname === null ? undefined : args.nickname,
 		});
 	},
@@ -239,7 +241,7 @@ export const removeListEditor = mutation({
 		editorId: v.id("listEditors"),
 	},
 	handler: async (ctx, args) => {
-		const editor = await ctx.db.get(args.editorId);
+		const editor = await ctx.db.get("listEditors", args.editorId);
 		if (!editor) {
 			throw new ConvexError(
 				appError("EDITOR_ENTRY_NOT_FOUND", "Editor entry not found"),
@@ -247,7 +249,7 @@ export const removeListEditor = mutation({
 		}
 
 		await requireListOwner(ctx, editor.listId);
-		await ctx.db.delete(args.editorId);
+		await ctx.db.delete("listEditors", args.editorId);
 	},
 });
 
@@ -275,6 +277,6 @@ export const leaveList = mutation({
 			);
 		}
 
-		await ctx.db.delete(editorEntry._id);
+		await ctx.db.delete("listEditors", editorEntry._id);
 	},
 });

@@ -64,7 +64,7 @@ export const getItem = query({
 		itemId: v.id("items"),
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) return null;
 
 		await requireListAccess(ctx, item.listId);
@@ -103,7 +103,7 @@ export const searchItems = query({
 		// Batch fetch shared lists
 		const sharedListIds = editorEntries.map((entry) => entry.listId);
 		const sharedLists = await Promise.all(
-			sharedListIds.map((id) => ctx.db.get(id)),
+			sharedListIds.map((id) => ctx.db.get("lists", id)),
 		);
 
 		// Build a map of accessible lists for quick lookup
@@ -230,7 +230,7 @@ export const updateItem = mutation({
 		sortOrder: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) {
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
@@ -291,7 +291,7 @@ export const updateItem = mutation({
 		);
 
 		if (Object.keys(filteredUpdates).length > 0) {
-			await ctx.db.patch(itemId, filteredUpdates);
+			await ctx.db.patch("items", itemId, filteredUpdates);
 		}
 	},
 });
@@ -304,7 +304,7 @@ export const toggleItemComplete = mutation({
 		itemId: v.id("items"),
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) {
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
@@ -312,7 +312,7 @@ export const toggleItemComplete = mutation({
 		await requireListAccess(ctx, item.listId);
 
 		const newCompleted = !item.completed;
-		await ctx.db.patch(args.itemId, {
+		await ctx.db.patch("items", args.itemId, {
 			completed: newCompleted,
 			completedAt: newCompleted ? Date.now() : undefined,
 		});
@@ -329,7 +329,7 @@ export const incrementItemValue = mutation({
 		setValue: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) {
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
@@ -355,7 +355,7 @@ export const incrementItemValue = mutation({
 		const completed =
 			item.targetValue !== undefined && newValue >= item.targetValue;
 
-		await ctx.db.patch(args.itemId, {
+		await ctx.db.patch("items", args.itemId, {
 			currentValue: newValue,
 			completed,
 			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
@@ -372,7 +372,7 @@ export const updateItemStatus = mutation({
 		status: itemStatusValidator,
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) {
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
@@ -386,7 +386,7 @@ export const updateItemStatus = mutation({
 		await requireListAccess(ctx, item.listId);
 
 		const completed = args.status === "done";
-		await ctx.db.patch(args.itemId, {
+		await ctx.db.patch("items", args.itemId, {
 			status: args.status,
 			completed,
 			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
@@ -402,7 +402,7 @@ export const deleteItem = mutation({
 		itemId: v.id("items"),
 	},
 	handler: async (ctx, args) => {
-		const item = await ctx.db.get(args.itemId);
+		const item = await ctx.db.get("items", args.itemId);
 		if (!item) {
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}

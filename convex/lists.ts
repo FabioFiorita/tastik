@@ -55,7 +55,9 @@ export const getUserLists = query({
 
 		// Batch fetch lists (more efficient than N+1 queries)
 		const listIds = editorEntries.map((entry) => entry.listId);
-		const sharedLists = await Promise.all(listIds.map((id) => ctx.db.get(id)));
+		const sharedLists = await Promise.all(
+			listIds.map((id) => ctx.db.get("lists", id)),
+		);
 
 		// Filter out nulls and apply status filter
 		const validSharedLists = sharedLists.filter(
@@ -223,7 +225,7 @@ export const updateList = mutation({
 		}
 
 		if (Object.keys(filteredUpdates).length > 0) {
-			await ctx.db.patch(listId, filteredUpdates);
+			await ctx.db.patch("lists", listId, filteredUpdates);
 		}
 	},
 });
@@ -245,7 +247,7 @@ export const deleteList = mutation({
 			.collect();
 
 		for (const item of items) {
-			await ctx.db.delete(item._id);
+			await ctx.db.delete("items", item._id);
 		}
 
 		// Delete all tags in the list
@@ -255,7 +257,7 @@ export const deleteList = mutation({
 			.collect();
 
 		for (const tag of tags) {
-			await ctx.db.delete(tag._id);
+			await ctx.db.delete("listTags", tag._id);
 		}
 
 		// Delete all editor entries
@@ -265,10 +267,10 @@ export const deleteList = mutation({
 			.collect();
 
 		for (const editor of editors) {
-			await ctx.db.delete(editor._id);
+			await ctx.db.delete("listEditors", editor._id);
 		}
 
-		await ctx.db.delete(args.listId);
+		await ctx.db.delete("lists", args.listId);
 	},
 });
 
@@ -281,7 +283,7 @@ export const archiveList = mutation({
 	},
 	handler: async (ctx, args) => {
 		await requireListOwner(ctx, args.listId);
-		await ctx.db.patch(args.listId, { status: "archived" });
+		await ctx.db.patch("lists", args.listId, { status: "archived" });
 	},
 });
 
@@ -294,7 +296,7 @@ export const restoreList = mutation({
 	},
 	handler: async (ctx, args) => {
 		await requireListOwner(ctx, args.listId);
-		await ctx.db.patch(args.listId, { status: "active" });
+		await ctx.db.patch("lists", args.listId, { status: "active" });
 	},
 });
 

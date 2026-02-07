@@ -18,6 +18,7 @@ export const seedSubscribedUser = internalMutation({
 			await ctx.db.insert("subscriptions", {
 				userId,
 				status: "active",
+				isActive: true,
 				freeTrial: false,
 				planSlug: "tastik_pro",
 				currentPeriodStart: now,

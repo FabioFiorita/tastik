@@ -195,7 +195,7 @@ export const upsertUser = internalMutation({
 			.unique();
 
 		if (existingUser) {
-			await ctx.db.patch(existingUser._id, {
+			await ctx.db.patch("users", existingUser._id, {
 				email: args.email,
 				name: args.name,
 				image: args.image,
@@ -234,21 +234,21 @@ export const deleteUserData = internalMutation({
 				.query("items")
 				.withIndex("by_list", (q) => q.eq("listId", list._id));
 			for await (const item of items) {
-				await ctx.db.delete(item._id);
+				await ctx.db.delete("items", item._id);
 			}
 			const tags = ctx.db
 				.query("listTags")
 				.withIndex("by_list", (q) => q.eq("listId", list._id));
 			for await (const tag of tags) {
-				await ctx.db.delete(tag._id);
+				await ctx.db.delete("listTags", tag._id);
 			}
 			const editors = ctx.db
 				.query("listEditors")
 				.withIndex("by_list", (q) => q.eq("listId", list._id));
 			for await (const editor of editors) {
-				await ctx.db.delete(editor._id);
+				await ctx.db.delete("listEditors", editor._id);
 			}
-			await ctx.db.delete(list._id);
+			await ctx.db.delete("lists", list._id);
 		}
 
 		// Delete editor entries where this user was added to others' lists
@@ -256,7 +256,7 @@ export const deleteUserData = internalMutation({
 			.query("listEditors")
 			.withIndex("by_user", (q) => q.eq("userId", userId));
 		for await (const entry of editorEntries) {
-			await ctx.db.delete(entry._id);
+			await ctx.db.delete("listEditors", entry._id);
 		}
 
 		// Delete subscription
@@ -265,11 +265,11 @@ export const deleteUserData = internalMutation({
 			.withIndex("by_user", (q) => q.eq("userId", userId))
 			.unique();
 		if (subscription) {
-			await ctx.db.delete(subscription._id);
+			await ctx.db.delete("subscriptions", subscription._id);
 		}
 
 		// Delete user document
-		await ctx.db.delete(userId);
+		await ctx.db.delete("users", userId);
 	},
 });
 
@@ -371,24 +371,34 @@ export const handleBillingEvent = internalMutation({
 			}
 		}
 
+		const planSlug = args.planSlug ?? existingSubscription?.planSlug;
+		const currentPeriodEnd =
+			args.periodEnd ?? existingSubscription?.currentPeriodEnd;
+
+		// Precompute isActive for query efficiency
+		const isActive =
+			status === "active" &&
+			planSlug !== undefined &&
+			(currentPeriodEnd === undefined || currentPeriodEnd > Date.now());
+
 		const payload = {
 			status,
+			isActive,
 			freeTrial,
 			clerkSubscriptionId:
 				args.clerkSubscriptionId ?? existingSubscription?.clerkSubscriptionId,
 			clerkSubscriptionItemId:
 				args.clerkSubscriptionItemId ??
 				existingSubscription?.clerkSubscriptionItemId,
-			planSlug: args.planSlug ?? existingSubscription?.planSlug,
+			planSlug,
 			currentPeriodStart:
 				args.periodStart ?? existingSubscription?.currentPeriodStart,
-			currentPeriodEnd:
-				args.periodEnd ?? existingSubscription?.currentPeriodEnd,
+			currentPeriodEnd,
 			canceledAt: canceledAt ?? existingSubscription?.canceledAt,
 		};
 
 		if (existingSubscription) {
-			await ctx.db.patch(existingSubscription._id, payload);
+			await ctx.db.patch("subscriptions", existingSubscription._id, payload);
 		} else {
 			await ctx.db.insert("subscriptions", {
 				userId,

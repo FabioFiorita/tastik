@@ -77,7 +77,7 @@ export const updateTag = mutation({
 		color: v.optional(v.union(v.string(), v.null())),
 	},
 	handler: async (ctx, args) => {
-		const tag = await ctx.db.get(args.tagId);
+		const tag = await ctx.db.get("listTags", args.tagId);
 		if (!tag) {
 			throw new ConvexError(appError("TAG_NOT_FOUND", "Tag not found"));
 		}
@@ -115,7 +115,7 @@ export const updateTag = mutation({
 		}
 
 		if (Object.keys(updates).length > 0) {
-			await ctx.db.patch(args.tagId, updates);
+			await ctx.db.patch("listTags", args.tagId, updates);
 		}
 	},
 });
@@ -128,7 +128,7 @@ export const deleteTag = mutation({
 		tagId: v.id("listTags"),
 	},
 	handler: async (ctx, args) => {
-		const tag = await ctx.db.get(args.tagId);
+		const tag = await ctx.db.get("listTags", args.tagId);
 		if (!tag) {
 			throw new ConvexError(appError("TAG_NOT_FOUND", "Tag not found"));
 		}
@@ -144,9 +144,9 @@ export const deleteTag = mutation({
 			.collect();
 
 		for (const item of itemsWithTag) {
-			await ctx.db.patch(item._id, { tagId: undefined });
+			await ctx.db.patch("items", item._id, { tagId: undefined });
 		}
 
-		await ctx.db.delete(args.tagId);
+		await ctx.db.delete("listTags", args.tagId);
 	},
 });

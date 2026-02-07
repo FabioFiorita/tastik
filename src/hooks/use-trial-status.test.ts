@@ -18,10 +18,11 @@ describe("use-trial-status", () => {
 		vi.useRealTimers();
 	});
 
-	it("returns isTrialing true when status is trialing", () => {
+	it("returns isTrialing true when status is active and free trial is running", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: Date.now() + 7 * 24 * 60 * 60 * 1000,
 		});
 
@@ -37,6 +38,7 @@ describe("use-trial-status", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: false,
 			status: "active",
+			freeTrial: false,
 			currentPeriodEnd: Date.now() + 30 * 24 * 60 * 60 * 1000,
 		});
 
@@ -48,7 +50,8 @@ describe("use-trial-status", () => {
 	it("returns null trialLabel when currentPeriodEnd is not provided", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: undefined,
 		});
 
@@ -64,7 +67,8 @@ describe("use-trial-status", () => {
 		const daysLeft = 5;
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: Date.now() + daysLeft * 24 * 60 * 60 * 1000,
 		});
 
@@ -77,7 +81,8 @@ describe("use-trial-status", () => {
 	it("returns singular 'day' for 1 day left", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: Date.now() + 24 * 60 * 60 * 1000,
 		});
 
@@ -90,7 +95,8 @@ describe("use-trial-status", () => {
 	it("returns 0 days left when trial has ended", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: Date.now() - 24 * 60 * 60 * 1000,
 		});
 
@@ -103,7 +109,8 @@ describe("use-trial-status", () => {
 	it("returns 0 days left when currentPeriodEnd is in the past", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: true,
-			status: "trialing",
+			status: "active",
+			freeTrial: true,
 			currentPeriodEnd: Date.now() - 1000,
 		});
 
@@ -116,6 +123,7 @@ describe("use-trial-status", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
 			isTrialing: false,
 			status: "inactive",
+			freeTrial: false,
 			currentPeriodEnd: undefined,
 		});
 

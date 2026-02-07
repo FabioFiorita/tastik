@@ -5,7 +5,8 @@ import { api } from "../../../convex/_generated/api";
 export type SubscriptionQueryData = {
 	isSubscribed: boolean;
 	isTrialing: boolean;
-	status: "inactive" | "trialing" | "active" | "past_due" | "canceled";
+	status: "inactive" | "active" | "past_due" | "canceled";
+	freeTrial: boolean;
 	planSlug?: string;
 	currentPeriodEnd?: number;
 	canceledAt?: number;

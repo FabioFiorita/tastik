@@ -2,6 +2,11 @@ import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { appError } from "./errors";
+import {
+	hasTastikProPlan,
+	isPaidSubscriptionActive,
+	isSubscriptionStatusValid,
+} from "./subscription";
 
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
@@ -85,18 +90,7 @@ export async function isUserSubscribed(
 
 	if (!subscription) return false;
 
-	if (subscription.status !== "active" && subscription.status !== "trialing") {
-		return false;
-	}
-
-	if (
-		subscription.currentPeriodEnd !== undefined &&
-		subscription.currentPeriodEnd <= Date.now()
-	) {
-		return false;
-	}
-
-	return true;
+	return isPaidSubscriptionActive(subscription);
 }
 
 export async function requirePaidFeature(
@@ -128,7 +122,10 @@ export async function requireSubscription(
 		);
 	}
 
-	if (subscription.status !== "active" && subscription.status !== "trialing") {
+	if (
+		!isSubscriptionStatusValid(subscription.status) ||
+		!hasTastikProPlan(subscription.planSlug)
+	) {
 		throw new ConvexError(
 			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
 		);

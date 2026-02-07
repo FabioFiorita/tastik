@@ -40,14 +40,14 @@ type BillingPlan = {
 type BillingSubscriptionItemWebhookData = {
 	id: string;
 	status: string;
+	is_free_trial?: boolean | null;
 	plan_period: "month" | "annual";
-	period_start: number;
-	period_end?: number;
-	canceled_at?: number;
+	period_start: number | null;
+	period_end?: number | null;
+	canceled_at?: number | null;
 	plan?: BillingPlan | null;
 	plan_id?: string | null;
 	payer?: BillingPayer;
-	amount: { amount: number };
 };
 
 type BillingSubscriptionWebhookData = {
@@ -62,6 +62,18 @@ type ClerkBillingEvent = {
 	data: BillingSubscriptionWebhookData | BillingSubscriptionItemWebhookData;
 	type: string;
 };
+
+export function toOptionalNumber(
+	value: number | null | undefined,
+): number | undefined {
+	return value ?? undefined;
+}
+
+export function toOptionalBoolean(
+	value: boolean | null | undefined,
+): boolean | undefined {
+	return value ?? undefined;
+}
 
 export const upsertUser = internalMutation({
 	args: {
@@ -166,7 +178,6 @@ export const handleBillingEvent = internalMutation({
 		periodStart: v.optional(v.number()),
 		periodEnd: v.optional(v.number()),
 		canceledAt: v.optional(v.number()),
-		itemStatus: v.optional(v.string()),
 		isFreeTrial: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
@@ -195,15 +206,11 @@ export const handleBillingEvent = internalMutation({
 			.withIndex("by_user", (q) => q.eq("userId", userId))
 			.unique();
 
-		type SubscriptionStatus =
-			| "inactive"
-			| "trialing"
-			| "active"
-			| "past_due"
-			| "canceled";
+		type SubscriptionStatus = "inactive" | "active" | "past_due" | "canceled";
 
 		let status: SubscriptionStatus | undefined;
 		let canceledAt: number | undefined;
+		const freeTrial = args.isFreeTrial ?? existingSubscription?.freeTrial;
 
 		switch (args.eventType) {
 			// Subscription-level events
@@ -218,7 +225,7 @@ export const handleBillingEvent = internalMutation({
 			}
 			// Subscription item events
 			case "subscriptionItem.created": {
-				status = args.isFreeTrial ? "trialing" : "active";
+				status = "active";
 				break;
 			}
 			case "subscriptionItem.active": {
@@ -229,11 +236,7 @@ export const handleBillingEvent = internalMutation({
 				// Keep current status until period ends, just record canceledAt
 				canceledAt = args.canceledAt ?? Date.now();
 				status =
-					existingSubscription?.status === "trialing"
-						? "trialing"
-						: existingSubscription?.status === "active"
-							? "active"
-							: "canceled";
+					existingSubscription?.status === "active" ? "active" : "canceled";
 				break;
 			}
 			case "subscriptionItem.ended": {
@@ -262,12 +265,18 @@ export const handleBillingEvent = internalMutation({
 
 		const payload = {
 			status,
-			clerkSubscriptionId: args.clerkSubscriptionId,
-			clerkSubscriptionItemId: args.clerkSubscriptionItemId,
-			planSlug: args.planSlug,
-			currentPeriodStart: args.periodStart,
-			currentPeriodEnd: args.periodEnd,
-			canceledAt,
+			freeTrial,
+			clerkSubscriptionId:
+				args.clerkSubscriptionId ?? existingSubscription?.clerkSubscriptionId,
+			clerkSubscriptionItemId:
+				args.clerkSubscriptionItemId ??
+				existingSubscription?.clerkSubscriptionItemId,
+			planSlug: args.planSlug ?? existingSubscription?.planSlug,
+			currentPeriodStart:
+				args.periodStart ?? existingSubscription?.currentPeriodStart,
+			currentPeriodEnd:
+				args.periodEnd ?? existingSubscription?.currentPeriodEnd,
+			canceledAt: canceledAt ?? existingSubscription?.canceledAt,
 		};
 
 		if (existingSubscription) {
@@ -356,9 +365,9 @@ export const handleClerkWebhook = httpAction(async (ctx, request) => {
 			clerkSubscriptionId: subscriptionData.id,
 			clerkSubscriptionItemId: firstItem?.id,
 			planSlug: firstItem?.plan?.slug,
-			periodStart: firstItem?.period_start,
-			periodEnd: firstItem?.period_end,
-			isFreeTrial: firstItem?.amount?.amount === 0,
+			periodStart: toOptionalNumber(firstItem?.period_start),
+			periodEnd: toOptionalNumber(firstItem?.period_end),
+			isFreeTrial: toOptionalBoolean(firstItem?.is_free_trial),
 		});
 	} else if (type.startsWith("subscriptionItem.")) {
 		const itemData = data as BillingSubscriptionItemWebhookData;
@@ -373,11 +382,10 @@ export const handleClerkWebhook = httpAction(async (ctx, request) => {
 			clerkUserId,
 			clerkSubscriptionItemId: itemData.id,
 			planSlug: itemData.plan?.slug,
-			periodStart: itemData.period_start,
-			periodEnd: itemData.period_end,
-			canceledAt: itemData.canceled_at,
-			itemStatus: itemData.status,
-			isFreeTrial: itemData.amount?.amount === 0,
+			periodStart: toOptionalNumber(itemData.period_start),
+			periodEnd: toOptionalNumber(itemData.period_end),
+			canceledAt: toOptionalNumber(itemData.canceled_at),
+			isFreeTrial: toOptionalBoolean(itemData.is_free_trial),
 		});
 	}
 

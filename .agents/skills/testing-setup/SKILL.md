@@ -53,19 +53,28 @@ it("uses fixture data", () => {
 });
 ```
 
-### Mocks (`src/__tests__/helpers/mocks.ts`)
+### Mocks (`src/lib/helpers/mocks.ts`)
 
 Use reusable mocks for common dependencies:
 
 ```typescript
-import { mockNextThemes } from "@/__tests__/helpers/mocks";
+import { useTheme } from "next-themes";
+import { mockNextThemes } from "@/lib/helpers/mocks";
+import { renderWithUser, screen } from "@/test-utils";
 
-const { mockSetTheme } = mockNextThemes({ theme: "dark" });
+const { mockSetTheme } = mockNextThemes();
 
-it("calls setTheme", async () => {
-  const { user } = renderWithUser(<ModeToggle />);
-  await user.click(screen.getByTestId("mode-toggle-trigger"));
-  await user.click(screen.getByTestId("mode-toggle-dark"));
+it("calls setTheme when theme button is clicked", async () => {
+  function ThemeButton() {
+    const { setTheme } = useTheme();
+    return (
+      <button data-testid="theme-dark" type="button" onClick={() => setTheme("dark")}>
+        Dark
+      </button>
+    );
+  }
+  const { user } = renderWithUser(<ThemeButton />);
+  await user.click(screen.getByTestId("theme-dark"));
   expect(mockSetTheme).toHaveBeenCalledWith("dark");
 });
 ```

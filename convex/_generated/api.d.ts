@@ -16,6 +16,7 @@ import type * as lib_limits from "../lib/limits.js";
 import type * as lib_logger from "../lib/logger.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
+import type * as lib_subscription from "../lib/subscription.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as listEditors from "../listEditors.js";
 import type * as lists from "../lists.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   "lib/logger": typeof lib_logger;
   "lib/permissions": typeof lib_permissions;
   "lib/rateLimiter": typeof lib_rateLimiter;
+  "lib/subscription": typeof lib_subscription;
   "lib/validation": typeof lib_validation;
   listEditors: typeof listEditors;
   lists: typeof lists;

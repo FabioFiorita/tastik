@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalQuery, query } from "./_generated/server";
 import { requireAuth } from "./lib/permissions";
+import { hasTastikProPlan, isPaidSubscriptionActive } from "./lib/subscription";
 
 export const isSubscribed = query({
 	args: {},
@@ -14,9 +15,7 @@ export const isSubscribed = query({
 
 		if (!subscription) return false;
 
-		return (
-			subscription.status === "active" || subscription.status === "trialing"
-		);
+		return isPaidSubscriptionActive(subscription);
 	},
 });
 
@@ -28,7 +27,9 @@ export const getSubscription = query({
 		if (!identity) {
 			return {
 				isSubscribed: false,
+				isTrialing: false,
 				status: "inactive" as const,
+				freeTrial: false,
 				planSlug: undefined,
 				currentPeriodEnd: undefined,
 				canceledAt: undefined,
@@ -43,7 +44,9 @@ export const getSubscription = query({
 		if (!user) {
 			return {
 				isSubscribed: false,
+				isTrialing: false,
 				status: "inactive" as const,
+				freeTrial: false,
 				planSlug: undefined,
 				currentPeriodEnd: undefined,
 				canceledAt: undefined,
@@ -58,20 +61,32 @@ export const getSubscription = query({
 		if (!subscription) {
 			return {
 				isSubscribed: false,
+				isTrialing: false,
 				status: "inactive" as const,
+				freeTrial: false,
 				planSlug: undefined,
 				currentPeriodEnd: undefined,
 				canceledAt: undefined,
 			};
 		}
 
-		const isSubscribed = subscription.status === "active";
-		const isTrialing = subscription.status === "trialing";
+		const isSubscribed =
+			subscription.status === "active" &&
+			hasTastikProPlan(subscription.planSlug) &&
+			(subscription.currentPeriodEnd === undefined ||
+				subscription.currentPeriodEnd > Date.now());
+		const isTrialing =
+			subscription.status === "active" &&
+			subscription.freeTrial === true &&
+			hasTastikProPlan(subscription.planSlug) &&
+			(subscription.currentPeriodEnd === undefined ||
+				subscription.currentPeriodEnd > Date.now());
 
 		return {
 			isSubscribed,
 			isTrialing,
 			status: subscription.status,
+			freeTrial: subscription.freeTrial ?? false,
 			planSlug: subscription.planSlug,
 			currentPeriodEnd: subscription.currentPeriodEnd,
 			canceledAt: subscription.canceledAt,

@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { AuthButton } from "@/components/common/auth-button";
-import { ModeToggle } from "@/components/common/mode-toggle";
 
 export function PublicHeader() {
 	return (
@@ -50,7 +49,6 @@ export function PublicHeader() {
 				</nav>
 
 				<div className="flex items-center gap-3">
-					<ModeToggle />
 					<AuthButton />
 				</div>
 			</div>

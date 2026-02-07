@@ -14,11 +14,11 @@ import { useTrialStatus } from "@/hooks/use-trial-status";
 
 export function NavUser() {
 	const { theme, setTheme } = useTheme();
-	const { trialLabel } = useTrialStatus();
+	const { isTrialing, trialLabel } = useTrialStatus();
 
 	return (
 		<div data-testid="nav-user">
-			<UserButton appearance={{ theme: shadcn }}>
+			<UserButton appearance={{ theme: shadcn }} afterSignOutUrl="/sign-in">
 				<UserButton.MenuItems>
 					<UserButton.Action
 						label={`Light${theme === "light" ? " ✓" : ""}`}
@@ -52,7 +52,7 @@ export function NavUser() {
 						labelIcon={<FileText className="size-4" />}
 						href="/terms"
 					/>
-					{trialLabel && (
+					{isTrialing && (
 						<UserButton.Link
 							label={`Subscription (${trialLabel})`}
 							labelIcon={<Sparkles className="size-4" />}

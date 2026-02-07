@@ -13,7 +13,10 @@ import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicSignUpRouteImport } from './routes/_public/sign-up'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
+import { Route as PublicSignUpSplatRouteImport } from './routes/_public/sign-up.$'
+import { Route as PublicSignInSplatRouteImport } from './routes/_public/sign-in.$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
 import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
@@ -37,10 +40,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicSignUpRoute = PublicSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicSignInRoute = PublicSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
   getParentRoute: () => PublicRoute,
+} as any)
+const PublicSignUpSplatRoute = PublicSignUpSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => PublicSignUpRoute,
+} as any)
+const PublicSignInSplatRoute = PublicSignInSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => PublicSignInRoute,
 } as any)
 const PubliclegalTermsRoute = PubliclegalTermsRouteImport.update({
   id: '/(legal)/terms',
@@ -66,20 +84,26 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/subscription': typeof SubscriptionRoute
-  '/sign-in': typeof PublicSignInRoute
+  '/sign-in': typeof PublicSignInRouteWithChildren
+  '/sign-up': typeof PublicSignUpRouteWithChildren
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
+  '/sign-in/$': typeof PublicSignInSplatRoute
+  '/sign-up/$': typeof PublicSignUpSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/subscription': typeof SubscriptionRoute
-  '/sign-in': typeof PublicSignInRoute
+  '/sign-in': typeof PublicSignInRouteWithChildren
+  '/sign-up': typeof PublicSignUpRouteWithChildren
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
+  '/sign-in/$': typeof PublicSignInSplatRoute
+  '/sign-up/$': typeof PublicSignUpSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,11 +111,14 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/subscription': typeof SubscriptionRoute
-  '/_public/sign-in': typeof PublicSignInRoute
+  '/_public/sign-in': typeof PublicSignInRouteWithChildren
+  '/_public/sign-up': typeof PublicSignUpRouteWithChildren
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
   '/_public/(legal)/terms': typeof PubliclegalTermsRoute
+  '/_public/sign-in/$': typeof PublicSignInSplatRoute
+  '/_public/sign-up/$': typeof PublicSignUpSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,19 +126,25 @@ export interface FileRouteTypes {
     | '/'
     | '/subscription'
     | '/sign-in'
+    | '/sign-up'
     | '/lists/$listId'
     | '/privacy'
     | '/support'
     | '/terms'
+    | '/sign-in/$'
+    | '/sign-up/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/subscription'
     | '/sign-in'
+    | '/sign-up'
     | '/lists/$listId'
     | '/privacy'
     | '/support'
     | '/terms'
+    | '/sign-in/$'
+    | '/sign-up/$'
   id:
     | '__root__'
     | '/'
@@ -119,10 +152,13 @@ export interface FileRouteTypes {
     | '/_public'
     | '/subscription'
     | '/_public/sign-in'
+    | '/_public/sign-up'
     | '/_protected/lists/$listId'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
     | '/_public/(legal)/terms'
+    | '/_public/sign-in/$'
+    | '/_public/sign-up/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,12 +198,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/sign-up': {
+      id: '/_public/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof PublicSignUpRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/sign-in': {
       id: '/_public/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof PublicSignInRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_public/sign-up/$': {
+      id: '/_public/sign-up/$'
+      path: '/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof PublicSignUpSplatRouteImport
+      parentRoute: typeof PublicSignUpRoute
+    }
+    '/_public/sign-in/$': {
+      id: '/_public/sign-in/$'
+      path: '/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof PublicSignInSplatRouteImport
+      parentRoute: typeof PublicSignInRoute
     }
     '/_public/(legal)/terms': {
       id: '/_public/(legal)/terms'
@@ -212,15 +269,41 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
   ProtectedRouteChildren,
 )
 
+interface PublicSignInRouteChildren {
+  PublicSignInSplatRoute: typeof PublicSignInSplatRoute
+}
+
+const PublicSignInRouteChildren: PublicSignInRouteChildren = {
+  PublicSignInSplatRoute: PublicSignInSplatRoute,
+}
+
+const PublicSignInRouteWithChildren = PublicSignInRoute._addFileChildren(
+  PublicSignInRouteChildren,
+)
+
+interface PublicSignUpRouteChildren {
+  PublicSignUpSplatRoute: typeof PublicSignUpSplatRoute
+}
+
+const PublicSignUpRouteChildren: PublicSignUpRouteChildren = {
+  PublicSignUpSplatRoute: PublicSignUpSplatRoute,
+}
+
+const PublicSignUpRouteWithChildren = PublicSignUpRoute._addFileChildren(
+  PublicSignUpRouteChildren,
+)
+
 interface PublicRouteChildren {
-  PublicSignInRoute: typeof PublicSignInRoute
+  PublicSignInRoute: typeof PublicSignInRouteWithChildren
+  PublicSignUpRoute: typeof PublicSignUpRouteWithChildren
   PubliclegalPrivacyRoute: typeof PubliclegalPrivacyRoute
   PubliclegalSupportRoute: typeof PubliclegalSupportRoute
   PubliclegalTermsRoute: typeof PubliclegalTermsRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
-  PublicSignInRoute: PublicSignInRoute,
+  PublicSignInRoute: PublicSignInRouteWithChildren,
+  PublicSignUpRoute: PublicSignUpRouteWithChildren,
   PubliclegalPrivacyRoute: PubliclegalPrivacyRoute,
   PubliclegalSupportRoute: PubliclegalSupportRoute,
   PubliclegalTermsRoute: PubliclegalTermsRoute,

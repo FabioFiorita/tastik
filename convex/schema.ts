@@ -36,7 +36,6 @@ export const listStatusValidator = v.union(
 
 export const subscriptionStatusValidator = v.union(
 	v.literal("inactive"),
-	v.literal("trialing"),
 	v.literal("active"),
 	v.literal("past_due"),
 	v.literal("canceled"),
@@ -128,6 +127,7 @@ const schema = defineSchema({
 	subscriptions: defineTable({
 		userId: v.id("users"),
 		status: subscriptionStatusValidator,
+		freeTrial: v.optional(v.boolean()),
 		clerkSubscriptionId: v.optional(v.string()),
 		clerkSubscriptionItemId: v.optional(v.string()),
 		planSlug: v.optional(v.string()),

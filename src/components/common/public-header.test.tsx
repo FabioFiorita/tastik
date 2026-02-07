@@ -22,12 +22,10 @@ vi.mock("@clerk/tanstack-react-start", () => ({
 			{ "data-testid": "clerk-sign-in-button" },
 			children,
 		),
-	UserButton: () =>
-		React.createElement("div", { "data-testid": "clerk-user-button" }),
 }));
 
-vi.mock("@clerk/themes", () => ({
-	shadcn: {},
+vi.mock("@/components/dashboard/nav-user", () => ({
+	NavUser: () => React.createElement("div", { "data-testid": "nav-user" }),
 }));
 
 describe("public-header", () => {
@@ -80,20 +78,15 @@ describe("public-header", () => {
 		);
 	});
 
-	it("renders ModeToggle component", () => {
-		renderWithUser(<PublicHeader />);
-		expect(screen.getByTestId("mode-toggle-trigger")).toBeInTheDocument();
-	});
-
 	it("renders sign in button when not authenticated", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 		renderWithUser(<PublicHeader />);
 		expect(screen.getByTestId("clerk-sign-in-button")).toBeInTheDocument();
 	});
 
-	it("renders UserButton when authenticated", () => {
+	it("renders nav user when authenticated", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
 		renderWithUser(<PublicHeader />);
-		expect(screen.getByTestId("clerk-user-button")).toBeInTheDocument();
+		expect(screen.getByTestId("nav-user")).toBeInTheDocument();
 	});
 });

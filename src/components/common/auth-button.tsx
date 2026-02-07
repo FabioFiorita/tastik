@@ -1,11 +1,11 @@
-import { SignInButton, UserButton, useAuth } from "@clerk/tanstack-react-start";
-import { shadcn } from "@clerk/themes";
+import { SignInButton, useAuth } from "@clerk/tanstack-react-start";
+import { NavUser } from "@/components/dashboard/nav-user";
 
 export function AuthButton() {
 	const { isSignedIn } = useAuth();
 
 	if (isSignedIn) {
-		return <UserButton appearance={{ theme: shadcn }} />;
+		return <NavUser />;
 	}
 
 	return <SignInButton mode="redirect" forceRedirectUrl="/" />;

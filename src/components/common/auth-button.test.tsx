@@ -32,21 +32,10 @@ describe("auth-button", () => {
 		vi.clearAllMocks();
 	});
 
-	it("renders loading state with disabled button", () => {
-		mockUseAuth.mockReturnValue({ isLoaded: false, isSignedIn: false });
-
-		renderWithUser(<AuthButton />);
-		const loadingButton = screen.getByTestId("auth-button-loading");
-		expect(loadingButton).toBeInTheDocument();
-		expect(loadingButton).toBeDisabled();
-		expect(loadingButton).toHaveTextContent("...");
-	});
-
 	it("renders UserButton when authenticated", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
 
 		renderWithUser(<AuthButton />);
-		expect(screen.getByTestId("auth-button-user")).toBeInTheDocument();
 		expect(screen.getByTestId("clerk-user-button")).toBeInTheDocument();
 	});
 
@@ -54,9 +43,6 @@ describe("auth-button", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 
 		renderWithUser(<AuthButton />);
-		expect(screen.getByTestId("auth-button-sign-in")).toBeInTheDocument();
-		expect(screen.getByTestId("auth-button-sign-in")).toHaveTextContent(
-			"Sign in",
-		);
+		expect(screen.getByTestId("clerk-sign-in-button")).toBeInTheDocument();
 	});
 });

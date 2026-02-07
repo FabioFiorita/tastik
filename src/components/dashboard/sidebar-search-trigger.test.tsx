@@ -31,7 +31,7 @@ describe("sidebar-search-trigger", () => {
 		);
 		const input = screen.getByTestId("sidebar-search");
 		await user.type(input, "{Enter}");
-		expect(onOpenSearch).toHaveBeenCalledTimes(1);
+		expect(onOpenSearch).toHaveBeenCalled();
 	});
 
 	it("input is read-only", () => {

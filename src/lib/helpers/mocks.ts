@@ -1,67 +1,61 @@
 import React from "react";
 import { vi } from "vitest";
 
-/**
- * Mock for @tanstack/react-router Link component
- * Use this in component tests that render Link components
- */
+const routerMocks = vi.hoisted(() => ({
+	mockNavigate: vi.fn(),
+	mockLocation: { pathname: "/" },
+	mockParams: {} as Record<string, string>,
+}));
+
+vi.mock("@tanstack/react-router", () => ({
+	Link: ({
+		to,
+		children,
+		className,
+		params,
+		...props
+	}: {
+		to: string;
+		children: React.ReactNode;
+		className?: string;
+		params?: Record<string, string>;
+		[key: string]: unknown;
+	}) => React.createElement("a", { href: to, className, ...props }, children),
+	useNavigate: () => routerMocks.mockNavigate,
+	useLocation: () => routerMocks.mockLocation,
+	useParams: () => routerMocks.mockParams,
+}));
+
 export function mockReactRouterLink() {
-	vi.mock("@tanstack/react-router", () => ({
-		Link: ({
-			to,
-			children,
-			className,
-			params,
-			...props
-		}: {
-			to: string;
-			children: React.ReactNode;
-			className?: string;
-			params?: Record<string, string>;
-			[key: string]: unknown;
-		}) => React.createElement("a", { href: to, className, ...props }, children),
-		useNavigate: vi.fn(() => vi.fn()),
-		useLocation: vi.fn(() => ({ pathname: "/" })),
-		useParams: vi.fn(() => ({})),
-	}));
+	return routerMocks;
 }
 
-/**
- * Mock for @tanstack/react-router navigation hooks
- * Returns controllable mock functions for useNavigate, useLocation, useParams
- */
 export function mockReactRouter(overrides?: {
 	navigate?: ReturnType<typeof vi.fn>;
 	location?: { pathname: string; [key: string]: unknown };
 	params?: Record<string, string>;
 }) {
-	const mockNavigate = overrides?.navigate ?? vi.fn();
-	const mockLocation = overrides?.location ?? { pathname: "/" };
-	const mockParams = overrides?.params ?? {};
-
-	vi.mock("@tanstack/react-router", () => ({
-		useNavigate: () => mockNavigate,
-		useLocation: () => mockLocation,
-		useParams: () => mockParams,
-	}));
-
-	return { mockNavigate, mockLocation, mockParams };
+	if (overrides?.navigate)
+		routerMocks.mockNavigate =
+			overrides.navigate as typeof routerMocks.mockNavigate;
+	if (overrides?.location) routerMocks.mockLocation = overrides.location;
+	if (overrides?.params) routerMocks.mockParams = overrides.params;
+	return routerMocks;
 }
 
-/**
- * Mock for next-themes
- * Returns controllable mock function for setTheme
- * Use this in component tests that use theme switching
- *
- * @example
- * // Simple usage - returns direct value
- * const { mockSetTheme } = mockNextThemes();
- *
- * @example
- * // Advanced usage - returns controllable function
- * const { mockUseTheme } = mockNextThemes({ returnFunction: true });
- * mockUseTheme.mockReturnValue({ setTheme: mockSetTheme, theme: "dark" });
- */
+const themeMocks = vi.hoisted(() => ({
+	mockSetTheme: vi.fn(),
+	theme: "light" as string,
+	getUseTheme: undefined as (() => unknown) | undefined,
+}));
+
+vi.mock("next-themes", () => ({
+	useTheme: () =>
+		themeMocks.getUseTheme
+			? themeMocks.getUseTheme?.()
+			: { setTheme: themeMocks.mockSetTheme, theme: themeMocks.theme },
+}));
+
 export function mockNextThemes(overrides?: {
 	theme?: string;
 	setTheme?: ReturnType<typeof vi.fn>;
@@ -70,42 +64,26 @@ export function mockNextThemes(overrides?: {
 	mockSetTheme: ReturnType<typeof vi.fn>;
 	mockUseTheme?: ReturnType<typeof vi.fn>;
 } {
-	const mockSetTheme = overrides?.setTheme ?? vi.fn();
-	const theme = overrides?.theme ?? "light";
-
+	if (overrides?.setTheme)
+		themeMocks.mockSetTheme =
+			overrides.setTheme as typeof themeMocks.mockSetTheme;
+	if (overrides?.theme) themeMocks.theme = overrides.theme;
 	if (overrides?.returnFunction) {
 		const mockUseTheme = vi.fn();
-		vi.mock("next-themes", () => ({
-			useTheme: () => mockUseTheme(),
-		}));
-		return { mockUseTheme, mockSetTheme };
+		themeMocks.getUseTheme = () => mockUseTheme();
+		return { mockUseTheme, mockSetTheme: themeMocks.mockSetTheme };
 	}
-
-	vi.mock("next-themes", () => ({
-		useTheme: () => ({
-			setTheme: mockSetTheme,
-			theme,
-		}),
-	}));
-
-	return { mockSetTheme };
+	return { mockSetTheme: themeMocks.mockSetTheme };
 }
 
-/**
- * Mock for @/hooks/queries/use-current-user
- * Returns controllable mock function that can be used with mockReturnValue
- * Use this in component tests that need user data
- *
- * @example
- * const { mockUseCurrentUser } = mockUseCurrentUser();
- * mockUseCurrentUser.mockReturnValue({ _id: "user123", name: "Test", ... });
- */
+const userMocks = vi.hoisted(() => ({
+	mockUserFn: vi.fn(),
+}));
+
+vi.mock("@/hooks/queries/use-current-user", () => ({
+	useCurrentUser: () => userMocks.mockUserFn(),
+}));
+
 export function mockUseCurrentUser() {
-	const mockUserFn = vi.fn();
-
-	vi.mock("@/hooks/queries/use-current-user", () => ({
-		useCurrentUser: () => mockUserFn(),
-	}));
-
-	return { mockUseCurrentUser: mockUserFn };
+	return { mockUseCurrentUser: userMocks.mockUserFn };
 }

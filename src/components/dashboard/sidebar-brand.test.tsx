@@ -1,9 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { mockReactRouterLink } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import { SidebarBrand } from "./sidebar-brand";
 
 mockReactRouterLink();
+
+function renderSidebarBrand(props: Parameters<typeof SidebarBrand>[0]) {
+	return renderWithUser(
+		<SidebarProvider>
+			<SidebarBrand {...props} />
+		</SidebarProvider>,
+	);
+}
 
 describe("sidebar-brand", () => {
 	beforeEach(() => {
@@ -11,7 +20,7 @@ describe("sidebar-brand", () => {
 	});
 
 	it("renders brand with logo and text", () => {
-		renderWithUser(<SidebarBrand />);
+		renderSidebarBrand({});
 		expect(screen.getByAltText("Tastik")).toBeInTheDocument();
 		expect(screen.getByText("Tastik")).toBeInTheDocument();
 		expect(screen.getByText("Your personal lists")).toBeInTheDocument();
@@ -19,7 +28,7 @@ describe("sidebar-brand", () => {
 
 	it("calls onNavigate when clicked", async () => {
 		const onNavigate = vi.fn();
-		const { user } = renderWithUser(<SidebarBrand onNavigate={onNavigate} />);
+		const { user } = renderSidebarBrand({ onNavigate });
 		const link = screen.getByText("Tastik").closest("a");
 		if (link) {
 			await user.click(link);
@@ -28,7 +37,7 @@ describe("sidebar-brand", () => {
 	});
 
 	it("renders without onNavigate callback", () => {
-		renderWithUser(<SidebarBrand />);
+		renderSidebarBrand({});
 		expect(screen.getByText("Tastik")).toBeInTheDocument();
 	});
 });

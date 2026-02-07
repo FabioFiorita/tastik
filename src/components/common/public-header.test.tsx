@@ -8,25 +8,6 @@ mockNextThemes();
 
 const mockUseAuth = vi.fn();
 
-vi.mock("@tanstack/react-router", async (importOriginal) => {
-	const actual =
-		await importOriginal<typeof import("@tanstack/react-router")>();
-	return {
-		...actual,
-		Link: ({
-			to,
-			children,
-			className,
-			...props
-		}: {
-			to: string;
-			children: React.ReactNode;
-			className?: string;
-			[key: string]: unknown;
-		}) => React.createElement("a", { href: to, className, ...props }, children),
-	};
-});
-
 vi.mock("@clerk/tanstack-react-start", () => ({
 	useAuth: () => mockUseAuth(),
 	SignInButton: ({
@@ -107,12 +88,12 @@ describe("public-header", () => {
 	it("renders sign in button when not authenticated", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
 		renderWithUser(<PublicHeader />);
-		expect(screen.getByTestId("auth-button-sign-in")).toBeInTheDocument();
+		expect(screen.getByTestId("clerk-sign-in-button")).toBeInTheDocument();
 	});
 
 	it("renders UserButton when authenticated", () => {
 		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
 		renderWithUser(<PublicHeader />);
-		expect(screen.getByTestId("auth-button-user")).toBeInTheDocument();
+		expect(screen.getByTestId("clerk-user-button")).toBeInTheDocument();
 	});
 });

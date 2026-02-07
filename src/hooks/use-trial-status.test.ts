@@ -20,6 +20,7 @@ describe("use-trial-status", () => {
 
 	it("returns isTrialing true when status is trialing", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: Date.now() + 7 * 24 * 60 * 60 * 1000,
 		});
@@ -34,6 +35,7 @@ describe("use-trial-status", () => {
 
 	it("returns isTrialing false when status is active", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: false,
 			status: "active",
 			currentPeriodEnd: Date.now() + 30 * 24 * 60 * 60 * 1000,
 		});
@@ -45,6 +47,7 @@ describe("use-trial-status", () => {
 
 	it("returns null trialLabel when currentPeriodEnd is not provided", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: undefined,
 		});
@@ -60,6 +63,7 @@ describe("use-trial-status", () => {
 	it("calculates correct trial days left", () => {
 		const daysLeft = 5;
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: Date.now() + daysLeft * 24 * 60 * 60 * 1000,
 		});
@@ -72,6 +76,7 @@ describe("use-trial-status", () => {
 
 	it("returns singular 'day' for 1 day left", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: Date.now() + 24 * 60 * 60 * 1000,
 		});
@@ -84,6 +89,7 @@ describe("use-trial-status", () => {
 
 	it("returns 0 days left when trial has ended", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: Date.now() - 24 * 60 * 60 * 1000,
 		});
@@ -96,6 +102,7 @@ describe("use-trial-status", () => {
 
 	it("returns 0 days left when currentPeriodEnd is in the past", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: true,
 			status: "trialing",
 			currentPeriodEnd: Date.now() - 1000,
 		});
@@ -107,6 +114,7 @@ describe("use-trial-status", () => {
 
 	it("handles inactive status", () => {
 		mockUseSubscriptionQuery.mockReturnValue({
+			isTrialing: false,
 			status: "inactive",
 			currentPeriodEnd: undefined,
 		});

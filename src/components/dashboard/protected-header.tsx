@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from "@tanstack/react-router";
+import { NavUser } from "@/components/dashboard/nav-user";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -24,36 +25,39 @@ export function ProtectedHeader() {
 	const isListDetailRoute = location.pathname.startsWith("/lists/") && listId;
 
 	return (
-		<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 bg-background px-4">
-			<SidebarTrigger className="size-8" data-testid="sidebar-trigger" />
-			<Separator orientation="vertical" className="my-auto mr-2 h-4" />
-			<Breadcrumb>
-				<BreadcrumbList>
-					{isListsRoute ? (
-						<BreadcrumbItem>
-							<BreadcrumbPage>All Lists</BreadcrumbPage>
-						</BreadcrumbItem>
-					) : isListDetailRoute ? (
-						<>
+		<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 bg-background px-4">
+			<div className="flex items-center gap-2">
+				<SidebarTrigger className="size-8" data-testid="sidebar-trigger" />
+				<Separator orientation="vertical" className="my-auto mr-2 h-4" />
+				<Breadcrumb>
+					<BreadcrumbList>
+						{isListsRoute ? (
 							<BreadcrumbItem>
-								<BreadcrumbLink render={<Link to="/" />}>
-									All Lists
-								</BreadcrumbLink>
+								<BreadcrumbPage>All Lists</BreadcrumbPage>
 							</BreadcrumbItem>
-							<BreadcrumbSeparator />
+						) : isListDetailRoute ? (
+							<>
+								<BreadcrumbItem>
+									<BreadcrumbLink render={<Link to="/" />}>
+										All Lists
+									</BreadcrumbLink>
+								</BreadcrumbItem>
+								<BreadcrumbSeparator />
+								<BreadcrumbItem>
+									<BreadcrumbPage>
+										{list ? list.name : <Skeleton className="h-4 w-24" />}
+									</BreadcrumbPage>
+								</BreadcrumbItem>
+							</>
+						) : (
 							<BreadcrumbItem>
-								<BreadcrumbPage>
-									{list ? list.name : <Skeleton className="h-4 w-24" />}
-								</BreadcrumbPage>
+								<BreadcrumbPage>Home</BreadcrumbPage>
 							</BreadcrumbItem>
-						</>
-					) : (
-						<BreadcrumbItem>
-							<BreadcrumbPage>Home</BreadcrumbPage>
-						</BreadcrumbItem>
-					)}
-				</BreadcrumbList>
-			</Breadcrumb>
+						)}
+					</BreadcrumbList>
+				</Breadcrumb>
+			</div>
+			<NavUser />
 		</header>
 	);
 }

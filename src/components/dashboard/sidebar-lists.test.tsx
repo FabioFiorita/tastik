@@ -1,4 +1,6 @@
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { mockReactRouterLink } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -6,21 +8,27 @@ import { SidebarLists } from "./sidebar-lists";
 
 mockReactRouterLink();
 
+function renderSidebarLists(props: React.ComponentProps<typeof SidebarLists>) {
+	return renderWithUser(
+		<SidebarProvider>
+			<SidebarLists {...props} />
+		</SidebarProvider>,
+	);
+}
+
 describe("sidebar-lists", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("renders skeleton loaders when lists is undefined", () => {
-		renderWithUser(<SidebarLists lists={undefined} pathname="/" />);
-		const skeletons = screen
-			.getAllByRole("generic")
-			.filter((el) => el.className.includes("skeleton"));
+		renderSidebarLists({ lists: undefined, pathname: "/" });
+		const skeletons = document.querySelectorAll("[data-slot='skeleton']");
 		expect(skeletons.length).toBeGreaterThan(0);
 	});
 
 	it("renders empty state when lists is empty array", () => {
-		renderWithUser(<SidebarLists lists={[]} pathname="/" />);
+		renderSidebarLists({ lists: [], pathname: "/" });
 		expect(
 			screen.getByText("Add your first list to get started."),
 		).toBeInTheDocument();
@@ -31,7 +39,7 @@ describe("sidebar-lists", () => {
 			{ _id: "list1" as Id<"lists">, name: "List 1", icon: "✅" },
 			{ _id: "list2" as Id<"lists">, name: "List 2" },
 		];
-		renderWithUser(<SidebarLists lists={lists} pathname="/" />);
+		renderSidebarLists({ lists, pathname: "/" });
 		expect(screen.getByTestId("sidebar-list-list1")).toBeInTheDocument();
 		expect(screen.getByTestId("sidebar-list-list2")).toBeInTheDocument();
 		expect(screen.getByText("List 1")).toBeInTheDocument();
@@ -40,7 +48,7 @@ describe("sidebar-lists", () => {
 
 	it("renders list icon when provided", () => {
 		const lists = [{ _id: "list1" as Id<"lists">, name: "List 1", icon: "✅" }];
-		renderWithUser(<SidebarLists lists={lists} pathname="/" />);
+		renderSidebarLists({ lists, pathname: "/" });
 		const listItem = screen.getByTestId("sidebar-list-list1");
 		expect(listItem).toHaveTextContent("✅");
 	});
@@ -50,7 +58,7 @@ describe("sidebar-lists", () => {
 			{ _id: "list1" as Id<"lists">, name: "List 1" },
 			{ _id: "list2" as Id<"lists">, name: "List 2" },
 		];
-		renderWithUser(<SidebarLists lists={lists} pathname="/lists/list1" />);
+		renderSidebarLists({ lists, pathname: "/lists/list1" });
 		const list1 = screen.getByTestId("sidebar-list-list1");
 		expect(list1).toBeInTheDocument();
 	});
@@ -58,9 +66,11 @@ describe("sidebar-lists", () => {
 	it("calls onNavigate when list is clicked", async () => {
 		const onNavigate = vi.fn();
 		const lists = [{ _id: "list1" as Id<"lists">, name: "List 1" }];
-		const { user } = renderWithUser(
-			<SidebarLists lists={lists} pathname="/" onNavigate={onNavigate} />,
-		);
+		const { user } = renderSidebarLists({
+			lists,
+			pathname: "/",
+			onNavigate,
+		});
 		const listItem = screen.getByTestId("sidebar-list-list1");
 		await user.click(listItem);
 		expect(onNavigate).toHaveBeenCalledTimes(1);
@@ -71,7 +81,7 @@ describe("sidebar-lists", () => {
 			_id: `list${i + 1}` as Id<"lists">,
 			name: `List ${i + 1}`,
 		}));
-		renderWithUser(<SidebarLists lists={lists} pathname="/" />);
+		renderSidebarLists({ lists, pathname: "/" });
 		expect(screen.getByText("View all 11 lists")).toBeInTheDocument();
 	});
 
@@ -80,7 +90,7 @@ describe("sidebar-lists", () => {
 			_id: `list${i + 1}` as Id<"lists">,
 			name: `List ${i + 1}`,
 		}));
-		renderWithUser(<SidebarLists lists={lists} pathname="/" />);
+		renderSidebarLists({ lists, pathname: "/" });
 		expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
 	});
 });

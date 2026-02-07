@@ -5,22 +5,24 @@ import { SearchCommand } from "./search-command";
 
 const mockUseSearchItems = vi.fn();
 const mockSetOpenMobile = vi.fn();
+const mockUseSidebar = vi.fn();
 
 vi.mock("@/hooks/queries/use-search-items", () => ({
 	useSearchItems: (query: string) => mockUseSearchItems(query),
 }));
 
 vi.mock("@/components/ui/sidebar", () => ({
-	useSidebar: () => ({
-		isMobile: false,
-		setOpenMobile: mockSetOpenMobile,
-	}),
+	useSidebar: () => mockUseSidebar(),
 }));
 
 describe("search-command", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockUseSearchItems.mockReturnValue(undefined);
+		mockUseSidebar.mockReturnValue({
+			isMobile: false,
+			setOpenMobile: mockSetOpenMobile,
+		});
 	});
 
 	it("renders search dialog when open", () => {
@@ -114,7 +116,7 @@ describe("search-command", () => {
 	});
 
 	it("closes mobile sidebar when result is selected on mobile", async () => {
-		vi.mocked(require("@/components/ui/sidebar").useSidebar).mockReturnValue({
+		mockUseSidebar.mockReturnValue({
 			isMobile: true,
 			setOpenMobile: mockSetOpenMobile,
 		});

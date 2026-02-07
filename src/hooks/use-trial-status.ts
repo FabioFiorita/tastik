@@ -2,9 +2,8 @@ import { useMemo } from "react";
 import { useSubscriptionQuery } from "@/hooks/queries/use-subscription";
 
 export function useTrialStatus() {
-	const { status, currentPeriodEnd } = useSubscriptionQuery();
+	const { isTrialing, currentPeriodEnd } = useSubscriptionQuery();
 	return useMemo(() => {
-		const isTrialing = status === "trialing";
 		const trialEnd = currentPeriodEnd ? new Date(currentPeriodEnd) : null;
 		const trialDaysLeft = trialEnd
 			? Math.max(
@@ -17,5 +16,5 @@ export function useTrialStatus() {
 				? null
 				: `${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left`;
 		return { isTrialing, trialEnd, trialDaysLeft, trialLabel };
-	}, [status, currentPeriodEnd]);
+	}, [isTrialing, currentPeriodEnd]);
 }

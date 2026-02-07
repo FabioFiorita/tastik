@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockReactRouterLink } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ListView } from "./list-view";
+
+mockReactRouterLink();
 
 const mockUseList = vi.fn();
 const mockUseListItems = vi.fn();
@@ -29,10 +32,6 @@ vi.mock("@/hooks/actions/use-list-actions", () => ({
 		isDeleting: false,
 	}),
 }));
-
-import { mockReactRouterLink } from "@/lib/helpers/mocks";
-
-mockReactRouterLink();
 
 describe("list-view", () => {
 	beforeEach(() => {

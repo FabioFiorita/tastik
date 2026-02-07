@@ -65,11 +65,12 @@ export const getSubscription = query({
 			};
 		}
 
-		const isSubscribed =
-			subscription.status === "active" || subscription.status === "trialing";
+		const isSubscribed = subscription.status === "active";
+		const isTrialing = subscription.status === "trialing";
 
 		return {
 			isSubscribed,
+			isTrialing,
 			status: subscription.status,
 			planSlug: subscription.planSlug,
 			currentPeriodEnd: subscription.currentPeriodEnd,

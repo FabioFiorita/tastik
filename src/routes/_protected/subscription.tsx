@@ -1,5 +1,4 @@
 import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
-import { PublicLayout } from "@/components/layout/public-layout";
 import { SubscriptionPage } from "@/components/subscription/subscription-page";
 import {
 	subscriptionQueryOptions,
@@ -26,9 +25,5 @@ function SubscriptionRoute() {
 		return <Navigate to="/" replace />;
 	}
 
-	return (
-		<PublicLayout>
-			<SubscriptionPage />
-		</PublicLayout>
-	);
+	return <SubscriptionPage />;
 }

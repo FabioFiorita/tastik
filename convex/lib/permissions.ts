@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { appError } from "./errors";
 import {
@@ -49,11 +49,27 @@ export async function requireListAccess(
 	ctx: QueryCtx | MutationCtx,
 	listId: Id<"lists">,
 ) {
+	const access = await getListAccessOrNull(ctx, listId);
+	if (!access) {
+		throw new ConvexError(appError("LIST_NOT_FOUND", "List not found"));
+	}
+
+	return access;
+}
+
+export async function getListAccessOrNull(
+	ctx: QueryCtx | MutationCtx,
+	listId: Id<"lists">,
+): Promise<{
+	userId: Id<"users">;
+	list: Doc<"lists">;
+	isOwner: boolean;
+} | null> {
 	const userId = await requireAuth(ctx);
 	const list = await ctx.db.get(listId);
 
 	if (!list) {
-		throw new ConvexError(appError("LIST_NOT_FOUND", "List not found"));
+		return null;
 	}
 
 	const isOwner = list.ownerId === userId;

@@ -79,7 +79,6 @@ describe("lists", () => {
 		});
 
 		it("throws NOT_LIST_ACCESS when another user requests list", async () => {
-			const env = await createTestEnv();
 			const asBob = await env.createUserIdentity("Bob");
 			await seedSubscribedUser(asBob);
 			await expect(asBob.query(api.lists.getList, { listId })).rejects.toThrow(
@@ -87,13 +86,12 @@ describe("lists", () => {
 			);
 		});
 
-		it("throws LIST_NOT_FOUND for non-existent list id", async () => {
+		it("returns null for non-existent list id", async () => {
 			await env.t.run(async (ctx) => {
 				await ctx.db.delete(listId);
 			});
-			await expect(
-				asAlice.query(api.lists.getList, { listId }),
-			).rejects.toThrow(ConvexError);
+			const list = await asAlice.query(api.lists.getList, { listId });
+			expect(list).toBeNull();
 		});
 	});
 
@@ -106,6 +104,7 @@ describe("lists", () => {
 				showCompleted: false,
 			});
 			const list = await asAlice.query(api.lists.getList, { listId });
+			if (!list) throw new Error("expected list");
 			expect(list).toMatchObject({
 				name: "Updated",
 				sortBy: "name",
@@ -121,9 +120,8 @@ describe("lists", () => {
 				name: "Item",
 			});
 			await asAlice.mutation(api.lists.deleteList, { listId });
-			await expect(
-				asAlice.query(api.lists.getList, { listId }),
-			).rejects.toThrow(ConvexError);
+			const list = await asAlice.query(api.lists.getList, { listId });
+			expect(list).toBeNull();
 		});
 	});
 
@@ -136,6 +134,7 @@ describe("lists", () => {
 			expect(activeOnly.find((l) => l._id === listId)).toBeUndefined();
 			await asAlice.mutation(api.lists.restoreList, { listId });
 			const list = await asAlice.query(api.lists.getList, { listId });
+			if (!list) throw new Error("expected list");
 			expect(list.status).toBe("active");
 		});
 	});

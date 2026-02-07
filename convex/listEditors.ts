@@ -16,14 +16,14 @@ import {
 } from "./lib/validation";
 
 /**
- * Get all editors for a list with their user details.
+ * Owner-only editor management view with user details.
  */
 export const getListEditors = query({
 	args: {
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		await requireListAccess(ctx, args.listId);
+		await requireListOwner(ctx, args.listId);
 
 		const editors = await ctx.db
 			.query("listEditors")
@@ -49,6 +49,32 @@ export const getListEditors = query({
 		});
 
 		return editorsWithUsers;
+	},
+});
+
+/**
+ * List collaborators with privacy-safe fields.
+ * Editors can view collaborator nicknames but not real identities.
+ */
+export const getListCollaborators = query({
+	args: {
+		listId: v.id("lists"),
+	},
+	handler: async (ctx, args) => {
+		const { userId } = await requireListAccess(ctx, args.listId);
+
+		const editors = await ctx.db
+			.query("listEditors")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		return editors.map((editor) => ({
+			_id: editor._id,
+			listId: editor.listId,
+			nickname: editor.nickname,
+			addedAt: editor.addedAt,
+			isCurrentUser: editor.userId === userId,
+		}));
 	},
 });
 

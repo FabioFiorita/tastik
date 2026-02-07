@@ -35,8 +35,8 @@ export function useListActions(listId: Id<"lists"> | undefined) {
 			return;
 		}
 
+		navigate({ to: "/", replace: true });
 		await deleteList({ listId });
-		navigate({ to: "/" });
 	};
 
 	return {

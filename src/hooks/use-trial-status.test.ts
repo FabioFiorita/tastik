@@ -1,5 +1,5 @@
-import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "@/test-utils";
 import { useTrialStatus } from "./use-trial-status";
 
 const mockUseSubscriptionQuery = vi.fn();

@@ -4,7 +4,9 @@ import { internal } from "./_generated/api";
 import { httpAction, internalMutation } from "./_generated/server";
 import { normalizeEmail } from "./lib/validation";
 
-type ClerkUserEvent = {
+// ── Types ────────────────────────────────────────────────────────────
+
+export type ClerkUserEvent = {
 	data: {
 		id: string;
 		email_addresses: Array<{
@@ -19,25 +21,25 @@ type ClerkUserEvent = {
 	type: string;
 };
 
-type ClerkDeleteEvent = {
+export type ClerkDeleteEvent = {
 	data: {
 		id: string;
 	};
 	type: string;
 };
 
-type BillingPayer = {
+export type BillingPayer = {
 	user_id?: string;
 	organization_id?: string;
 };
 
-type BillingPlan = {
+export type BillingPlan = {
 	id: string;
 	slug: string;
 	name: string;
 };
 
-type BillingSubscriptionItemWebhookData = {
+export type BillingSubscriptionItemWebhookData = {
 	id: string;
 	status: string;
 	is_free_trial?: boolean | null;
@@ -50,7 +52,7 @@ type BillingSubscriptionItemWebhookData = {
 	payer?: BillingPayer;
 };
 
-type BillingSubscriptionWebhookData = {
+export type BillingSubscriptionWebhookData = {
 	id: string;
 	status: string;
 	payer_id: string;
@@ -58,10 +60,12 @@ type BillingSubscriptionWebhookData = {
 	items: BillingSubscriptionItemWebhookData[];
 };
 
-type ClerkBillingEvent = {
+export type ClerkBillingEvent = {
 	data: BillingSubscriptionWebhookData | BillingSubscriptionItemWebhookData;
 	type: string;
 };
+
+// ── Helpers ──────────────────────────────────────────────────────────
 
 export function toOptionalNumber(
 	value: number | null | undefined,
@@ -74,6 +78,108 @@ export function toOptionalBoolean(
 ): boolean | undefined {
 	return value ?? undefined;
 }
+
+// ── HTTP Action ──────────────────────────────────────────────────────
+
+export const handleClerkWebhook = httpAction(async (ctx, request) => {
+	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+	if (!webhookSecret) {
+		return new Response("Webhook secret not configured", { status: 500 });
+	}
+
+	const svixId = request.headers.get("svix-id");
+	const svixTimestamp = request.headers.get("svix-timestamp");
+	const svixSignature = request.headers.get("svix-signature");
+
+	if (!svixId || !svixTimestamp || !svixSignature) {
+		return new Response("Missing svix headers", { status: 400 });
+	}
+
+	const body = await request.text();
+
+	const wh = new Webhook(webhookSecret);
+	let event: ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
+	try {
+		event = wh.verify(body, {
+			"svix-id": svixId,
+			"svix-timestamp": svixTimestamp,
+			"svix-signature": svixSignature,
+		}) as ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
+	} catch {
+		return new Response("Invalid webhook signature", { status: 400 });
+	}
+
+	const { type, data } = event;
+
+	if (type === "user.created" || type === "user.updated") {
+		const userData = data as ClerkUserEvent["data"];
+		const clerkId = userData.id;
+		const primaryEmail = userData.email_addresses.find(
+			(e) => e.id === userData.primary_email_address_id,
+		);
+		const email = primaryEmail
+			? normalizeEmail(primaryEmail.email_address)
+			: undefined;
+		const firstName = userData.first_name ?? "";
+		const lastName = userData.last_name ?? "";
+		const name = `${firstName} ${lastName}`.trim() || undefined;
+		const image = userData.image_url ?? undefined;
+
+		await ctx.runMutation(internal.clerkWebhook.upsertUser, {
+			clerkId,
+			email,
+			name,
+			image,
+		});
+	} else if (type === "user.deleted") {
+		const clerkId = data.id;
+		await ctx.runMutation(internal.clerkWebhook.deleteUserData, {
+			clerkId,
+		});
+	} else if (type.startsWith("subscription.")) {
+		const subscriptionData = data as BillingSubscriptionWebhookData;
+		const clerkUserId = subscriptionData.payer?.user_id;
+		if (!clerkUserId) {
+			return new Response(null, { status: 200 });
+		}
+
+		const firstItem = subscriptionData.items?.[0];
+
+		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
+			eventId: svixId,
+			eventType: type,
+			clerkUserId,
+			clerkSubscriptionId: subscriptionData.id,
+			clerkSubscriptionItemId: firstItem?.id,
+			planSlug: firstItem?.plan?.slug,
+			periodStart: toOptionalNumber(firstItem?.period_start),
+			periodEnd: toOptionalNumber(firstItem?.period_end),
+			isFreeTrial: toOptionalBoolean(firstItem?.is_free_trial),
+		});
+	} else if (type.startsWith("subscriptionItem.")) {
+		const itemData = data as BillingSubscriptionItemWebhookData;
+		const clerkUserId = itemData.payer?.user_id;
+		if (!clerkUserId) {
+			return new Response(null, { status: 200 });
+		}
+
+		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
+			eventId: svixId,
+			eventType: type,
+			clerkUserId,
+			clerkSubscriptionItemId: itemData.id,
+			planSlug: itemData.plan?.slug,
+			periodStart: toOptionalNumber(itemData.period_start),
+			periodEnd: toOptionalNumber(itemData.period_end),
+			canceledAt: toOptionalNumber(itemData.canceled_at),
+			isFreeTrial: toOptionalBoolean(itemData.is_free_trial),
+		});
+	}
+
+	return new Response(null, { status: 200 });
+});
+
+// ── User Mutations ───────────────────────────────────────────────────
 
 export const upsertUser = internalMutation({
 	args: {
@@ -166,6 +272,8 @@ export const deleteUserData = internalMutation({
 		await ctx.db.delete(userId);
 	},
 });
+
+// ── Billing Mutations ────────────────────────────────────────────────
 
 export const handleBillingEvent = internalMutation({
 	args: {
@@ -292,102 +400,4 @@ export const handleBillingEvent = internalMutation({
 			eventId: args.eventId,
 		});
 	},
-});
-
-export const handleClerkWebhook = httpAction(async (ctx, request) => {
-	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-	if (!webhookSecret) {
-		return new Response("Webhook secret not configured", { status: 500 });
-	}
-
-	const svixId = request.headers.get("svix-id");
-	const svixTimestamp = request.headers.get("svix-timestamp");
-	const svixSignature = request.headers.get("svix-signature");
-
-	if (!svixId || !svixTimestamp || !svixSignature) {
-		return new Response("Missing svix headers", { status: 400 });
-	}
-
-	const body = await request.text();
-
-	const wh = new Webhook(webhookSecret);
-	let event: ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
-	try {
-		event = wh.verify(body, {
-			"svix-id": svixId,
-			"svix-timestamp": svixTimestamp,
-			"svix-signature": svixSignature,
-		}) as ClerkUserEvent | ClerkDeleteEvent | ClerkBillingEvent;
-	} catch {
-		return new Response("Invalid webhook signature", { status: 400 });
-	}
-
-	const { type, data } = event;
-
-	if (type === "user.created" || type === "user.updated") {
-		const userData = data as ClerkUserEvent["data"];
-		const clerkId = userData.id;
-		const primaryEmail = userData.email_addresses.find(
-			(e) => e.id === userData.primary_email_address_id,
-		);
-		const email = primaryEmail
-			? normalizeEmail(primaryEmail.email_address)
-			: undefined;
-		const firstName = userData.first_name ?? "";
-		const lastName = userData.last_name ?? "";
-		const name = `${firstName} ${lastName}`.trim() || undefined;
-		const image = userData.image_url ?? undefined;
-
-		await ctx.runMutation(internal.clerkWebhook.upsertUser, {
-			clerkId,
-			email,
-			name,
-			image,
-		});
-	} else if (type === "user.deleted") {
-		const clerkId = data.id;
-		await ctx.runMutation(internal.clerkWebhook.deleteUserData, {
-			clerkId,
-		});
-	} else if (type.startsWith("subscription.")) {
-		const subscriptionData = data as BillingSubscriptionWebhookData;
-		const clerkUserId = subscriptionData.payer?.user_id;
-		if (!clerkUserId) {
-			return new Response(null, { status: 200 });
-		}
-
-		const firstItem = subscriptionData.items?.[0];
-
-		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
-			eventId: svixId,
-			eventType: type,
-			clerkUserId,
-			clerkSubscriptionId: subscriptionData.id,
-			clerkSubscriptionItemId: firstItem?.id,
-			planSlug: firstItem?.plan?.slug,
-			periodStart: toOptionalNumber(firstItem?.period_start),
-			periodEnd: toOptionalNumber(firstItem?.period_end),
-			isFreeTrial: toOptionalBoolean(firstItem?.is_free_trial),
-		});
-	} else if (type.startsWith("subscriptionItem.")) {
-		const itemData = data as BillingSubscriptionItemWebhookData;
-		const clerkUserId = itemData.payer?.user_id;
-		if (!clerkUserId) {
-			return new Response(null, { status: 200 });
-		}
-
-		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
-			eventId: svixId,
-			eventType: type,
-			clerkUserId,
-			clerkSubscriptionItemId: itemData.id,
-			planSlug: itemData.plan?.slug,
-			periodStart: toOptionalNumber(itemData.period_start),
-			periodEnd: toOptionalNumber(itemData.period_end),
-			canceledAt: toOptionalNumber(itemData.canceled_at),
-			isFreeTrial: toOptionalBoolean(itemData.is_free_trial),
-		});
-	}
-
-	return new Response(null, { status: 200 });
 });

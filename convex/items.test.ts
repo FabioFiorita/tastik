@@ -92,6 +92,29 @@ describe("items", () => {
 				}),
 			).rejects.toThrow(ConvexError);
 		});
+
+		it("throws when tagId belongs to another list", async () => {
+			await asAlice.mutation(api.lists.createList, { name: "Second List" });
+			const lists = await asAlice.query(api.lists.getUserLists, {});
+			const secondListId = lists.find((list) => list._id !== listId)?._id;
+			if (!secondListId) throw new Error("expected second list");
+
+			await asAlice.mutation(api.tags.createTag, {
+				listId: secondListId,
+				name: "Foreign Tag",
+			});
+			const secondListTags = await asAlice.query(api.tags.getListTags, {
+				listId: secondListId,
+			});
+
+			await expect(
+				asAlice.mutation(api.items.createItem, {
+					listId,
+					name: "Item with wrong tag",
+					tagId: secondListTags[0]._id,
+				}),
+			).rejects.toThrow(ConvexError);
+		});
 	});
 
 	describe("items.getListItems", () => {
@@ -116,6 +139,17 @@ describe("items", () => {
 			});
 			expect(incomplete).toHaveLength(1);
 			expect(incomplete[0].name).toBe("Todo");
+		});
+
+		it("returns empty array when list no longer exists", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Item",
+			});
+
+			await asAlice.mutation(api.lists.deleteList, { listId });
+			const items = await asAlice.query(api.items.getListItems, { listId });
+			expect(items).toEqual([]);
 		});
 	});
 
@@ -155,6 +189,34 @@ describe("items", () => {
 				url: "https://example.com",
 				notes: "Notes",
 			});
+		});
+
+		it("throws when updating tagId to a tag from another list", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Original",
+			});
+			const items = await asAlice.query(api.items.getListItems, { listId });
+			const itemId = items[0]._id;
+
+			await asAlice.mutation(api.lists.createList, { name: "Second List" });
+			const lists = await asAlice.query(api.lists.getUserLists, {});
+			const secondListId = lists.find((list) => list._id !== listId)?._id;
+			if (!secondListId) throw new Error("expected second list");
+			await asAlice.mutation(api.tags.createTag, {
+				listId: secondListId,
+				name: "Foreign Tag",
+			});
+			const secondListTags = await asAlice.query(api.tags.getListTags, {
+				listId: secondListId,
+			});
+
+			await expect(
+				asAlice.mutation(api.items.updateItem, {
+					itemId,
+					tagId: secondListTags[0]._id,
+				}),
+			).rejects.toThrow(ConvexError);
 		});
 	});
 

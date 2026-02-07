@@ -6,7 +6,10 @@
 
 # Subscription Model
 
-- Payment processor: RevenueCat.
-- States: `inactive`, `trialing`, `active`, `past_due`, `canceled`.
-- Every query/mutation checks `requireSubscription()`.
-- `requireSubscription()` verifies a subscription exists, status is `active` or `trialing`, and the current period has not expired.
+- Billing provider: Clerk Billing.
+- Stored subscription status values: `inactive`, `active`, `past_due`, `canceled`.
+- Trialing is derived from `status: active` + `freeTrial: true` + non-expired period.
+- Freemium is active:
+  - Free: up to 5 lists, up to 50 items/list, list types `simple` and `calculator`.
+  - Pro: up to 50 lists, up to 500 items/list, all list types, sharing, and tags.
+- Access is feature-gated by subscription checks where needed (not a global hard paywall).

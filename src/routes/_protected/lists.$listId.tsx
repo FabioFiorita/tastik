@@ -15,9 +15,12 @@ export const Route = createFileRoute("/_protected/lists/$listId")({
 		const list = await context.queryClient.ensureQueryData(
 			listQueryOptions(listId),
 		);
+		if (!list) {
+			throw redirect({ to: "/" });
+		}
 
 		await context.queryClient.ensureQueryData(
-			listItemsQueryOptions(listId, list?.showCompleted ?? false),
+			listItemsQueryOptions(listId, list.showCompleted),
 		);
 
 		return { listId };

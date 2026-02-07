@@ -1,9 +1,11 @@
 import { ConvexError, v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import {
+	getListAccessOrNull,
 	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
@@ -18,6 +20,8 @@ import {
 } from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
 
+// ── Queries ──────────────────────────────────────────────────────────
+
 /**
  * Get all items in a list.
  */
@@ -27,7 +31,10 @@ export const getListItems = query({
 		includeCompleted: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
-		await requireListAccess(ctx, args.listId);
+		const access = await getListAccessOrNull(ctx, args.listId);
+		if (!access) {
+			return [];
+		}
 
 		let items: Doc<"items">[];
 		if (args.includeCompleted === false) {
@@ -66,6 +73,75 @@ export const getItem = query({
 });
 
 /**
+ * Search items across all accessible lists.
+ * Returns items with list info for grouping in search results.
+ */
+export const searchItems = query({
+	args: {
+		query: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await requireAuth(ctx);
+
+		const searchQuery = args.query.trim();
+		if (!searchQuery) {
+			return [];
+		}
+
+		// Get user's owned lists
+		const ownedLists = await ctx.db
+			.query("lists")
+			.withIndex("by_owner", (q) => q.eq("ownerId", userId))
+			.collect();
+
+		// Get lists where user is an editor
+		const editorEntries = await ctx.db
+			.query("listEditors")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.collect();
+
+		// Batch fetch shared lists
+		const sharedListIds = editorEntries.map((entry) => entry.listId);
+		const sharedLists = await Promise.all(
+			sharedListIds.map((id) => ctx.db.get(id)),
+		);
+
+		// Build a map of accessible lists for quick lookup
+		const accessibleListsMap = new Map<string, Doc<"lists">>();
+		for (const list of ownedLists) {
+			accessibleListsMap.set(list._id, list);
+		}
+		for (const list of sharedLists) {
+			if (list) {
+				accessibleListsMap.set(list._id, list);
+			}
+		}
+
+		// Search items using the search index
+		const searchResults = await ctx.db
+			.query("items")
+			.withSearchIndex("search_name", (q) => q.search("name", searchQuery))
+			.take(50);
+
+		// Filter to only items in accessible lists and enrich with list info
+		const accessibleItems = searchResults
+			.filter((item) => accessibleListsMap.has(item.listId))
+			.map((item) => {
+				const list = accessibleListsMap.get(item.listId);
+				return {
+					...item,
+					listName: list?.name ?? "Unknown",
+					listIcon: list?.icon,
+				};
+			});
+
+		return accessibleItems;
+	},
+});
+
+// ── Mutations ────────────────────────────────────────────────────────
+
+/**
  * Create a new item in a list.
  */
 export const createItem = mutation({
@@ -100,6 +176,9 @@ export const createItem = mutation({
 		if (args.step !== undefined) {
 			validateStep(args.step);
 		}
+		if (args.tagId) {
+			await assertTagBelongsToList(ctx, args.listId, args.tagId);
+		}
 
 		// Get the highest sort order in the list (optimized with index)
 		const lastItem = await ctx.db
@@ -109,7 +188,6 @@ export const createItem = mutation({
 			.first();
 
 		const maxSortOrder = lastItem?.sortOrder ?? 0;
-
 		const itemType = args.type ?? "simple";
 
 		await ctx.db.insert("items", {
@@ -176,6 +254,9 @@ export const updateItem = mutation({
 		}
 		if (args.step !== undefined && args.step !== null) {
 			validateStep(args.step);
+		}
+		if (args.tagId !== undefined && args.tagId !== null) {
+			await assertTagBelongsToList(ctx, item.listId, args.tagId);
 		}
 
 		const { itemId, tagId, description, url, notes, step, ...updates } = args;
@@ -331,69 +412,17 @@ export const deleteItem = mutation({
 	},
 });
 
-/**
- * Search items across all accessible lists.
- * Returns items with list info for grouping in search results.
- */
-export const searchItems = query({
-	args: {
-		query: v.string(),
-	},
-	handler: async (ctx, args) => {
-		const userId = await requireAuth(ctx);
+// ── Helpers ──────────────────────────────────────────────────────────
 
-		const searchQuery = args.query.trim();
-		if (!searchQuery) {
-			return [];
-		}
-
-		// Get user's owned lists
-		const ownedLists = await ctx.db
-			.query("lists")
-			.withIndex("by_owner", (q) => q.eq("ownerId", userId))
-			.collect();
-
-		// Get lists where user is an editor
-		const editorEntries = await ctx.db
-			.query("listEditors")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.collect();
-
-		// Batch fetch shared lists
-		const sharedListIds = editorEntries.map((entry) => entry.listId);
-		const sharedLists = await Promise.all(
-			sharedListIds.map((id) => ctx.db.get(id)),
+async function assertTagBelongsToList(
+	ctx: MutationCtx,
+	listId: Id<"lists">,
+	tagId: Id<"listTags">,
+): Promise<void> {
+	const tag = await ctx.db.get(tagId);
+	if (!tag || tag.listId !== listId) {
+		throw new ConvexError(
+			appError("TAG_NOT_IN_LIST", "Tag does not belong to this list"),
 		);
-
-		// Build a map of accessible lists for quick lookup
-		const accessibleListsMap = new Map<string, Doc<"lists">>();
-		for (const list of ownedLists) {
-			accessibleListsMap.set(list._id, list);
-		}
-		for (const list of sharedLists) {
-			if (list) {
-				accessibleListsMap.set(list._id, list);
-			}
-		}
-
-		// Search items using the search index
-		const searchResults = await ctx.db
-			.query("items")
-			.withSearchIndex("search_name", (q) => q.search("name", searchQuery))
-			.take(50);
-
-		// Filter to only items in accessible lists and enrich with list info
-		const accessibleItems = searchResults
-			.filter((item) => accessibleListsMap.has(item.listId))
-			.map((item) => {
-				const list = accessibleListsMap.get(item.listId);
-				return {
-					...item,
-					listName: list?.name ?? "Unknown",
-					listIcon: list?.icon,
-				};
-			});
-
-		return accessibleItems;
-	},
-});
+	}
+}

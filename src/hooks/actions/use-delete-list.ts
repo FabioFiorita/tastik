@@ -13,8 +13,10 @@ export function useDeleteList() {
 		try {
 			await mutation(args);
 			toast.success("List deleted");
+			return true;
 		} catch {
 			toast.error("Failed to delete list");
+			return false;
 		} finally {
 			setIsPending(false);
 		}

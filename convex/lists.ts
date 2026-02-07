@@ -8,6 +8,7 @@ import {
 	MAX_ITEMS_PER_LIST,
 } from "./lib/limits";
 import {
+	getListAccessOrNull,
 	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
@@ -21,6 +22,8 @@ import {
 	listTypeValidator,
 	sortByValidator,
 } from "./schema";
+
+// ── Queries ──────────────────────────────────────────────────────────
 
 /**
  * Get all lists the user owns or has access to as editor.
@@ -82,10 +85,60 @@ export const getList = query({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { list, isOwner } = await requireListAccess(ctx, args.listId);
+		const access = await getListAccessOrNull(ctx, args.listId);
+		if (!access) {
+			return null;
+		}
+
+		const { list, isOwner } = access;
 		return { ...list, isOwner };
 	},
 });
+
+/**
+ * Export a list as plain text, markdown, or CSV.
+ */
+export const exportList = query({
+	args: {
+		listId: v.id("lists"),
+		format: v.optional(
+			v.union(v.literal("txt"), v.literal("md"), v.literal("csv")),
+		),
+	},
+	handler: async (ctx, args) => {
+		const { list } = await requireListAccess(ctx, args.listId);
+
+		// Fetch items
+		const items = await ctx.db
+			.query("items")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Fetch tags
+		const tags = await ctx.db
+			.query("listTags")
+			.withIndex("by_list", (q) => q.eq("listId", args.listId))
+			.collect();
+
+		// Build tag map for quick lookup
+		const tagMap = new Map(tags.map((tag) => [tag._id, tag]));
+
+		// Sort items by sortOrder
+		const sortedItems = items.sort((a, b) => a.sortOrder - b.sortOrder);
+
+		// Format based on requested format
+		const format = args.format ?? "txt";
+		if (format === "txt") {
+			return formatPlainText(list, sortedItems, tagMap);
+		}
+		if (format === "md") {
+			return formatMarkdown(list, sortedItems, tagMap);
+		}
+		return formatCsv(sortedItems, tagMap);
+	},
+});
+
+// ── Mutations ────────────────────────────────────────────────────────
 
 /**
  * Create a new list.
@@ -340,52 +393,8 @@ export const duplicateList = mutation({
 	},
 });
 
-/**
- * Export a list as plain text, markdown, or CSV.
- */
-export const exportList = query({
-	args: {
-		listId: v.id("lists"),
-		format: v.optional(
-			v.union(v.literal("txt"), v.literal("md"), v.literal("csv")),
-		),
-	},
-	handler: async (ctx, args) => {
-		const { list } = await requireListAccess(ctx, args.listId);
+// ── Export Helpers ────────────────────────────────────────────────────
 
-		// Fetch items
-		const items = await ctx.db
-			.query("items")
-			.withIndex("by_list", (q) => q.eq("listId", args.listId))
-			.collect();
-
-		// Fetch tags
-		const tags = await ctx.db
-			.query("listTags")
-			.withIndex("by_list", (q) => q.eq("listId", args.listId))
-			.collect();
-
-		// Build tag map for quick lookup
-		const tagMap = new Map(tags.map((tag) => [tag._id, tag]));
-
-		// Sort items by sortOrder
-		const sortedItems = items.sort((a, b) => a.sortOrder - b.sortOrder);
-
-		// Format based on requested format
-		const format = args.format ?? "txt";
-		if (format === "txt") {
-			return formatPlainText(list, sortedItems, tagMap);
-		}
-		if (format === "md") {
-			return formatMarkdown(list, sortedItems, tagMap);
-		}
-		return formatCsv(sortedItems, tagMap);
-	},
-});
-
-/**
- * Format list as plain text.
- */
 function formatPlainText(
 	list: Doc<"lists">,
 	items: Doc<"items">[],
@@ -430,9 +439,6 @@ function formatPlainText(
 	return output;
 }
 
-/**
- * Format list as markdown.
- */
 function formatMarkdown(
 	list: Doc<"lists">,
 	items: Doc<"items">[],
@@ -476,9 +482,6 @@ function formatMarkdown(
 	return output;
 }
 
-/**
- * Format list as CSV.
- */
 function formatCsv(
 	items: Doc<"items">[],
 	tagMap: Map<string, Doc<"listTags">>,
@@ -511,11 +514,7 @@ function formatCsv(
 	return output;
 }
 
-/**
- * Escape CSV values.
- */
 function csvEscape(value: string): string {
-	// If value contains comma, quote, or newline, wrap in quotes and escape quotes
 	if (value.includes(",") || value.includes('"') || value.includes("\n")) {
 		return `"${value.replace(/"/g, '""')}"`;
 	}

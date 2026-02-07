@@ -38,6 +38,7 @@ describe("listEditors", () => {
 			});
 			expect(editors).toHaveLength(1);
 			expect(editors[0].userId).toBe(bobUserId);
+			expect(editors[0].user?._id).toBe(bobUserId);
 		});
 
 		it("throws CANNOT_ADD_SELF_AS_EDITOR when owner adds self", async () => {
@@ -65,6 +66,50 @@ describe("listEditors", () => {
 					listId,
 					userId: bobUser._id,
 				}),
+			).rejects.toThrow(ConvexError);
+		});
+	});
+
+	describe("listEditors.getListCollaborators", () => {
+		it("returns nickname-safe collaborator data for editors", async () => {
+			const asBob = await env.createUserIdentity("Bob");
+			await seedSubscribedUser(asBob);
+			const bobUser = await asBob.query(api.users.getCurrentUser, {});
+			if (!bobUser) throw new Error("expected Bob user");
+
+			await asAlice.mutation(api.listEditors.addListEditor, {
+				listId,
+				userId: bobUser._id,
+				nickname: "Bobby",
+			});
+
+			const collaborators = await asBob.query(
+				api.listEditors.getListCollaborators,
+				{
+					listId,
+				},
+			);
+			expect(collaborators).toHaveLength(1);
+			expect(collaborators[0]).toMatchObject({
+				nickname: "Bobby",
+				isCurrentUser: true,
+			});
+			expect("user" in collaborators[0]).toBe(false);
+		});
+
+		it("blocks editors from owner-only getListEditors", async () => {
+			const asBob = await env.createUserIdentity("Bob");
+			await seedSubscribedUser(asBob);
+			const bobUser = await asBob.query(api.users.getCurrentUser, {});
+			if (!bobUser) throw new Error("expected Bob user");
+
+			await asAlice.mutation(api.listEditors.addListEditor, {
+				listId,
+				userId: bobUser._id,
+			});
+
+			await expect(
+				asBob.query(api.listEditors.getListEditors, { listId }),
 			).rejects.toThrow(ConvexError);
 		});
 	});

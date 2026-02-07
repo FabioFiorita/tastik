@@ -167,7 +167,7 @@ export const createList = mutation({
 		}
 
 		validateListName(args.name);
-		await ctx.db.insert("lists", {
+		const listId = await ctx.db.insert("lists", {
 			ownerId: userId,
 			name: args.name.trim(),
 			icon: args.icon,
@@ -179,6 +179,7 @@ export const createList = mutation({
 			hideCheckbox: args.hideCheckbox ?? false,
 			showTotal: args.showTotal ?? false,
 		});
+		return listId;
 	},
 });
 

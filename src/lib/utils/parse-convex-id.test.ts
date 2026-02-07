@@ -23,6 +23,11 @@ describe("parse-convex-id", () => {
 		expect(result).toBeUndefined();
 	});
 
+	it("returns undefined when id is 'undefined' string", () => {
+		const result = parseConvexId<"lists">("undefined");
+		expect(result).toBeUndefined();
+	});
+
 	it("returns undefined when id is empty string", () => {
 		const result = parseConvexId<"lists">("");
 		expect(result).toBeUndefined();

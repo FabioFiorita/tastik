@@ -24,6 +24,7 @@ export const LIST_ICON_OPTIONS = [
 	{ name: "Health", emoji: "🏥" },
 	{ name: "Errands", emoji: "🚗" },
 	{ name: "Garden", emoji: "🌱" },
+	{ name: "Work", emoji: "💼" },
 ] as const;
 
 export const LIST_ICON_VALUES = LIST_ICON_OPTIONS.map((icon) => icon.emoji);

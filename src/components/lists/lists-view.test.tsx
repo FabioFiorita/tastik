@@ -7,24 +7,18 @@ import { ListsView } from "./lists-view";
 mockReactRouterLink();
 
 const mockUseUserLists = vi.fn();
-const mockHandleCreateList = vi.fn();
-const mockUseListsActions = vi.fn();
 
 vi.mock("@/hooks/queries/use-user-lists", () => ({
 	useUserLists: (status: "active" | "archived") => mockUseUserLists(status),
 }));
 
-vi.mock("@/hooks/actions/use-lists-actions", () => ({
-	useListsActions: () => mockUseListsActions(),
+vi.mock("@/hooks/actions/use-create-list", () => ({
+	useCreateList: () => ({ createList: vi.fn(), isPending: false }),
 }));
 
 describe("lists-view", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockUseListsActions.mockReturnValue({
-			handleCreateList: mockHandleCreateList,
-			isCreating: false,
-		});
 	});
 
 	it("renders nothing when lists are loading", () => {
@@ -101,30 +95,19 @@ describe("lists-view", () => {
 		expect(card).toHaveTextContent("✅");
 	});
 
-	it("calls handleCreateList when create button is clicked", async () => {
+	it("opens create list dialog when create button is clicked", async () => {
 		mockUseUserLists.mockReturnValue([]);
 		const { user } = renderWithUser(<ListsView />);
 		const createButton = screen.getByTestId("create-list-button");
 		await user.click(createButton);
-		expect(mockHandleCreateList).toHaveBeenCalledTimes(1);
+		expect(screen.getByText("Create New List")).toBeInTheDocument();
 	});
 
-	it("calls handleCreateList from empty state", async () => {
+	it("opens create list dialog from empty state button", async () => {
 		mockUseUserLists.mockReturnValue([]);
 		const { user } = renderWithUser(<ListsView />);
-		const createButton = screen.getAllByText("Create List")[0];
+		const createButton = screen.getByText("Create List");
 		await user.click(createButton);
-		expect(mockHandleCreateList).toHaveBeenCalledTimes(1);
-	});
-
-	it("disables create button when isCreating is true", () => {
-		mockUseListsActions.mockReturnValue({
-			handleCreateList: mockHandleCreateList,
-			isCreating: true,
-		});
-		mockUseUserLists.mockReturnValue([]);
-		renderWithUser(<ListsView />);
-		const createButton = screen.getByTestId("create-list-button");
-		expect(createButton).toBeDisabled();
+		expect(screen.getByText("Create New List")).toBeInTheDocument();
 	});
 });

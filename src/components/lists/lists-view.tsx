@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Archive, Plus } from "lucide-react";
+import { ListTodo, Plus } from "lucide-react";
+import { useState } from "react";
+import { CreateListDialog } from "@/components/lists/create-list-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -15,13 +17,16 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { useListsActions } from "@/hooks/actions/use-lists-actions";
+import { Kbd } from "@/components/ui/kbd";
 import { useUserLists } from "@/hooks/queries/use-user-lists";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { getListIcon } from "@/lib/utils/get-list-icon";
 
 export function ListsView() {
 	const lists = useUserLists("active");
-	const { handleCreateList, isCreating } = useListsActions();
+	const [createListOpen, setCreateListOpen] = useState(false);
+
+	useKeyboardShortcut("c", () => setCreateListOpen(true));
 
 	if (!lists) {
 		return null;
@@ -36,21 +41,24 @@ export function ListsView() {
 						Manage your lists and items
 					</p>
 				</div>
-				<Button
-					onClick={handleCreateList}
-					disabled={isCreating}
-					data-testid="create-list-button"
-				>
-					<Plus className="mr-2 size-4" />
-					New List
-				</Button>
+				<CreateListDialog
+					open={createListOpen}
+					onOpenChange={setCreateListOpen}
+					trigger={
+						<Button data-testid="create-list-button">
+							<Plus className="mr-2 size-4" />
+							New List
+							<Kbd className="ml-2">C</Kbd>
+						</Button>
+					}
+				/>
 			</div>
 
 			{lists.length === 0 ? (
 				<Empty>
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
-							<Archive />
+							<ListTodo />
 						</EmptyMedia>
 						<EmptyTitle>No lists yet</EmptyTitle>
 						<EmptyDescription>
@@ -58,7 +66,7 @@ export function ListsView() {
 						</EmptyDescription>
 					</EmptyHeader>
 					<EmptyContent>
-						<Button onClick={handleCreateList} disabled={isCreating}>
+						<Button onClick={() => setCreateListOpen(true)}>
 							<Plus className="mr-2 size-4" />
 							Create List
 						</Button>

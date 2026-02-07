@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, ListChecks, PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -85,7 +85,7 @@ export function ListView({ listId }: ListViewProps) {
 				<Empty>
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
-							<PlusCircle />
+							<ListChecks />
 						</EmptyMedia>
 						<EmptyTitle>No items yet</EmptyTitle>
 						<EmptyDescription>

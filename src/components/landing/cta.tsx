@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { Smartphone } from "lucide-react";
 import { LandingSection } from "@/components/landing/landing-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -40,18 +39,6 @@ export function CTA() {
 					>
 						Sign in to continue
 					</Link>
-					<a
-						href="#download"
-						rel="noopener noreferrer"
-						className={cn(
-							buttonVariants({ variant: "outline", size: "lg" }),
-							"gap-2",
-						)}
-						data-testid="cta-download-ios"
-					>
-						<Smartphone className="h-5 w-5" />
-						Download for iOS
-					</a>
 				</div>
 			</div>
 		</LandingSection>

@@ -1,9 +1,8 @@
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
+import type { SortBy } from "@/lib/types/sort-by";
 import { api } from "../../../convex/_generated/api";
 import { useCurrentUser } from "../queries/use-current-user";
-
-type SortBy = "created_at" | "updated_at" | "name";
 
 export function useListsSort() {
 	const user = useCurrentUser();

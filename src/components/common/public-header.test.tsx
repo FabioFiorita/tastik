@@ -89,4 +89,16 @@ describe("public-header", () => {
 		renderWithUser(<PublicHeader />);
 		expect(screen.getByTestId("nav-user")).toBeInTheDocument();
 	});
+
+	it("renders mode toggle when not authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false });
+		renderWithUser(<PublicHeader />);
+		expect(screen.getByTestId("mode-toggle-trigger")).toBeInTheDocument();
+	});
+
+	it("does not render mode toggle when authenticated", () => {
+		mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true });
+		renderWithUser(<PublicHeader />);
+		expect(screen.queryByTestId("mode-toggle-trigger")).not.toBeInTheDocument();
+	});
 });

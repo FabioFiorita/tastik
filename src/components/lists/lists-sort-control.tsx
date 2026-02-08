@@ -1,5 +1,6 @@
 import { Settings2 } from "lucide-react";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import type { SortBy } from "@/lib/types/sort-by";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -13,8 +14,6 @@ import {
 import { Kbd, KbdGroup } from "../ui/kbd";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
-
-type SortBy = "created_at" | "updated_at" | "name";
 
 type ListsSortControlProps = {
 	sortBy: SortBy;

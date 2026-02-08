@@ -78,6 +78,9 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 ## Exports
 - Prefer named exports. Use default exports only when a framework requires them.
 
+## Convex Types
+- Infer domain types (enums, unions) from `convex/schema.ts` validators. Do not duplicate literal unions or enum-like types in `src/`; create a type in `src/lib/types/` using `Infer<typeof someValidator>` and import from the schema.
+
 ## Convex Queries in Hooks
 - Do not call Convex queries directly in components.
 - Create hooks under `src/hooks/queries/`.

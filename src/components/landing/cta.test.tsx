@@ -28,13 +28,6 @@ describe("cta", () => {
 		expect(signInLink).toHaveTextContent("Sign in to continue");
 	});
 
-	it("renders Download for iOS link", () => {
-		renderWithUser(<CTA />);
-		const downloadLink = screen.getByTestId("cta-download-ios");
-		expect(downloadLink).toBeInTheDocument();
-		expect(downloadLink).toHaveTextContent("Download for iOS");
-	});
-
 	it("renders Tastik logo", () => {
 		renderWithUser(<CTA />);
 		expect(screen.getByTestId("cta-logo")).toHaveAttribute("alt", "Tastik");

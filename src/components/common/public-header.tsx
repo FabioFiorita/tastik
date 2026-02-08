@@ -1,7 +1,11 @@
+import { useAuth } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
 import { AuthButton } from "@/components/common/auth-button";
+import { ModeToggle } from "@/components/common/mode-toggle";
 
 export function PublicHeader() {
+	const { isSignedIn } = useAuth();
+
 	return (
 		<header
 			className="sticky top-0 z-50 w-full border-border/50 border-b bg-background/80 backdrop-blur-lg"
@@ -49,6 +53,7 @@ export function PublicHeader() {
 				</nav>
 
 				<div className="flex items-center gap-3">
+					{!isSignedIn && <ModeToggle />}
 					<AuthButton />
 				</div>
 			</div>

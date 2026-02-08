@@ -8,5 +8,7 @@
 
 ## Business Model
 - Convex + web app.
-- Hard paywall subscription at $1.99/month.
+- Freemium subscription model via Clerk Billing:
+  - Free: 5 lists, 50 items/list, simple and calculator list types, keyboard shortcuts
+  - Pro: $1.99/month or $19.92/year (7-day trial), all list types, tags, sharing
 - Goal is self-sustaining and to cover hosting costs.

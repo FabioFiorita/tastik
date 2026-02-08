@@ -58,9 +58,23 @@ function TermsPage() {
 									multi)
 								</li>
 							</ul>
+							<p className="mt-3 text-muted-foreground">
+								Keyboard shortcuts are available to all users for efficient list
+								and item management.
+							</p>
 							<p className="text-muted-foreground">
-								The Pro plan is available for $1.99 per month, processed through
-								Clerk. Pro subscribers get access to:
+								The Pro plan is available as a monthly or yearly subscription,
+								processed through Clerk:
+							</p>
+							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+								<li>Monthly: $1.99 per month</li>
+								<li>
+									Yearly: $19.92 per year (billed annually, equivalent to
+									$1.66/month - save 17%)
+								</li>
+							</ul>
+							<p className="text-muted-foreground">
+								Pro subscribers get access to:
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>Up to 50 lists</li>
@@ -72,7 +86,8 @@ function TermsPage() {
 								<li>List sharing with editors (up to 10 per list)</li>
 							</ul>
 							<p className="text-muted-foreground">
-								New Pro subscribers may be eligible for a free trial period.
+								New Pro subscribers receive a 7-day free trial for both monthly
+								and yearly plans.
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>

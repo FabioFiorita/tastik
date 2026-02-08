@@ -7,7 +7,7 @@ export function Features() {
 			id="features"
 			backgroundClass="bg-background"
 			title="Built for everyday lists"
-			subtitle="Powerful features that stay out of your way. Focus on what matters, not on managing your app."
+			subtitle="Start free with simple lists. Upgrade to Pro for advanced features."
 		>
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{LANDING_FEATURES.map((feature) => (

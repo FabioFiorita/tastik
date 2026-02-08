@@ -53,8 +53,12 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 				<span className="text-muted-foreground">/{plan.period}</span>
 			</div>
 
+			{plan.subtitle && (
+				<p className="mb-4 text-muted-foreground text-xs">{plan.subtitle}</p>
+			)}
+
 			<div
-				className="mb-6 flex items-center gap-2 text-muted-foreground text-sm"
+				className="mb-6 flex flex-grow items-start gap-2 text-muted-foreground text-sm"
 				data-testid="plan-card-trial"
 			>
 				<Check className="size-4 text-primary" />

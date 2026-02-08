@@ -12,14 +12,15 @@ description: Tastik app domain knowledge - a non-deadline task companion with mu
 
 ## Quick Facts
 - Non-deadline task companion; not competing with iOS Reminders, Todoist, or TickTick.
-- Freemium model with Clerk billing for Pro at $1.99/month.
+- Freemium model with Clerk billing for Pro at $1.99/month or $19.92/year (7-day trial).
 - Passwordless auth: email OTP, Google OAuth, Apple Sign In.
 
 ## Hard Constraints
-- 500 items per list.
-- 50 tags per list.
-- 10 editors per list.
+- 500 items per list (Pro).
+- 50 tags per list (Pro).
+- 10 editors per list (Pro).
 - Free plan limits: 5 lists, 50 items/list, simple and calculator list types only.
+- Free features: simple lists, calculator lists, keyboard shortcuts, flexible preferences.
 - Pro-only features: tags, sharing/editors, and advanced list types (stepper, kanban, multi).
 
 ## References
@@ -31,4 +32,4 @@ description: Tastik app domain knowledge - a non-deadline task companion with mu
 - Source of truth and verification: `references/source-of-truth.md`
 
 ## Last Verified
-- 2026-02-07
+- 2026-02-08

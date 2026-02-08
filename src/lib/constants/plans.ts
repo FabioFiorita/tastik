@@ -15,6 +15,7 @@ export type Plan = {
 	trial: string;
 	cta: string;
 	badge?: string;
+	subtitle?: string;
 	popular: boolean;
 };
 
@@ -24,16 +25,17 @@ export const PLANS: Plan[] = [
 		price: "$1.99",
 		period: "month",
 		trial: "7-day",
-		cta: "Start 7-Day Trial",
+		cta: "Get Started",
 		popular: false,
 	},
 	{
 		name: "Yearly",
-		price: "$19.99",
+		price: "$19.92",
 		period: "year",
-		badge: "Save 16%",
-		trial: "14-day",
-		cta: "Start 14-Day Trial",
+		badge: "Save 17%",
+		trial: "7-day",
+		cta: "Get Started",
+		subtitle: "Billed annually ($1.66/mo)",
 		popular: true,
 	},
 ];

@@ -5,8 +5,8 @@ export const LEGAL_CONTACT = {
 };
 
 export const LEGAL_METADATA = {
-	lastUpdated: "February 3, 2026",
-	termsVersion: "2.0",
+	lastUpdated: "February 8, 2026",
+	termsVersion: "2.1",
 	privacyVersion: "2.0",
 };
 

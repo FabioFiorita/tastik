@@ -10,7 +10,6 @@ import {
 	ListChecks,
 	Luggage,
 	PartyPopper,
-	Settings2,
 	Share2,
 	ShoppingCart,
 	Tag,
@@ -25,21 +24,27 @@ export type LandingFeature = {
 export const LANDING_FEATURES: LandingFeature[] = [
 	{
 		icon: ListChecks,
-		title: "Stepper Lists",
+		title: "Simple Lists",
 		description:
-			"Increment or decrement values inline. Perfect for quantities like groceries or inventory.",
+			"Quick checkbox lists for everyday tasks. Free plan includes up to 5 lists with 50 items each.",
 	},
 	{
 		icon: Calculator,
 		title: "Calculator Lists",
 		description:
-			"Track costs and see running totals as you plan. Great for budgeting and expense tracking.",
+			"Automatic quantity and cost calculations. Track costs and see running totals as you plan.",
+	},
+	{
+		icon: ListChecks,
+		title: "Stepper Lists",
+		description:
+			"Track current/target values with auto-complete. Increment or decrement values inline.",
 	},
 	{
 		icon: Columns3,
 		title: "Kanban Boards",
 		description:
-			"Lightweight project tracking with drag-and-drop columns. No timelines required.",
+			"Drag-and-drop To do, In progress, Done columns. Lightweight project tracking with visual flow.",
 	},
 	{
 		icon: Layers,
@@ -57,19 +62,13 @@ export const LANDING_FEATURES: LandingFeature[] = [
 		icon: Share2,
 		title: "Easy Sharing",
 		description:
-			"Invite editors to collaborate on any list. Perfect for shared groceries or projects.",
+			"Up to 10 editors per list with privacy-first nicknames. Invite editors to collaborate on any list.",
 	},
 	{
 		icon: Tag,
 		title: "Smart Tags",
 		description:
-			"Organize items with tags. Filter and group within any list type.",
-	},
-	{
-		icon: Settings2,
-		title: "Flexible Preferences",
-		description:
-			"Customize sorting, hide completed items, toggle checkboxes, and show totals.",
+			"Up to 50 tags per list for filtering and structure. Organize items with tags and filter within any list type.",
 	},
 ];
 

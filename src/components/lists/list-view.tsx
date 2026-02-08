@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ListChecks, PlusCircle, Trash2 } from "lucide-react";
+import { ListChecks, PlusCircle, Trash2 } from "lucide-react";
+import { ListDetailHeader } from "@/components/lists/list-detail-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -23,14 +23,8 @@ interface ListViewProps {
 export function ListView({ listId }: ListViewProps) {
 	const list = useList(listId);
 	const items = useListItems(listId, list?.showCompleted ?? false);
-	const {
-		handleCreateItem,
-		handleToggleItem,
-		handleDeleteItem,
-		handleDeleteList,
-		isCreating,
-		isDeleting,
-	} = useListActions(listId);
+	const { handleCreateItem, handleToggleItem, handleDeleteItem, isCreating } =
+		useListActions(listId);
 
 	if (!list || !items) {
 		return (
@@ -42,44 +36,11 @@ export function ListView({ listId }: ListViewProps) {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-4">
-					<Link to="/">
-						<Button variant="ghost" size="icon" data-testid="back-to-lists">
-							<ArrowLeft className="size-4" />
-						</Button>
-					</Link>
-					<div>
-						<h1 className="font-semibold text-2xl tracking-tight">
-							{list.name}
-						</h1>
-						<p className="text-muted-foreground text-sm">
-							{items.length} {items.length === 1 ? "item" : "items"}
-						</p>
-					</div>
-				</div>
-				<div className="flex gap-2">
-					<Button
-						onClick={handleCreateItem}
-						disabled={isCreating}
-						data-testid="create-item-button"
-					>
-						<PlusCircle className="mr-2 size-4" />
-						Add Item
-					</Button>
-					{list.isOwner && (
-						<Button
-							variant="destructive"
-							onClick={handleDeleteList}
-							disabled={isDeleting}
-							data-testid="delete-list-button"
-						>
-							<Trash2 className="mr-2 size-4" />
-							Delete
-						</Button>
-					)}
-				</div>
-			</div>
+			<ListDetailHeader
+				listId={listId}
+				list={list}
+				onAddItem={handleCreateItem}
+			/>
 
 			{items.length === 0 ? (
 				<Empty>

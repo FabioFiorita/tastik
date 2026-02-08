@@ -33,13 +33,13 @@ export function ProtectedHeader() {
 					<BreadcrumbList>
 						{isListsRoute ? (
 							<BreadcrumbItem>
-								<BreadcrumbPage>All Lists</BreadcrumbPage>
+								<BreadcrumbPage>My Lists</BreadcrumbPage>
 							</BreadcrumbItem>
 						) : isListDetailRoute ? (
 							<>
 								<BreadcrumbItem>
 									<BreadcrumbLink render={<Link to="/" />}>
-										All Lists
+										My Lists
 									</BreadcrumbLink>
 								</BreadcrumbItem>
 								<BreadcrumbSeparator />
@@ -51,7 +51,7 @@ export function ProtectedHeader() {
 							</>
 						) : (
 							<BreadcrumbItem>
-								<BreadcrumbPage>All Lists</BreadcrumbPage>
+								<BreadcrumbPage>My Lists</BreadcrumbPage>
 							</BreadcrumbItem>
 						)}
 					</BreadcrumbList>

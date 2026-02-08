@@ -41,7 +41,7 @@ export function ListsView() {
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="font-semibold text-2xl tracking-tight">All Lists</h1>
+					<h1 className="font-semibold text-2xl tracking-tight">My Lists</h1>
 					<p className="text-muted-foreground text-sm">
 						Manage your lists and items
 					</p>

@@ -59,12 +59,13 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - No deprecated APIs. Example: use `React.SyntheticEvent<HTMLFormElement>` for form submits (not `FormEvent`).
 - Tailwind/shadcn: prefer design tokens (`primary`, `muted`, `muted-foreground`, `foreground`) and standard scales (`text-xs`, `text-sm`, `size-5`). Avoid arbitrary values unless behind a theme variable or a shared component.
 - Mobile-first: base styles for mobile; use `md:` or `lg:` for larger breakpoints. Avoid `sm:` for layout.
-- One component per file. Split multiple components into separate files.
+- One component per file. Never create multiple components in a single file; use one file per component.
 - No duplication. Extract repeated layout/structure into a reusable component.
 - Navigation: Use TanStack Router's `useNavigate()` hook for navigation. Never use `window.location.href` or `window.location` for navigation. Use `navigate({ to: "/path" })` or `navigate({ to: "/path", replace: true })` as needed.
 - Routes: define `pendingComponent` and `errorComponent` on every route; keep route `component` focused on rendering loaded data.
 
 ## Component Files
+- Never create multiple components in a single file; use one file per component.
 - Component files should contain only the component and small, component-specific helpers.
 - Static data (arrays, copy, config) belongs in `src/lib/constants.ts` or a focused constants file in `src/lib/constants/`.
 - Pure helpers belong in `src/lib/utils.ts` or a focused util file in `src/lib/utils/`.

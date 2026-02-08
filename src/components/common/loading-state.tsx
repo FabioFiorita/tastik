@@ -24,7 +24,7 @@ export function LoadingState({
 	return (
 		<div
 			className={cn(
-				"flex min-h-(--empty-state-min-height) items-center justify-center",
+				"flex min-h-(--empty-state-min-height) items-center justify-center px-4",
 				className,
 			)}
 			data-testid={testId ?? "loading-state"}

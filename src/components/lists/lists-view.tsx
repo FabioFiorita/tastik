@@ -60,9 +60,9 @@ export function ListsView() {
 						onOpenChange={setCreateListOpen}
 						trigger={
 							<Button data-testid="create-list-button">
-								<Plus className="mr-2 size-4" />
-								New List
-								<Kbd className="ml-2">C</Kbd>
+								<Plus className="size-4 md:mr-2" />
+								<span className="hidden md:inline">New List</span>
+								<Kbd className="ml-2 hidden md:inline-flex">C</Kbd>
 							</Button>
 						}
 					/>

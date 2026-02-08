@@ -51,7 +51,7 @@ export function ProtectedHeader() {
 							</>
 						) : (
 							<BreadcrumbItem>
-								<BreadcrumbPage>Home</BreadcrumbPage>
+								<BreadcrumbPage>All Lists</BreadcrumbPage>
 							</BreadcrumbItem>
 						)}
 					</BreadcrumbList>

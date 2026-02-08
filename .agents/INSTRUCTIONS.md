@@ -108,6 +108,10 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 - `mockNextThemes()` - Mocks next-themes (use `returnFunction: true` if you need controllable `useTheme`).
 - Never manually mock these modules - always use the helpers to avoid duplication.
 
+## Testing (best practices)
+- Do not use `vi.hoisted`. Define mocks inside the `vi.mock()` factory and expose them via a dedicated export (e.g. `__mocks` or `__mockX`) so tests can obtain references after importing the mocked module.
+- Use `vi.mocked(mockFn)` when calling mock methods (e.g. `mockResolvedValue`, `mockReturnValue`) or when TypeScript needs to treat the value as a mock; this keeps assertions type-safe.
+
 ## Post-Change Checks
 After any code change, run:
 - `bun typecheck`

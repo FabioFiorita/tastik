@@ -3,22 +3,33 @@ import { act, renderHook } from "@/test-utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useDeleteList } from "./use-delete-list";
 
-const { mockMutation, mockToastSuccess, mockToastError } = vi.hoisted(() => ({
-	mockMutation: vi.fn(),
-	mockToastSuccess: vi.fn(),
-	mockToastError: vi.fn(),
-}));
+vi.mock("convex/react", () => {
+	const mockMutation = vi.fn();
+	return { useMutation: () => mockMutation, __mockMutation: mockMutation };
+});
 
-vi.mock("convex/react", () => ({
-	useMutation: () => mockMutation,
-}));
+vi.mock("sonner", () => {
+	const mockToastSuccess = vi.fn();
+	const mockToastError = vi.fn();
+	return {
+		toast: { success: mockToastSuccess, error: mockToastError },
+		__mocks: { mockToastSuccess, mockToastError },
+	};
+});
 
-vi.mock("sonner", () => ({
-	toast: {
-		success: mockToastSuccess,
-		error: mockToastError,
-	},
-}));
+const convexReact = await import("convex/react");
+const sonner = await import("sonner");
+const mockMutation = (
+	convexReact as unknown as { __mockMutation: ReturnType<typeof vi.fn> }
+).__mockMutation;
+const { mockToastSuccess, mockToastError } = (
+	sonner as unknown as {
+		__mocks: {
+			mockToastSuccess: ReturnType<typeof vi.fn>;
+			mockToastError: ReturnType<typeof vi.fn>;
+		};
+	}
+).__mocks;
 
 describe("use-delete-list", () => {
 	beforeEach(() => {
@@ -26,7 +37,7 @@ describe("use-delete-list", () => {
 	});
 
 	it("returns true and shows success toast when delete succeeds", async () => {
-		mockMutation.mockResolvedValue(undefined);
+		vi.mocked(mockMutation).mockResolvedValue(undefined);
 		const { result } = renderHook(() => useDeleteList());
 
 		let success = false;
@@ -42,7 +53,7 @@ describe("use-delete-list", () => {
 	});
 
 	it("returns false and shows error toast when delete fails", async () => {
-		mockMutation.mockRejectedValue(new Error("boom"));
+		vi.mocked(mockMutation).mockRejectedValue(new Error("boom"));
 		const { result } = renderHook(() => useDeleteList());
 
 		let success = true;

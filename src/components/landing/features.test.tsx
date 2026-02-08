@@ -14,7 +14,7 @@ describe("features", () => {
 	it("renders section subtitle", () => {
 		renderWithUser(<Features />);
 		expect(screen.getByTestId("features-section-heading")).toHaveTextContent(
-			/Powerful features that stay out of your way. Focus on what matters/i,
+			/Start free with simple lists. Upgrade to Pro for advanced features/i,
 		);
 	});
 

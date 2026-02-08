@@ -1,33 +1,47 @@
 import React from "react";
 import { vi } from "vitest";
 
-const routerMocks = vi.hoisted(() => ({
-	mockNavigate: vi.fn(),
-	mockLocation: { pathname: "/" },
-	mockParams: {} as Record<string, string>,
-}));
+vi.mock("@tanstack/react-router", () => {
+	const mocks = {
+		mockNavigate: vi.fn(),
+		mockLocation: { pathname: "/" as string },
+		mockParams: {} as Record<string, string>,
+	};
+	return {
+		Link: ({
+			to,
+			children,
+			className,
+			params,
+			...props
+		}: {
+			to: string;
+			children: React.ReactNode;
+			className?: string;
+			params?: Record<string, string>;
+			[key: string]: unknown;
+		}) => React.createElement("a", { href: to, className, ...props }, children),
+		useNavigate: () => mocks.mockNavigate,
+		useLocation: () => mocks.mockLocation,
+		useParams: () => mocks.mockParams,
+		__routerMocks: mocks,
+	};
+});
 
-vi.mock("@tanstack/react-router", () => ({
-	Link: ({
-		to,
-		children,
-		className,
-		params,
-		...props
-	}: {
-		to: string;
-		children: React.ReactNode;
-		className?: string;
-		params?: Record<string, string>;
-		[key: string]: unknown;
-	}) => React.createElement("a", { href: to, className, ...props }, children),
-	useNavigate: () => routerMocks.mockNavigate,
-	useLocation: () => routerMocks.mockLocation,
-	useParams: () => routerMocks.mockParams,
-}));
+interface RouterMockShape {
+	__routerMocks: {
+		mockNavigate: ReturnType<typeof vi.fn>;
+		mockLocation: { pathname: string; [key: string]: unknown };
+		mockParams: Record<string, string>;
+	};
+}
+const routerMocks = (await import(
+	"@tanstack/react-router"
+)) as unknown as RouterMockShape;
+const routerMocksRef = routerMocks.__routerMocks;
 
 export function mockReactRouterLink() {
-	return routerMocks;
+	return routerMocksRef;
 }
 
 export function mockReactRouter(overrides?: {
@@ -36,25 +50,36 @@ export function mockReactRouter(overrides?: {
 	params?: Record<string, string>;
 }) {
 	if (overrides?.navigate)
-		routerMocks.mockNavigate =
-			overrides.navigate as typeof routerMocks.mockNavigate;
-	if (overrides?.location) routerMocks.mockLocation = overrides.location;
-	if (overrides?.params) routerMocks.mockParams = overrides.params;
-	return routerMocks;
+		routerMocksRef.mockNavigate =
+			overrides.navigate as typeof routerMocksRef.mockNavigate;
+	if (overrides?.location) routerMocksRef.mockLocation = overrides.location;
+	if (overrides?.params) routerMocksRef.mockParams = overrides.params;
+	return routerMocksRef;
 }
 
-const themeMocks = vi.hoisted(() => ({
-	mockSetTheme: vi.fn(),
-	theme: "light" as string,
-	getUseTheme: undefined as (() => unknown) | undefined,
-}));
+vi.mock("next-themes", () => {
+	const mockSetTheme = vi.fn();
+	const state = {
+		theme: "light" as string,
+		getUseTheme: undefined as (() => unknown) | undefined,
+	};
+	return {
+		useTheme: () =>
+			state.getUseTheme
+				? state.getUseTheme?.()
+				: { setTheme: mockSetTheme, theme: state.theme },
+		__themeMocks: { mockSetTheme, state },
+	};
+});
 
-vi.mock("next-themes", () => ({
-	useTheme: () =>
-		themeMocks.getUseTheme
-			? themeMocks.getUseTheme?.()
-			: { setTheme: themeMocks.mockSetTheme, theme: themeMocks.theme },
-}));
+interface ThemeMockShape {
+	__themeMocks: {
+		mockSetTheme: ReturnType<typeof vi.fn>;
+		state: { theme: string; getUseTheme: (() => unknown) | undefined };
+	};
+}
+const themeMocks = (await import("next-themes")) as unknown as ThemeMockShape;
+const themeMocksRef = themeMocks.__themeMocks;
 
 export function mockNextThemes(overrides?: {
 	theme?: string;
@@ -65,24 +90,32 @@ export function mockNextThemes(overrides?: {
 	mockUseTheme?: ReturnType<typeof vi.fn>;
 } {
 	if (overrides?.setTheme)
-		themeMocks.mockSetTheme =
-			overrides.setTheme as typeof themeMocks.mockSetTheme;
-	if (overrides?.theme) themeMocks.theme = overrides.theme;
+		themeMocksRef.mockSetTheme =
+			overrides.setTheme as typeof themeMocksRef.mockSetTheme;
+	if (overrides?.theme) themeMocksRef.state.theme = overrides.theme;
 	if (overrides?.returnFunction) {
 		const mockUseTheme = vi.fn();
-		themeMocks.getUseTheme = () => mockUseTheme();
-		return { mockUseTheme, mockSetTheme: themeMocks.mockSetTheme };
+		themeMocksRef.state.getUseTheme = () => mockUseTheme();
+		return { mockUseTheme, mockSetTheme: themeMocksRef.mockSetTheme };
 	}
-	return { mockSetTheme: themeMocks.mockSetTheme };
+	return { mockSetTheme: themeMocksRef.mockSetTheme };
 }
 
-const userMocks = vi.hoisted(() => ({
-	mockUserFn: vi.fn(),
-}));
+vi.mock("@/hooks/queries/use-current-user", () => {
+	const mockUserFn = vi.fn();
+	return {
+		useCurrentUser: () => mockUserFn(),
+		__userMocks: { mockUserFn },
+	};
+});
 
-vi.mock("@/hooks/queries/use-current-user", () => ({
-	useCurrentUser: () => userMocks.mockUserFn(),
-}));
+interface UserMockShape {
+	__userMocks: { mockUserFn: ReturnType<typeof vi.fn> };
+}
+const userMocksRef = (await import(
+	"@/hooks/queries/use-current-user"
+)) as unknown as UserMockShape;
+const userMocks = userMocksRef.__userMocks;
 
 export function mockUseCurrentUser() {
 	return { mockUseCurrentUser: userMocks.mockUserFn };

@@ -35,6 +35,11 @@ export const getUserLists = query({
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 
+		// Get user to read sort preferences
+		const user = await ctx.db.get(userId);
+		const sortBy = user?.listsSortBy ?? "created_at";
+		const sortAscending = user?.listsSortAscending ?? false;
+
 		// Get owned lists
 		const ownedListsQuery = ctx.db
 			.query("lists")
@@ -74,8 +79,26 @@ export const getUserLists = query({
 			...validSharedLists.map((list) => ({ ...list, isOwner: false })),
 		];
 
-		// Sort by creation time, newest first
-		return allLists.sort((a, b) => b._creationTime - a._creationTime);
+		// Sort based on user preferences
+		allLists.sort((a, b) => {
+			let comparison = 0;
+
+			if (sortBy === "created_at") {
+				comparison = a._creationTime - b._creationTime;
+			} else if (sortBy === "updated_at") {
+				const aUpdated = a.updatedAt ?? a._creationTime;
+				const bUpdated = b.updatedAt ?? b._creationTime;
+				comparison = aUpdated - bUpdated;
+			} else if (sortBy === "name") {
+				comparison = a.name.localeCompare(b.name, undefined, {
+					sensitivity: "base",
+				});
+			}
+
+			return sortAscending ? comparison : -comparison;
+		});
+
+		return allLists;
 	},
 });
 
@@ -178,6 +201,7 @@ export const createList = mutation({
 			showCompleted: true,
 			hideCheckbox: args.hideCheckbox ?? false,
 			showTotal: args.showTotal ?? false,
+			updatedAt: Date.now(),
 		});
 		return listId;
 	},
@@ -226,7 +250,10 @@ export const updateList = mutation({
 		}
 
 		if (Object.keys(filteredUpdates).length > 0) {
-			await ctx.db.patch("lists", listId, filteredUpdates);
+			await ctx.db.patch(listId, {
+				...filteredUpdates,
+				updatedAt: Date.now(),
+			});
 		}
 	},
 });
@@ -284,7 +311,10 @@ export const archiveList = mutation({
 	},
 	handler: async (ctx, args) => {
 		await requireListOwner(ctx, args.listId);
-		await ctx.db.patch("lists", args.listId, { status: "archived" });
+		await ctx.db.patch(args.listId, {
+			status: "archived",
+			updatedAt: Date.now(),
+		});
 	},
 });
 
@@ -297,7 +327,10 @@ export const restoreList = mutation({
 	},
 	handler: async (ctx, args) => {
 		await requireListOwner(ctx, args.listId);
-		await ctx.db.patch("lists", args.listId, { status: "active" });
+		await ctx.db.patch(args.listId, {
+			status: "active",
+			updatedAt: Date.now(),
+		});
 	},
 });
 
@@ -358,6 +391,7 @@ export const duplicateList = mutation({
 			showCompleted: list.showCompleted,
 			hideCheckbox: list.hideCheckbox,
 			showTotal: list.showTotal,
+			updatedAt: Date.now(),
 		});
 
 		// Duplicate tags and build ID mapping

@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { internalQuery, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
+import { requireAuth } from "./lib/permissions";
+import { sortByValidator } from "./schema";
 
 export const getById = internalQuery({
 	args: { userId: v.id("users") },
@@ -29,5 +31,19 @@ export const getCurrentUser = query({
 			.unique();
 		if (!user) return null;
 		return user;
+	},
+});
+
+export const updateListsSortPreference = mutation({
+	args: {
+		sortBy: sortByValidator,
+		sortAscending: v.boolean(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await requireAuth(ctx);
+		await ctx.db.patch(userId, {
+			listsSortBy: args.sortBy,
+			listsSortAscending: args.sortAscending,
+		});
 	},
 });

@@ -49,6 +49,8 @@ const schema = defineSchema({
 		email: v.optional(v.string()),
 		termsAcceptedAt: v.optional(v.number()),
 		lastSeenAt: v.optional(v.number()),
+		listsSortBy: v.optional(sortByValidator),
+		listsSortAscending: v.optional(v.boolean()),
 	})
 		.index("email", ["email"])
 		.index("by_clerk_id", ["clerkId"]),
@@ -65,6 +67,7 @@ const schema = defineSchema({
 		showCompleted: v.boolean(),
 		hideCheckbox: v.optional(v.boolean()),
 		showTotal: v.optional(v.boolean()),
+		updatedAt: v.optional(v.number()),
 	})
 		.index("by_owner", ["ownerId"])
 		.index("by_owner_and_status", ["ownerId", "status"]),
@@ -112,6 +115,7 @@ const schema = defineSchema({
 		notes: v.optional(v.string()),
 		// Ordering
 		sortOrder: v.number(),
+		updatedAt: v.optional(v.number()),
 	})
 		.index("by_list", ["listId"])
 		.index("by_list_and_completed", ["listId", "completed"])

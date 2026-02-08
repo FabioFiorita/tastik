@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
 import { CreateListDialog } from "@/components/lists/create-list-dialog";
+import { ListsSortControl } from "@/components/lists/lists-sort-control";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -18,6 +19,7 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Kbd } from "@/components/ui/kbd";
+import { useListsSort } from "@/hooks/actions/use-lists-sort";
 import { useUserLists } from "@/hooks/queries/use-user-lists";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { getListIcon } from "@/lib/utils/get-list-icon";
@@ -25,6 +27,9 @@ import { getListIcon } from "@/lib/utils/get-list-icon";
 export function ListsView() {
 	const lists = useUserLists("active");
 	const [createListOpen, setCreateListOpen] = useState(false);
+	const [sortPreferencesOpen, setSortPreferencesOpen] = useState(false);
+	const { sortBy, sortAscending, updateSortBy, toggleSortDirection } =
+		useListsSort();
 
 	useKeyboardShortcut("c", () => setCreateListOpen(true));
 
@@ -41,17 +46,27 @@ export function ListsView() {
 						Manage your lists and items
 					</p>
 				</div>
-				<CreateListDialog
-					open={createListOpen}
-					onOpenChange={setCreateListOpen}
-					trigger={
-						<Button data-testid="create-list-button">
-							<Plus className="mr-2 size-4" />
-							New List
-							<Kbd className="ml-2">C</Kbd>
-						</Button>
-					}
-				/>
+				<div className="flex items-center gap-3">
+					<ListsSortControl
+						sortBy={sortBy}
+						sortAscending={sortAscending}
+						onSortByChange={updateSortBy}
+						onToggleSortDirection={toggleSortDirection}
+						open={sortPreferencesOpen}
+						onOpenChange={setSortPreferencesOpen}
+					/>
+					<CreateListDialog
+						open={createListOpen}
+						onOpenChange={setCreateListOpen}
+						trigger={
+							<Button data-testid="create-list-button">
+								<Plus className="mr-2 size-4" />
+								New List
+								<Kbd className="ml-2">C</Kbd>
+							</Button>
+						}
+					/>
+				</div>
 			</div>
 
 			{lists.length === 0 ? (

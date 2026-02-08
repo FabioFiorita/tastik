@@ -190,6 +190,8 @@ export const createItem = mutation({
 		const maxSortOrder = lastItem?.sortOrder ?? 0;
 		const itemType = args.type ?? "simple";
 
+		const now = Date.now();
+
 		await ctx.db.insert("items", {
 			listId: args.listId,
 			name: args.name.trim(),
@@ -209,7 +211,11 @@ export const createItem = mutation({
 			description: args.description,
 			url: args.url,
 			notes: args.notes,
+			updatedAt: now,
 		});
+
+		// Update parent list's updatedAt
+		await ctx.db.patch(args.listId, { updatedAt: now });
 	},
 });
 
@@ -291,7 +297,14 @@ export const updateItem = mutation({
 		);
 
 		if (Object.keys(filteredUpdates).length > 0) {
-			await ctx.db.patch("items", itemId, filteredUpdates);
+			const now = Date.now();
+			await ctx.db.patch(itemId, {
+				...filteredUpdates,
+				updatedAt: now,
+			});
+
+			// Update parent list's updatedAt
+			await ctx.db.patch(item.listId, { updatedAt: now });
 		}
 	},
 });
@@ -312,10 +325,15 @@ export const toggleItemComplete = mutation({
 		await requireListAccess(ctx, item.listId);
 
 		const newCompleted = !item.completed;
-		await ctx.db.patch("items", args.itemId, {
+		const now = Date.now();
+		await ctx.db.patch(args.itemId, {
 			completed: newCompleted,
-			completedAt: newCompleted ? Date.now() : undefined,
+			completedAt: newCompleted ? now : undefined,
+			updatedAt: now,
 		});
+
+		// Update parent list's updatedAt
+		await ctx.db.patch(item.listId, { updatedAt: now });
 	},
 });
 
@@ -355,11 +373,16 @@ export const incrementItemValue = mutation({
 		const completed =
 			item.targetValue !== undefined && newValue >= item.targetValue;
 
-		await ctx.db.patch("items", args.itemId, {
+		const now = Date.now();
+		await ctx.db.patch(args.itemId, {
 			currentValue: newValue,
 			completed,
-			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
+			completedAt: completed && !item.completed ? now : item.completedAt,
+			updatedAt: now,
 		});
+
+		// Update parent list's updatedAt
+		await ctx.db.patch(item.listId, { updatedAt: now });
 	},
 });
 
@@ -386,11 +409,16 @@ export const updateItemStatus = mutation({
 		await requireListAccess(ctx, item.listId);
 
 		const completed = args.status === "done";
-		await ctx.db.patch("items", args.itemId, {
+		const now = Date.now();
+		await ctx.db.patch(args.itemId, {
 			status: args.status,
 			completed,
-			completedAt: completed && !item.completed ? Date.now() : item.completedAt,
+			completedAt: completed && !item.completed ? now : item.completedAt,
+			updatedAt: now,
 		});
+
+		// Update parent list's updatedAt
+		await ctx.db.patch(item.listId, { updatedAt: now });
 	},
 });
 
@@ -409,6 +437,9 @@ export const deleteItem = mutation({
 
 		await requireListAccess(ctx, item.listId);
 		await ctx.db.delete(args.itemId);
+
+		// Update parent list's updatedAt
+		await ctx.db.patch(item.listId, { updatedAt: Date.now() });
 	},
 });
 

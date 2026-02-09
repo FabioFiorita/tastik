@@ -15,6 +15,36 @@
 - Items are ordered and can be completed.
 - Each list type has its own behavior and display rules.
 
+## Item Form Fields
+
+### Common fields (always shown)
+- Name (required)
+- Description (optional)
+- URL (optional)
+- Tag inputs (optional, Pro feature)
+
+### Type-specific fields
+
+#### Stepper type
+- Step input (optional, defaults to 1.0)
+- Value input (target value)
+
+#### Calculator type
+- Value input (calculator value)
+
+#### Kanban type
+- Status picker (todo, in progress, done, etc.)
+
+#### Multi list type
+- Item type picker (simple, stepper, calculator, kanban)
+- After selecting item type, show fields based on that item type:
+  - If item type is stepper: show step and value inputs
+  - If item type is calculator: show value input
+  - If item type is kanban: show status picker
+  - If item type is simple: show only common fields
+
+Note: For multi-type lists, the item type determines which fields are displayed, effectively using the item type as if it were the list type for field rendering purposes.
+
 ## Tags (Pro-only feature)
 - Tags are list-scoped for privacy in shared lists.
 - Tags are visible to editors but only owners can modify them.

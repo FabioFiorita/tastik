@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Plus, Users } from "lucide-react";
 import { useState } from "react";
+import { EditListDialog } from "@/components/lists/edit-list-dialog";
 import { ListActionsMenu } from "@/components/lists/list-actions-menu";
 import { ListPreferencesMenu } from "@/components/lists/list-preferences-menu";
 import { ManageTagsDialog } from "@/components/lists/manage-tags-dialog";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useListCollaborators } from "@/hooks/queries/use-list-collaborators";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { DEFAULT_LIST_ICON } from "@/lib/constants/list-icons";
 import type { ListType } from "@/lib/types/list-type";
 import type { SortBy } from "@/lib/types/sort-by";
 import { formatListType } from "@/lib/utils/format-list-type";
@@ -125,6 +127,21 @@ export function ListDetailHeader({
 					</Button>
 				</div>
 			</div>
+
+			{activeDialog === "edit" && (
+				<EditListDialog
+					listId={listId}
+					initialValues={{
+						name: list.name,
+						type: list.type,
+						icon: list.icon ?? DEFAULT_LIST_ICON,
+					}}
+					open={true}
+					onOpenChange={(open) => {
+						if (!open) setActiveDialog(null);
+					}}
+				/>
+			)}
 
 			{activeDialog === "tags" && (
 				<ManageTagsDialog

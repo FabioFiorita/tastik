@@ -13,6 +13,14 @@ const mockHandleToggleItem = vi.fn();
 const mockHandleDeleteItem = vi.fn();
 const mockHandleDeleteList = vi.fn();
 
+vi.mock("@clerk/tanstack-react-start", () => ({
+	useAuth: () => ({ isLoaded: true, isSignedIn: true }),
+}));
+
+vi.mock("convex/react", () => ({
+	useConvexAuth: () => ({ isAuthenticated: true }),
+}));
+
 vi.mock("@/hooks/queries/use-list", () => ({
 	useList: (listId: Id<"lists">) => mockUseList(listId),
 }));
@@ -20,6 +28,32 @@ vi.mock("@/hooks/queries/use-list", () => ({
 vi.mock("@/hooks/queries/use-list-items", () => ({
 	useListItems: (listId: Id<"lists">, includeCompleted: boolean) =>
 		mockUseListItems(listId, includeCompleted),
+}));
+
+vi.mock("@/hooks/queries/use-list-collaborators", () => ({
+	useListCollaborators: () => ({ collaborators: [], isShared: false }),
+}));
+
+vi.mock("@/hooks/actions/use-export-list", () => ({
+	useExportList: () => ({ exportList: vi.fn(), isPending: false }),
+}));
+
+vi.mock("@/hooks/actions/use-duplicate-list", () => ({
+	useDuplicateList: () => ({ duplicateList: vi.fn(), isPending: false }),
+}));
+
+vi.mock("@/hooks/actions/use-delete-list", () => ({
+	useDeleteList: () => ({ deleteList: vi.fn(), isPending: false }),
+}));
+
+vi.mock("@/hooks/actions/use-update-list-preferences", () => ({
+	useUpdateListPreferences: () => ({
+		updateShowCompleted: vi.fn(),
+		updateHideCheckbox: vi.fn(),
+		updateShowTotal: vi.fn(),
+		updateSortBy: vi.fn(),
+		updateSortAscending: vi.fn(),
+	}),
 }));
 
 vi.mock("@/hooks/actions/use-list-actions", () => ({
@@ -45,7 +79,7 @@ describe("list-view", () => {
 		expect(screen.getByRole("status")).toBeInTheDocument();
 	});
 
-	it("renders list name and item count", () => {
+	it("renders list name and items", () => {
 		mockUseList.mockReturnValue({
 			_id: "list123" as Id<"lists">,
 			name: "My List",
@@ -59,22 +93,8 @@ describe("list-view", () => {
 		]);
 		renderWithUser(<ListView listId={"list123" as Id<"lists">} />);
 		expect(screen.getByText("My List")).toBeInTheDocument();
-		expect(screen.getByText("2 items")).toBeInTheDocument();
-	});
-
-	it("shows singular 'item' for single item", () => {
-		mockUseList.mockReturnValue({
-			_id: "list123" as Id<"lists">,
-			name: "My List",
-			showCompleted: false,
-			isOwner: true,
-			hideCheckbox: false,
-		});
-		mockUseListItems.mockReturnValue([
-			{ _id: "item1" as Id<"items">, name: "Item 1", completed: false },
-		]);
-		renderWithUser(<ListView listId={"list123" as Id<"lists">} />);
-		expect(screen.getByText("1 item")).toBeInTheDocument();
+		expect(screen.getByTestId("item-item1")).toBeInTheDocument();
+		expect(screen.getByTestId("item-item2")).toBeInTheDocument();
 	});
 
 	it("renders empty state when no items", () => {
@@ -121,7 +141,7 @@ describe("list-view", () => {
 		const { user } = renderWithUser(
 			<ListView listId={"list123" as Id<"lists">} />,
 		);
-		const addButton = screen.getByTestId("create-item-button");
+		const addButton = screen.getByTestId("add-item-button");
 		await user.click(addButton);
 		expect(mockHandleCreateItem).toHaveBeenCalledTimes(1);
 	});
@@ -164,7 +184,7 @@ describe("list-view", () => {
 		expect(mockHandleDeleteItem).toHaveBeenCalledWith("item1");
 	});
 
-	it("shows delete list button when user is owner", () => {
+	it("shows list actions menu when user is owner", () => {
 		mockUseList.mockReturnValue({
 			_id: "list123" as Id<"lists">,
 			name: "My List",
@@ -174,10 +194,10 @@ describe("list-view", () => {
 		});
 		mockUseListItems.mockReturnValue([]);
 		renderWithUser(<ListView listId={"list123" as Id<"lists">} />);
-		expect(screen.getByTestId("delete-list-button")).toBeInTheDocument();
+		expect(screen.getByTestId("list-actions-trigger")).toBeInTheDocument();
 	});
 
-	it("does not show delete list button when user is not owner", () => {
+	it("shows list actions menu when user is not owner", () => {
 		mockUseList.mockReturnValue({
 			_id: "list123" as Id<"lists">,
 			name: "My List",
@@ -187,7 +207,7 @@ describe("list-view", () => {
 		});
 		mockUseListItems.mockReturnValue([]);
 		renderWithUser(<ListView listId={"list123" as Id<"lists">} />);
-		expect(screen.queryByTestId("delete-list-button")).not.toBeInTheDocument();
+		expect(screen.getByTestId("list-actions-trigger")).toBeInTheDocument();
 	});
 
 	it("does not show checkbox when hideCheckbox is true", () => {

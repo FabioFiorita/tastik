@@ -16,6 +16,10 @@ vi.mock("@/hooks/actions/use-create-list", () => ({
 	useCreateList: () => ({ createList: vi.fn(), isPending: false }),
 }));
 
+vi.mock("@/hooks/actions/use-update-list", () => ({
+	useUpdateList: () => ({ updateList: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/hooks/actions/use-lists-sort", () => ({
 	useListsSort: () => ({
 		sortBy: "created_at",

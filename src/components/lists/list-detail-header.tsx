@@ -5,6 +5,7 @@ import { EditListDialog } from "@/components/lists/edit-list-dialog";
 import { ListActionsMenu } from "@/components/lists/list-actions-menu";
 import { ListPreferencesMenu } from "@/components/lists/list-preferences-menu";
 import { ManageTagsDialog } from "@/components/lists/manage-tags-dialog";
+import { ShareListDialog } from "@/components/lists/share-list-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
@@ -136,6 +137,17 @@ export function ListDetailHeader({
 						type: list.type,
 						icon: list.icon ?? DEFAULT_LIST_ICON,
 					}}
+					open={true}
+					onOpenChange={(open) => {
+						if (!open) setActiveDialog(null);
+					}}
+				/>
+			)}
+
+			{activeDialog === "share" && (
+				<ShareListDialog
+					listId={listId}
+					listName={list.name}
 					open={true}
 					onOpenChange={(open) => {
 						if (!open) setActiveDialog(null);

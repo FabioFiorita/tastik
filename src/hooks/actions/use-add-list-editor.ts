@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
+import { useState } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
@@ -8,33 +9,38 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ERROR_CODES, isAppErrorData } from "../../../convex/lib/errors";
 
-export function useDuplicateList() {
-	const mutation = useMutation(api.lists.duplicateList);
+export function useAddListEditor() {
 	const navigate = useNavigate();
+	const mutation = useMutation(api.listEditors.addListEditorByEmail);
+	const [isPending, setIsPending] = useState(false);
 
-	const duplicateList = async (args: { listId: Id<"lists"> }) => {
+	const addEditor = async (args: {
+		listId: Id<"lists">;
+		email: string;
+		nickname?: string;
+	}) => {
+		setIsPending(true);
 		try {
-			const newListId = await mutation(args);
-
-			toast.success("List duplicated successfully");
-			navigate({ to: "/lists/$listId", params: { listId: newListId } });
-
-			return newListId;
+			await mutation({
+				listId: args.listId,
+				email: args.email,
+				nickname: args.nickname,
+			});
+			toast.success("Editor added");
+			return true;
 		} catch (error) {
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
 					showUpgradeToast(error.data.message, navigate);
-					return undefined;
+					return false;
 				}
 			}
-
-			toast.error(getErrorMessage(error, "Failed to duplicate list"));
-			return undefined;
+			toast.error(getErrorMessage(error, "Failed to add editor"));
+			return false;
+		} finally {
+			setIsPending(false);
 		}
 	};
 
-	return {
-		duplicateList,
-		isPending: false, // Convex mutations handle pending state internally
-	};
+	return { addEditor, isPending };
 }

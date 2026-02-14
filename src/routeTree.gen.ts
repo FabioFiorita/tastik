@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicSignUpRouteImport } from './routes/_public/sign-up'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as ProtectedSubscriptionRouteImport } from './routes/_protected/subscription'
+import { Route as ProtectedArchiveRouteImport } from './routes/_protected/archive'
 import { Route as PublicSignUpSplatRouteImport } from './routes/_public/sign-up.$'
 import { Route as PublicSignInSplatRouteImport } from './routes/_public/sign-in.$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
@@ -50,6 +51,11 @@ const ProtectedSubscriptionRoute = ProtectedSubscriptionRouteImport.update({
   path: '/subscription',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedArchiveRoute = ProtectedArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const PublicSignUpSplatRoute = PublicSignUpSplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -83,6 +89,7 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive': typeof ProtectedArchiveRoute
   '/subscription': typeof ProtectedSubscriptionRoute
   '/sign-in': typeof PublicSignInRouteWithChildren
   '/sign-up': typeof PublicSignUpRouteWithChildren
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive': typeof ProtectedArchiveRoute
   '/subscription': typeof ProtectedSubscriptionRoute
   '/sign-in': typeof PublicSignInRouteWithChildren
   '/sign-up': typeof PublicSignUpRouteWithChildren
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_protected/archive': typeof ProtectedArchiveRoute
   '/_protected/subscription': typeof ProtectedSubscriptionRoute
   '/_public/sign-in': typeof PublicSignInRouteWithChildren
   '/_public/sign-up': typeof PublicSignUpRouteWithChildren
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/archive'
     | '/subscription'
     | '/sign-in'
     | '/sign-up'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/archive'
     | '/subscription'
     | '/sign-in'
     | '/sign-up'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_protected'
     | '/_public'
+    | '/_protected/archive'
     | '/_protected/subscription'
     | '/_public/sign-in'
     | '/_public/sign-up'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedSubscriptionRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/archive': {
+      id: '/_protected/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof ProtectedArchiveRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_public/sign-up/$': {
       id: '/_public/sign-up/$'
       path: '/$'
@@ -257,11 +276,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedRouteChildren {
+  ProtectedArchiveRoute: typeof ProtectedArchiveRoute
   ProtectedSubscriptionRoute: typeof ProtectedSubscriptionRoute
   ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedArchiveRoute: ProtectedArchiveRoute,
   ProtectedSubscriptionRoute: ProtectedSubscriptionRoute,
   ProtectedListsListIdRoute: ProtectedListsListIdRoute,
 }

@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/tanstack-react-start";
 import { shadcn } from "@clerk/themes";
 import {
+	Archive,
 	FileText,
 	HelpCircle,
 	Monitor,
@@ -37,6 +38,11 @@ export function NavUser() {
 					/>
 				</UserButton.MenuItems>
 				<UserButton.MenuItems>
+					<UserButton.Link
+						label="Archive"
+						labelIcon={<Archive className="size-4" />}
+						href="/archive"
+					/>
 					<UserButton.Link
 						label="Help Center"
 						labelIcon={<HelpCircle className="size-4" />}

@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
+	Archive,
 	Copy,
 	Download,
 	MoreVertical,
@@ -21,6 +22,7 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useArchiveList } from "@/hooks/actions/use-archive-list";
 import { useDeleteList } from "@/hooks/actions/use-delete-list";
 import { useDuplicateList } from "@/hooks/actions/use-duplicate-list";
 import { useExportList } from "@/hooks/actions/use-export-list";
@@ -47,8 +49,10 @@ export function ListActionsMenu({
 	onOpenDialog,
 }: ListActionsMenuProps) {
 	const navigate = useNavigate();
+	const { archiveList } = useArchiveList();
 	const { deleteList } = useDeleteList();
 	const { duplicateList } = useDuplicateList();
+	const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 	const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const { exportList, isPending: isExporting } = useExportList(
@@ -60,6 +64,11 @@ export function ListActionsMenu({
 
 	const openDialog = (dialog: "edit" | "share" | "tags") => {
 		onOpenDialog(dialog);
+		onOpenChange(false);
+	};
+
+	const openArchiveDialog = () => {
+		setArchiveDialogOpen(true);
 		onOpenChange(false);
 	};
 
@@ -123,6 +132,13 @@ export function ListActionsMenu({
 								<Tag className="mr-2 size-4" />
 								Tags
 							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={openArchiveDialog}
+								data-testid="archive-list-item"
+							>
+								<Archive className="mr-2 size-4" />
+								Archive
+							</DropdownMenuItem>
 						</>
 					)}
 
@@ -160,6 +176,15 @@ export function ListActionsMenu({
 				</DropdownMenuContent>
 			</DropdownMenu>
 
+			<ConfirmDialog
+				open={archiveDialogOpen}
+				onOpenChange={setArchiveDialogOpen}
+				title="Archive list?"
+				description="This list will be moved to the archive. You can restore it anytime."
+				confirmLabel="Archive"
+				onConfirm={() => archiveList({ listId })}
+				testId="archive-confirm"
+			/>
 			<ConfirmDialog
 				open={duplicateDialogOpen}
 				onOpenChange={setDuplicateDialogOpen}

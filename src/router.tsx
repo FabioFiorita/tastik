@@ -9,6 +9,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { Toaster } from "sonner";
 import { LoadingState } from "@/components/common/loading-state";
+import { SentryUserSync } from "@/components/common/sentry-user-sync";
 import { RouteErrorComponent } from "@/components/layout/route-error-component";
 import { env } from "@/lib/env";
 import { ThemeProvider } from "./components/common/theme-provider";
@@ -49,10 +50,16 @@ export function getRouter() {
 					appearance={{ baseTheme: shadcn }}
 				>
 					<ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-						<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-							{children}
-							<Toaster richColors position="top-right" />
-						</ThemeProvider>
+						<SentryUserSync>
+							<ThemeProvider
+								attribute="class"
+								defaultTheme="system"
+								enableSystem
+							>
+								{children}
+								<Toaster richColors position="top-right" />
+							</ThemeProvider>
+						</SentryUserSync>
 					</ConvexProviderWithClerk>
 				</ClerkProvider>
 			),

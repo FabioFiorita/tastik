@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { LandingSection } from "@/components/landing/landing-section";
 import { buttonVariants } from "@/components/ui/button";
+import { trackCtaClicked } from "@/lib/metrics";
 import { cn } from "@/lib/utils/cn";
 
 export function CTA() {
@@ -36,6 +37,7 @@ export function CTA() {
 						to="/sign-in"
 						className={cn(buttonVariants({ variant: "default", size: "lg" }))}
 						data-testid="cta-sign-in"
+						onClick={() => trackCtaClicked("get_started")}
 					>
 						Sign in to continue
 					</Link>

@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackListEditorAdded } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
@@ -26,9 +27,11 @@ export function useAddListEditor() {
 				email: args.email,
 				nickname: args.nickname,
 			});
+			trackListEditorAdded("success");
 			toast.success("Editor added");
 			return true;
 		} catch (error) {
+			trackListEditorAdded("failure");
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
 					showUpgradeToast(error.data.message, navigate);

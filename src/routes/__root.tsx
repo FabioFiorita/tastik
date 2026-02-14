@@ -7,13 +7,16 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
+	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import type { ConvexReactClient } from "convex/react";
+import { useEffect } from "react";
 import { NotFoundPage } from "@/components/common/not-found";
 import { currentUserQueryOptions } from "@/hooks/queries/use-current-user";
 import { subscriptionQueryOptions } from "@/hooks/queries/use-subscription";
+import { trackPageView } from "@/lib/metrics";
 import appCss from "../styles.css?url";
 
 const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
@@ -79,6 +82,16 @@ export const Route = createRootRouteWithContext<{
 	shellComponent: RootDocument,
 });
 
+function PageViewTracker() {
+	const location = useLocation();
+
+	useEffect(() => {
+		trackPageView(location.pathname);
+	}, [location.pathname]);
+
+	return null;
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
@@ -87,6 +100,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
+				<PageViewTracker />
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",

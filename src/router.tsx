@@ -1,6 +1,7 @@
 import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import { shadcn } from "@clerk/themes";
 import { ConvexQueryClient } from "@convex-dev/react-query";
+import * as Sentry from "@sentry/tanstackstart-react";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
@@ -58,6 +59,15 @@ export function getRouter() {
 		}),
 		queryClient,
 	);
+
+	if (!router.isServer && env.VITE_SENTRY_DSN) {
+		Sentry.init({
+			dsn: env.VITE_SENTRY_DSN,
+			sendDefaultPii: true,
+			integrations: [Sentry.tanstackRouterBrowserTracingIntegration(router)],
+			tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
+		});
+	}
 
 	return router;
 }

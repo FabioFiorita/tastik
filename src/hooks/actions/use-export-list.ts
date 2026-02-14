@@ -1,6 +1,7 @@
 import { useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackListExported } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -32,9 +33,10 @@ export function useExportList(listId: Id<"lists">, listName: string) {
 			a.download = `${listName}.${format}`;
 			a.click();
 			URL.revokeObjectURL(url);
-
+			trackListExported("success");
 			toast.success(`Exported as ${format.toUpperCase()}`);
 		} catch (error) {
+			trackListExported("failure");
 			toast.error(getErrorMessage(error, "Failed to export list"));
 		} finally {
 			setIsPending(false);

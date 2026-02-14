@@ -3,6 +3,7 @@ import { BookOpen, HelpCircle, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LEGAL_CONTACT } from "@/lib/constants/legal";
 import { SUPPORT_FAQS } from "@/lib/constants/support";
+import { trackCtaClicked } from "@/lib/metrics";
 
 export const Route = createFileRoute("/_public/(legal)/support")({
 	head: () => ({
@@ -43,7 +44,11 @@ function SupportPage() {
 							<Button
 								variant="outline"
 								render={(props) => (
-									<a {...props} href={`mailto:${LEGAL_CONTACT.supportEmail}`}>
+									<a
+										{...props}
+										href={`mailto:${LEGAL_CONTACT.supportEmail}`}
+										onClick={() => trackCtaClicked("support")}
+									>
 										{props.children}
 									</a>
 								)}
@@ -66,7 +71,11 @@ function SupportPage() {
 							<Button
 								variant="outline"
 								render={(props) => (
-									<a {...props} href={`mailto:${LEGAL_CONTACT.supportEmail}`}>
+									<a
+										{...props}
+										href={`mailto:${LEGAL_CONTACT.supportEmail}`}
+										onClick={() => trackCtaClicked("support")}
+									>
 										{props.children}
 									</a>
 								)}
@@ -125,7 +134,11 @@ function SupportPage() {
 						</p>
 						<Button
 							render={(props) => (
-								<a {...props} href={`mailto:${LEGAL_CONTACT.supportEmail}`}>
+								<a
+									{...props}
+									href={`mailto:${LEGAL_CONTACT.supportEmail}`}
+									onClick={() => trackCtaClicked("support")}
+								>
 									{props.children}
 								</a>
 							)}

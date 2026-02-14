@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackTagCreated } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
@@ -35,9 +36,11 @@ export function useCreateTag() {
 				name: trimmedName,
 				color: params.color,
 			});
+			trackTagCreated("success");
 			toast.success("Tag added");
 			return tagId;
 		} catch (error) {
+			trackTagCreated("failure");
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.TAG_NAME_EXISTS) {
 					toast.error(error.data.message);

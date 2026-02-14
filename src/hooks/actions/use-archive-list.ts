@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackListArchived } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -14,10 +15,12 @@ export function useArchiveList() {
 		setIsPending(true);
 		try {
 			await mutation(args);
+			trackListArchived("success");
 			toast.success("List archived");
 			navigate({ to: "/archive", replace: true });
 			return true;
 		} catch {
+			trackListArchived("failure");
 			toast.error("Failed to archive list");
 			return false;
 		} finally {

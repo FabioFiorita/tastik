@@ -1,6 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackItemUpdated } from "@/lib/metrics";
 import type { ItemStatus } from "@/lib/types/item-status";
 import type { ItemType } from "@/lib/types/item-type";
 import { api } from "../../../convex/_generated/api";
@@ -28,9 +29,11 @@ export function useUpdateItem() {
 		setIsPending(true);
 		try {
 			await mutation(params);
+			trackItemUpdated("success");
 			toast.success("Item updated");
 			return true;
 		} catch {
+			trackItemUpdated("failure");
 			toast.error("Failed to update item");
 			return false;
 		} finally {

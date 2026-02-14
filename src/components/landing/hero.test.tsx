@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mockReactRouterLink } from "@/lib/helpers/mocks";
+
+vi.mock("@/lib/metrics", () => ({
+	trackCtaClicked: vi.fn(),
+}));
+
 import { renderWithUser, screen } from "@/test-utils";
 import { Hero } from "./hero";
 

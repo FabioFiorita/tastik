@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackListCreated } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
@@ -30,12 +31,14 @@ export function useCreateList() {
 				type: params.type,
 				icon: params.icon,
 			});
+			trackListCreated(params.type ?? "simple", "success");
 			toast.success("List created");
 			if (listId != null) {
 				navigate({ to: "/lists/$listId", params: { listId } });
 			}
 			return listId;
 		} catch (error) {
+			trackListCreated(params.type ?? "simple", "failure");
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
 					showUpgradeToast(error.data.message, navigate);

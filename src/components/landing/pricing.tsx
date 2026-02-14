@@ -4,6 +4,7 @@ import { PricingFeatures } from "@/components/common/pricing-features";
 import { PricingFooter } from "@/components/common/pricing-footer";
 import { LandingSection } from "@/components/landing/landing-section";
 import { buttonVariants } from "@/components/ui/button";
+import { trackCtaClicked } from "@/lib/metrics";
 import { cn } from "@/lib/utils/cn";
 
 export function Pricing() {
@@ -31,6 +32,7 @@ export function Pricing() {
 								}),
 								"w-full",
 							)}
+							onClick={() => trackCtaClicked("subscribe")}
 						>
 							{plan.cta}
 						</Link>

@@ -1,6 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackItemCreated } from "@/lib/metrics";
 import type { ItemStatus } from "@/lib/types/item-status";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -26,9 +27,11 @@ export function useCreateItem() {
 		setIsPending(true);
 		try {
 			await mutation(args);
+			trackItemCreated(args.type ?? "simple", "success");
 			toast.success("Item added");
 			return true;
 		} catch {
+			trackItemCreated(args.type ?? "simple", "failure");
 			toast.error("Failed to add item");
 			return false;
 		} finally {

@@ -1,6 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackItemIncrement } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -16,7 +17,9 @@ export function useIncrementItemValue() {
 		setIsPending(true);
 		try {
 			await mutation(args);
+			trackItemIncrement("success");
 		} catch {
+			trackItemIncrement("failure");
 			toast.error("Failed to update value");
 		} finally {
 			setIsPending(false);

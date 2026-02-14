@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle, Minus, Plus, Smartphone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { trackCtaClicked } from "@/lib/metrics";
 import { cn } from "@/lib/utils/cn";
 
 export function Hero() {
@@ -40,6 +41,7 @@ export function Hero() {
 							to="/sign-in"
 							className={cn(buttonVariants({ variant: "default", size: "lg" }))}
 							data-testid="hero-get-started"
+							onClick={() => trackCtaClicked("get_started")}
 						>
 							Get Started
 						</Link>

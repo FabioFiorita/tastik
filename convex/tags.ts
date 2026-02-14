@@ -59,7 +59,7 @@ export const createTag = mutation({
 			);
 		}
 
-		await ctx.db.insert("listTags", {
+		return await ctx.db.insert("listTags", {
 			listId: args.listId,
 			name: trimmedName,
 			color: args.color,

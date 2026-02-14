@@ -1,25 +1,20 @@
 import { useNavigate } from "@tanstack/react-router";
+import type { ItemStatus } from "@/lib/types/item-status";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { useCreateItem } from "./use-create-item";
 import { useDeleteItem } from "./use-delete-item";
 import { useDeleteList } from "./use-delete-list";
+import { useIncrementItemValue } from "./use-increment-item-value";
 import { useToggleItemComplete } from "./use-toggle-item-complete";
+import { useUpdateItemStatus } from "./use-update-item-status";
 
 export function useListActions(listId: Id<"lists"> | undefined) {
 	const navigate = useNavigate();
 
-	const { createItem, isPending: isCreating } = useCreateItem();
 	const { toggleItemComplete } = useToggleItemComplete();
 	const { deleteItem } = useDeleteItem();
 	const { deleteList, isPending: isDeleting } = useDeleteList();
-
-	const handleCreateItem = async () => {
-		if (!listId) return;
-		await createItem({
-			listId,
-			name: "New item",
-		});
-	};
+	const { incrementValue } = useIncrementItemValue();
+	const { updateStatus } = useUpdateItemStatus();
 
 	const handleToggleItem = async (itemId: Id<"items">) => {
 		await toggleItemComplete({ itemId });
@@ -39,12 +34,27 @@ export function useListActions(listId: Id<"lists"> | undefined) {
 		await deleteList({ listId });
 	};
 
+	const handleIncrementValue = async (
+		itemId: Id<"items">,
+		delta?: number,
+		setValue?: number,
+	) => {
+		await incrementValue({ itemId, delta, setValue });
+	};
+
+	const handleUpdateStatus = async (
+		itemId: Id<"items">,
+		status: ItemStatus,
+	) => {
+		await updateStatus({ itemId, status });
+	};
+
 	return {
-		handleCreateItem,
 		handleToggleItem,
 		handleDeleteItem,
 		handleDeleteList,
-		isCreating,
+		handleIncrementValue,
+		handleUpdateStatus,
 		isDeleting,
 	};
 }

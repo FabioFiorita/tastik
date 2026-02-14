@@ -1,4 +1,5 @@
 import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
+import { shadcn } from "@clerk/themes";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
@@ -33,10 +34,19 @@ export function getRouter() {
 			defaultPreload: "intent",
 			defaultPendingComponent: LoadingState,
 			defaultErrorComponent: RouteErrorComponent,
-			context: { queryClient, convexClient, convexQueryClient },
+			context: {
+				queryClient,
+				convexClient,
+				convexQueryClient,
+				userId: null,
+				token: null,
+			},
 			scrollRestoration: true,
 			InnerWrap: ({ children }) => (
-				<ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+				<ClerkProvider
+					publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
+					appearance={{ baseTheme: shadcn }}
+				>
 					<ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
 						<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 							{children}

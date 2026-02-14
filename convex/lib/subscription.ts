@@ -21,9 +21,19 @@ export function isPaidSubscriptionActive(
 	subscription: SubscriptionRecord,
 	now: number = Date.now(),
 ): boolean {
-	// Use precomputed isActive field if available (avoids Date.now() in queries)
+	// Use precomputed isActive field with staleness safety checks
 	if (subscription.isActive !== undefined) {
-		return subscription.isActive;
+		if (!subscription.isActive) return false;
+
+		// Safety net: even if isActive was set to true, verify it's still valid
+		if (!hasTastikProPlan(subscription.planSlug)) return false;
+		if (
+			subscription.currentPeriodEnd !== undefined &&
+			subscription.currentPeriodEnd <= now
+		) {
+			return false;
+		}
+		return true;
 	}
 
 	// Fallback to computed logic for backward compatibility during migration

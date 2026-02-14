@@ -1,20 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { FooterSection } from "@/components/common/footer-section";
 import { LEGAL_CONTACT } from "@/lib/constants/legal";
-
-type FooterSectionProps = {
-	title: string;
-	children: ReactNode;
-};
-
-function FooterSection({ title, children }: FooterSectionProps) {
-	return (
-		<div className="space-y-4">
-			<h4 className="font-semibold text-foreground text-sm">{title}</h4>
-			<nav className="flex flex-col gap-2">{children}</nav>
-		</div>
-	);
-}
 
 export function PublicFooter() {
 	return (

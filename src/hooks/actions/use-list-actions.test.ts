@@ -4,17 +4,11 @@ import { renderHook } from "@/test-utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useListActions } from "./use-list-actions";
 
-const mockCreateItem = vi.fn();
 const mockToggleItemComplete = vi.fn();
 const mockDeleteItem = vi.fn();
 const mockDeleteList = vi.fn();
-
-vi.mock("./use-create-item", () => ({
-	useCreateItem: () => ({
-		createItem: mockCreateItem,
-		isPending: false,
-	}),
-}));
+const mockIncrementValue = vi.fn();
+const mockUpdateStatus = vi.fn();
 
 vi.mock("./use-toggle-item-complete", () => ({
 	useToggleItemComplete: () => ({
@@ -33,6 +27,20 @@ vi.mock("./use-delete-item", () => ({
 vi.mock("./use-delete-list", () => ({
 	useDeleteList: () => ({
 		deleteList: mockDeleteList,
+		isPending: false,
+	}),
+}));
+
+vi.mock("./use-increment-item-value", () => ({
+	useIncrementItemValue: () => ({
+		incrementValue: mockIncrementValue,
+		isPending: false,
+	}),
+}));
+
+vi.mock("./use-update-item-status", () => ({
+	useUpdateItemStatus: () => ({
+		updateStatus: mockUpdateStatus,
 		isPending: false,
 	}),
 }));

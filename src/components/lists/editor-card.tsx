@@ -1,6 +1,6 @@
 import { Check, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { RemoveEditorAlertDialog } from "@/components/lists/remove-editor-alert-dialog";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useRemoveListEditor } from "@/hooks/actions/use-remove-list-editor";
 import { useUpdateEditorNickname } from "@/hooks/actions/use-update-editor-nickname";
 import type { EditorInfo } from "@/lib/types/editor-info";
 import { cn } from "@/lib/utils/cn";
@@ -19,13 +20,13 @@ interface EditorCardProps {
 }
 
 export function EditorCard({ editor }: EditorCardProps) {
+	const { removeEditor } = useRemoveListEditor();
 	const { updateNickname, isPending: isUpdating } = useUpdateEditorNickname();
 	const [isEditing, setIsEditing] = useState(false);
 	const [nicknameValue, setNicknameValue] = useState(editor.nickname ?? "");
 	const [showRemoveDialog, setShowRemoveDialog] = useState(false);
 
-	const displayName =
-		editor.nickname ?? editor.user?.name ?? editor.user?.email ?? "Unknown";
+	const displayName = editor.nickname ?? editor.user?.email ?? "Unknown";
 	const emailLine = editor.user?.email;
 
 	const handleSaveNickname = async () => {
@@ -133,11 +134,15 @@ export function EditorCard({ editor }: EditorCardProps) {
 				)}
 			</li>
 
-			<RemoveEditorAlertDialog
+			<ConfirmDialog
 				open={showRemoveDialog}
 				onOpenChange={setShowRemoveDialog}
-				editorId={editor._id}
-				editorName={displayName}
+				title="Remove editor?"
+				description={`${displayName} will lose access to this list.`}
+				confirmLabel="Remove"
+				onConfirm={() => removeEditor({ editorId: editor._id })}
+				variant="destructive"
+				testId="remove-editor-confirm"
 			/>
 		</>
 	);

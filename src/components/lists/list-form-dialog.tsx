@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import type { ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 import {
 	ResponsiveDialog,
 	ResponsiveDialogContent,
@@ -22,8 +22,8 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 type ListFormDialogProps = {
 	mode: "create" | "edit";
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 	listId?: Id<"lists">;
 	initialValues?: { name: string; type: ListType; icon: string };
 	trigger?: ReactElement;
@@ -31,12 +31,15 @@ type ListFormDialogProps = {
 
 export function ListFormDialog({
 	mode,
-	open,
-	onOpenChange,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
 	listId,
 	initialValues,
 	trigger,
 }: ListFormDialogProps) {
+	const [internalOpen, setInternalOpen] = useState(false);
+	const open = controlledOpen ?? internalOpen;
+	const onOpenChange = controlledOnOpenChange ?? setInternalOpen;
 	const { createList, isPending: isCreatePending } = useCreateList();
 	const { updateList, isPending: isUpdatePending } = useUpdateList();
 	const isPending = mode === "create" ? isCreatePending : isUpdatePending;
@@ -82,7 +85,7 @@ export function ListFormDialog({
 		mode === "create"
 			? "Create a new list to organize your tasks and items."
 			: "Update your list details.";
-	const submitLabel = mode === "create" ? "Create List" : "Save";
+	const submitLabel = mode === "create" ? "Create List" : "Save Changes";
 
 	return (
 		<ResponsiveDialog open={open} onOpenChange={onOpenChange}>

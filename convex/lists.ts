@@ -5,6 +5,7 @@ import { appError } from "./lib/errors";
 import {
 	assertListsUnderLimit,
 	FREE_ALLOWED_LIST_TYPES,
+	FREE_MAX_ITEMS_PER_LIST,
 	MAX_ITEMS_PER_LIST,
 } from "./lib/limits";
 import {
@@ -200,7 +201,7 @@ export const createList = mutation({
 			sortAscending: true,
 			showCompleted: true,
 			hideCheckbox: args.hideCheckbox ?? false,
-			showTotal: args.showTotal ?? false,
+			showTotal: args.showTotal ?? listType === "calculator",
 			updatedAt: Date.now(),
 		});
 		return listId;
@@ -335,7 +336,7 @@ export const restoreList = mutation({
 });
 
 /**
- * Duplicate a list with all its items and tags (owner only).
+ * Duplicate a list with all its items and tags.
  * Editors are NOT copied for privacy.
  */
 export const duplicateList = mutation({
@@ -343,7 +344,7 @@ export const duplicateList = mutation({
 		listId: v.id("lists"),
 	},
 	handler: async (ctx, args) => {
-		const { userId, list } = await requireListOwner(ctx, args.listId);
+		const { userId, list } = await requireListAccess(ctx, args.listId);
 		const isSubscribed = await isUserSubscribed(ctx, userId);
 		await assertRateLimit(ctx, "duplicateList", userId);
 		await assertListsUnderLimit(ctx, userId, isSubscribed);
@@ -363,12 +364,16 @@ export const duplicateList = mutation({
 			.withIndex("by_list", (q) => q.eq("listId", args.listId))
 			.collect();
 
-		// Check items limit
-		if (sourceItems.length > MAX_ITEMS_PER_LIST) {
+		// Check item count against current plan limits.
+		// This prevents downgraded free users from duplicating oversized lists.
+		const maxItemsForPlan = isSubscribed
+			? MAX_ITEMS_PER_LIST
+			: FREE_MAX_ITEMS_PER_LIST;
+		if (sourceItems.length > maxItemsForPlan) {
 			throw new ConvexError(
 				appError(
 					"ITEMS_LIMIT_EXCEEDED",
-					`Cannot duplicate list with more than ${MAX_ITEMS_PER_LIST} items`,
+					`Cannot duplicate list with more than ${maxItemsForPlan} items`,
 				),
 			);
 		}
@@ -414,7 +419,6 @@ export const duplicateList = mutation({
 				completed: item.completed,
 				completedAt: item.completedAt,
 				currentValue: item.currentValue,
-				targetValue: item.targetValue,
 				step: item.step,
 				calculatorValue: item.calculatorValue,
 				status: item.status,
@@ -453,9 +457,8 @@ function formatPlainText(
 
 		if (item.type === "stepper") {
 			const current = item.currentValue ?? 0;
-			const target = item.targetValue ?? 0;
 			const step = item.step ?? 1;
-			output += `    Progress: ${current}/${target} (step: ${step})\n`;
+			output += `    Value: ${current} (step: ${step})\n`;
 		} else if (item.type === "calculator") {
 			output += `    Value: ${item.calculatorValue ?? 0}\n`;
 		} else if (item.type === "kanban") {
@@ -496,9 +499,8 @@ function formatMarkdown(
 
 		if (item.type === "stepper") {
 			const current = item.currentValue ?? 0;
-			const target = item.targetValue ?? 0;
 			const step = item.step ?? 1;
-			output += `  - Progress: ${current}/${target} (step: ${step})\n`;
+			output += `  - Value: ${current} (step: ${step})\n`;
 		} else if (item.type === "calculator") {
 			output += `  - Value: ${item.calculatorValue ?? 0}\n`;
 		} else if (item.type === "kanban") {
@@ -525,7 +527,7 @@ function formatCsv(
 ): string {
 	// CSV header
 	let output =
-		"Name,Completed,Type,Tag,Description,URL,Notes,CurrentValue,TargetValue,Step,CalculatorValue,Status\n";
+		"Name,Completed,Type,Tag,Description,URL,Notes,CurrentValue,Step,CalculatorValue,Status\n";
 
 	for (const item of items) {
 		const tag = item.tagId ? tagMap.get(item.tagId) : undefined;
@@ -539,7 +541,6 @@ function formatCsv(
 			item.url ? csvEscape(item.url) : "",
 			item.notes ? csvEscape(item.notes) : "",
 			item.currentValue?.toString() ?? "",
-			item.targetValue?.toString() ?? "",
 			item.step?.toString() ?? "",
 			item.calculatorValue?.toString() ?? "",
 			item.status ?? "",

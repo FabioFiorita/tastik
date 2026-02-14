@@ -38,7 +38,7 @@ export const LANDING_FEATURES: LandingFeature[] = [
 		icon: ListChecks,
 		title: "Stepper Lists",
 		description:
-			"Track current/target values with auto-complete. Increment or decrement values inline.",
+			"Track values with custom step sizes. Increment or decrement values inline.",
 	},
 	{
 		icon: Columns3,

@@ -36,8 +36,8 @@ export function ManageTagsDialog({
 		e.preventDefault();
 		const trimmed = newTagName.trim();
 		if (!trimmed) return;
-		const success = await createTag({ listId, name: trimmed });
-		if (success) {
+		const tagId = await createTag({ listId, name: trimmed });
+		if (tagId) {
 			setNewTagName("");
 		}
 	};
@@ -49,65 +49,93 @@ export function ManageTagsDialog({
 	return (
 		<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
 			<ResponsiveDialogContent>
-				<ResponsiveDialogHeader>
+				<ResponsiveDialogHeader className="shrink-0">
 					<ResponsiveDialogTitle>Manage Tags</ResponsiveDialogTitle>
 					<ResponsiveDialogDescription>
 						Tags help organize items in {listName}. All editors can see and use
 						tags.
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
-				<form
-					onSubmit={handleAddTag}
-					className="flex gap-2"
-					data-testid="add-tag-form"
-				>
-					<Input
-						value={newTagName}
-						onChange={(e) => setNewTagName(e.target.value)}
-						placeholder="Tag name"
-						disabled={isCreating}
-						className="flex-1"
-						data-testid="add-tag-input"
-					/>
-					<Button
-						type="submit"
-						disabled={isCreating || !newTagName.trim()}
-						data-testid="add-tag-button"
-					>
-						Add tag
-					</Button>
-				</form>
-				{tags.length > 0 ? (
-					<ul className="mt-4 space-y-2" data-testid="tags-list">
-						{tags.map((tag) => (
-							<li
-								key={tag._id}
-								className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2"
-								data-testid={`tag-${tag._id}`}
+
+				<div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto">
+					<section>
+						<h3 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+							List
+						</h3>
+						<div
+							className="rounded-lg border border-dashed bg-muted/30 px-4 py-3"
+							data-testid="list-card"
+						>
+							<p className="font-medium text-sm">{listName}</p>
+						</div>
+					</section>
+
+					<section>
+						<h3 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+							Add Tag
+						</h3>
+						<form
+							onSubmit={handleAddTag}
+							className="space-y-2"
+							data-testid="add-tag-form"
+						>
+							<Input
+								value={newTagName}
+								onChange={(e) => setNewTagName(e.target.value)}
+								placeholder="Tag name"
+								disabled={isCreating}
+								data-testid="add-tag-input"
+							/>
+							<Button
+								type="submit"
+								disabled={isCreating || !newTagName.trim()}
+								className="w-full"
+								data-testid="add-tag-button"
 							>
-								<span>{tag.name}</span>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									onClick={() => handleDeleteTag(tag._id)}
-									disabled={isDeleting}
-									aria-label={`Remove ${tag.name}`}
-									data-testid={`delete-tag-${tag._id}`}
-								>
-									<Trash2 className="size-4" />
-								</Button>
-							</li>
-						))}
-					</ul>
-				) : (
-					<p
-						className="mt-4 text-muted-foreground text-sm"
-						data-testid="tags-empty"
-					>
-						No tags yet. Add one above.
-					</p>
-				)}
+								Add tag
+							</Button>
+						</form>
+					</section>
+
+					<section>
+						<h3 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+							Tags
+						</h3>
+						{tags.length > 0 ? (
+							<ul className="space-y-2" data-testid="tags-list">
+								{tags.map((tag) => (
+									<li
+										key={tag._id}
+										className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2"
+										data-testid={`tag-${tag._id}`}
+									>
+										<span>{tag.name}</span>
+										<Button
+											type="button"
+											variant="destructive"
+											size="icon"
+											onClick={() => handleDeleteTag(tag._id)}
+											disabled={isDeleting}
+											aria-label={`Remove ${tag.name}`}
+											data-testid={`delete-tag-${tag._id}`}
+										>
+											<Trash2 className="size-4" />
+										</Button>
+									</li>
+								))}
+							</ul>
+						) : (
+							<div
+								className="flex items-center justify-center rounded-lg border border-dashed bg-muted/30 px-4 py-6"
+								data-testid="tags-empty"
+							>
+								<p className="text-muted-foreground text-sm">
+									No tags yet. Create one above.
+								</p>
+							</div>
+						)}
+					</section>
+				</div>
 			</ResponsiveDialogContent>
 		</ResponsiveDialog>
 	);

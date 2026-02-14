@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_protected/subscription")({
 			subscriptionQueryOptions(),
 		);
 
-		if (subscription.isSubscribed) {
+		if (subscription.isSubscribed && !subscription.isTrialing) {
 			throw redirect({ to: "/" });
 		}
 	},
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_protected/subscription")({
 function SubscriptionRoute() {
 	const subscription = useSubscriptionQuery();
 
-	if (subscription.isSubscribed) {
+	if (subscription.isSubscribed && !subscription.isTrialing) {
 		return <Navigate to="/" replace />;
 	}
 

@@ -35,6 +35,7 @@ export const getListItems = query({
 		if (!access) {
 			return [];
 		}
+		const { list } = access;
 
 		let items: Doc<"items">[];
 		if (args.includeCompleted === false) {
@@ -51,8 +52,7 @@ export const getListItems = query({
 				.collect();
 		}
 
-		// Sort by sortOrder
-		return items.sort((a, b) => a.sortOrder - b.sortOrder);
+		return items.sort((a, b) => compareItemsByListSort(a, b, list));
 	},
 });
 
@@ -107,7 +107,7 @@ export const searchItems = query({
 		);
 
 		// Build a map of accessible lists for quick lookup
-		const accessibleListsMap = new Map<string, Doc<"lists">>();
+		const accessibleListsMap = new Map<Id<"lists">, Doc<"lists">>();
 		for (const list of ownedLists) {
 			accessibleListsMap.set(list._id, list);
 		}
@@ -117,15 +117,34 @@ export const searchItems = query({
 			}
 		}
 
-		// Search items using the search index
-		const searchResults = await ctx.db
-			.query("items")
-			.withSearchIndex("search_name", (q) => q.search("name", searchQuery))
-			.take(50);
+		const normalizedQuery = searchQuery.toLocaleLowerCase();
+		const accessibleListIds = Array.from(accessibleListsMap.keys());
+		const listItems = await Promise.all(
+			accessibleListIds.map((listId) =>
+				ctx.db
+					.query("items")
+					.withIndex("by_list", (q) => q.eq("listId", listId))
+					.collect(),
+			),
+		);
 
-		// Filter to only items in accessible lists and enrich with list info
-		const accessibleItems = searchResults
-			.filter((item) => accessibleListsMap.has(item.listId))
+		const searchResults = listItems
+			.flat()
+			.filter((item) => {
+				const nameMatches = item.name
+					.toLocaleLowerCase()
+					.includes(normalizedQuery);
+				const descriptionMatches =
+					item.description?.toLocaleLowerCase().includes(normalizedQuery) ??
+					false;
+				return nameMatches || descriptionMatches;
+			})
+			.sort((a, b) => {
+				const aUpdatedAt = a.updatedAt ?? a._creationTime;
+				const bUpdatedAt = b.updatedAt ?? b._creationTime;
+				return bUpdatedAt - aUpdatedAt;
+			})
+			.slice(0, 50)
 			.map((item) => {
 				const list = accessibleListsMap.get(item.listId);
 				return {
@@ -135,7 +154,7 @@ export const searchItems = query({
 				};
 			});
 
-		return accessibleItems;
+		return searchResults;
 	},
 });
 
@@ -149,8 +168,11 @@ export const createItem = mutation({
 		listId: v.id("lists"),
 		name: v.string(),
 		type: v.optional(itemTypeValidator),
-		targetValue: v.optional(v.number()),
+		currentValue: v.optional(v.number()),
 		step: v.optional(v.number()),
+		calculatorValue: v.optional(v.number()),
+		status: v.optional(itemStatusValidator),
+		completed: v.optional(v.boolean()),
 		tagId: v.optional(v.id("listTags")),
 		description: v.optional(v.string()),
 		url: v.optional(v.string()),
@@ -191,21 +213,27 @@ export const createItem = mutation({
 		const itemType = args.type ?? "simple";
 
 		const now = Date.now();
+		const initialStatus =
+			itemType === "kanban" ? (args.status ?? "todo") : undefined;
+		const initialCurrentValue =
+			itemType === "stepper" ? (args.currentValue ?? 0) : undefined;
+		const initialCompleted = args.completed ?? initialStatus === "done";
 
 		await ctx.db.insert("items", {
 			listId: args.listId,
 			name: args.name.trim(),
 			type: itemType,
-			completed: false,
+			completed: initialCompleted,
+			completedAt: initialCompleted ? now : undefined,
 			sortOrder: maxSortOrder + 1,
 			// Stepper defaults
-			currentValue: itemType === "stepper" ? 0 : undefined,
-			targetValue: itemType === "stepper" ? args.targetValue : undefined,
+			currentValue: initialCurrentValue,
 			step: itemType === "stepper" ? (args.step ?? 1.0) : undefined,
 			// Calculator defaults
-			calculatorValue: itemType === "calculator" ? 0 : undefined,
+			calculatorValue:
+				itemType === "calculator" ? (args.calculatorValue ?? 0) : undefined,
 			// Kanban defaults
-			status: itemType === "kanban" ? "todo" : undefined,
+			status: initialStatus,
 			// Optional fields
 			tagId: args.tagId,
 			description: args.description,
@@ -227,8 +255,11 @@ export const updateItem = mutation({
 		itemId: v.id("items"),
 		name: v.optional(v.string()),
 		type: v.optional(itemTypeValidator),
-		targetValue: v.optional(v.number()),
+		currentValue: v.optional(v.union(v.number(), v.null())),
 		step: v.optional(v.union(v.number(), v.null())),
+		calculatorValue: v.optional(v.union(v.number(), v.null())),
+		status: v.optional(v.union(itemStatusValidator, v.null())),
+		completed: v.optional(v.boolean()),
 		tagId: v.optional(v.union(v.id("listTags"), v.null())),
 		description: v.optional(v.union(v.string(), v.null())),
 		url: v.optional(v.union(v.string(), v.null())),
@@ -265,7 +296,19 @@ export const updateItem = mutation({
 			await assertTagBelongsToList(ctx, item.listId, args.tagId);
 		}
 
-		const { itemId, tagId, description, url, notes, step, ...updates } = args;
+		const {
+			itemId,
+			tagId,
+			description,
+			url,
+			notes,
+			step,
+			currentValue,
+			calculatorValue,
+			status,
+			completed,
+			...updates
+		} = args;
 
 		// Build updates object, handling null values for optional fields
 		const patchData: Record<string, unknown> = { ...updates };
@@ -290,6 +333,21 @@ export const updateItem = mutation({
 		if (step !== undefined) {
 			patchData.step = step === null ? undefined : step;
 		}
+		if (currentValue !== undefined) {
+			patchData.currentValue = currentValue === null ? undefined : currentValue;
+		}
+		if (calculatorValue !== undefined) {
+			patchData.calculatorValue =
+				calculatorValue === null ? undefined : calculatorValue;
+		}
+		if (status !== undefined) {
+			patchData.status = status === null ? undefined : status;
+		}
+		if (completed !== undefined) {
+			patchData.completed = completed;
+		} else if (status !== undefined && status !== null) {
+			patchData.completed = status === "done";
+		}
 
 		// Filter out undefined values from updates
 		const filteredUpdates = Object.fromEntries(
@@ -298,6 +356,14 @@ export const updateItem = mutation({
 
 		if (Object.keys(filteredUpdates).length > 0) {
 			const now = Date.now();
+			const nextCompleted = filteredUpdates.completed;
+			if (nextCompleted === true && !item.completed) {
+				filteredUpdates.completedAt = now;
+			}
+			if (nextCompleted === false && item.completed) {
+				filteredUpdates.completedAt = undefined;
+			}
+
 			await ctx.db.patch(itemId, {
 				...filteredUpdates,
 				updatedAt: now,
@@ -352,13 +418,33 @@ export const incrementItemValue = mutation({
 			throw new ConvexError(appError("ITEM_NOT_FOUND", "Item not found"));
 		}
 
-		if (item.type !== "stepper") {
+		if (item.type !== "stepper" && item.type !== "calculator") {
 			throw new ConvexError(
-				appError("ITEM_NOT_STEPPER_TYPE", "Item is not a stepper type"),
+				appError(
+					"ITEM_NOT_STEPPER_TYPE",
+					"Item is not a numeric type (stepper or calculator)",
+				),
 			);
 		}
 
 		await requireListAccess(ctx, item.listId);
+		const now = Date.now();
+
+		if (item.type === "calculator") {
+			const newValue =
+				args.setValue !== undefined
+					? args.setValue
+					: (item.calculatorValue ?? 0) + (args.delta ?? 0);
+
+			await ctx.db.patch(args.itemId, {
+				calculatorValue: newValue,
+				updatedAt: now,
+			});
+
+			// Update parent list's updatedAt
+			await ctx.db.patch(item.listId, { updatedAt: now });
+			return;
+		}
 
 		let newValue: number;
 		if (args.setValue !== undefined) {
@@ -369,15 +455,8 @@ export const incrementItemValue = mutation({
 			newValue = (item.currentValue ?? 0) + delta;
 		}
 
-		// Check if completed (reached target)
-		const completed =
-			item.targetValue !== undefined && newValue >= item.targetValue;
-
-		const now = Date.now();
 		await ctx.db.patch(args.itemId, {
 			currentValue: newValue,
-			completed,
-			completedAt: completed && !item.completed ? now : item.completedAt,
 			updatedAt: now,
 		});
 
@@ -456,4 +535,30 @@ async function assertTagBelongsToList(
 			appError("TAG_NOT_IN_LIST", "Tag does not belong to this list"),
 		);
 	}
+}
+
+function compareItemsByListSort(
+	a: Doc<"items">,
+	b: Doc<"items">,
+	list: Pick<Doc<"lists">, "sortBy" | "sortAscending">,
+): number {
+	let comparison = 0;
+
+	if (list.sortBy === "created_at") {
+		comparison = a._creationTime - b._creationTime;
+	} else if (list.sortBy === "updated_at") {
+		const aUpdated = a.updatedAt ?? a._creationTime;
+		const bUpdated = b.updatedAt ?? b._creationTime;
+		comparison = aUpdated - bUpdated;
+	} else if (list.sortBy === "name") {
+		comparison = a.name.localeCompare(b.name, undefined, {
+			sensitivity: "base",
+		});
+	}
+
+	if (comparison === 0) {
+		comparison = a.sortOrder - b.sortOrder;
+	}
+
+	return list.sortAscending ? comparison : -comparison;
 }

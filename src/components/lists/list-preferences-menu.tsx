@@ -47,8 +47,7 @@ export function ListPreferencesMenu({
 		isPending,
 	} = useUpdateListPreferences(listId, list);
 
-	// Keyboard shortcut: 'v' to open menu
-	useKeyboardShortcut("v", () => onOpenChange(true));
+	useKeyboardShortcut("p", () => onOpenChange(true));
 
 	// Type-specific visibility logic
 	const showHideCompleted = list.type !== "kanban";
@@ -67,7 +66,7 @@ export function ListPreferencesMenu({
 				<SlidersHorizontal className="size-4" />
 				<span className="hidden md:inline">Preferences</span>
 				<KbdGroup className="ml-1 hidden md:inline-flex">
-					<Kbd>V</Kbd>
+					<Kbd>P</Kbd>
 				</KbdGroup>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">

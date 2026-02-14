@@ -20,34 +20,36 @@ export function useCreateTag() {
 	const mutation = useMutation(api.tags.createTag);
 	const [isPending, setIsPending] = useState(false);
 
-	const createTag = async (params: CreateTagParams): Promise<boolean> => {
+	const createTag = async (
+		params: CreateTagParams,
+	): Promise<Id<"listTags"> | null> => {
 		const trimmedName = params.name.trim();
 		if (!trimmedName) {
 			toast.error("Tag name cannot be empty");
-			return false;
+			return null;
 		}
 		setIsPending(true);
 		try {
-			await mutation({
+			const tagId = await mutation({
 				listId: params.listId,
 				name: trimmedName,
 				color: params.color,
 			});
 			toast.success("Tag added");
-			return true;
+			return tagId;
 		} catch (error) {
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.TAG_NAME_EXISTS) {
 					toast.error(error.data.message);
-					return false;
+					return null;
 				}
 				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
 					showUpgradeToast(error.data.message, navigate);
-					return false;
+					return null;
 				}
 			}
 			toast.error(getErrorMessage(error, "Failed to add tag"));
-			return false;
+			return null;
 		} finally {
 			setIsPending(false);
 		}

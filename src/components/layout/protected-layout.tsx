@@ -12,8 +12,8 @@ export function ProtectedLayout({ children }: { children?: React.ReactNode }) {
 	}
 
 	return (
-		<Suspense fallback={<LoadingState />}>
-			<DashboardLayout>{children ?? <Outlet />}</DashboardLayout>
-		</Suspense>
+		<DashboardLayout>
+			<Suspense fallback={<LoadingState />}>{children ?? <Outlet />}</Suspense>
+		</DashboardLayout>
 	);
 }

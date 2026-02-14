@@ -81,63 +81,6 @@ export const getListCollaborators = query({
 });
 
 /**
- * Add an editor to a list by user ID (owner only).
- */
-export const addListEditor = mutation({
-	args: {
-		listId: v.id("lists"),
-		userId: v.id("users"),
-		nickname: v.optional(v.string()),
-	},
-	handler: async (ctx, args) => {
-		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
-		await requirePaidFeature(ctx, ownerId, "sharing");
-		await assertRateLimit(ctx, "addListEditor", ownerId);
-
-		if (args.nickname) {
-			validateNickname(args.nickname);
-		}
-
-		if (args.userId === ownerId) {
-			throw new ConvexError(
-				appError(
-					"CANNOT_ADD_SELF_AS_EDITOR",
-					"Cannot add yourself as an editor",
-				),
-			);
-		}
-
-		const existingEditor = await ctx.db
-			.query("listEditors")
-			.withIndex("by_list_and_user", (q) =>
-				q.eq("listId", args.listId).eq("userId", args.userId),
-			)
-			.unique();
-
-		if (existingEditor) {
-			throw new ConvexError(
-				appError(
-					"USER_ALREADY_EDITOR",
-					"User is already an editor of this list",
-				),
-			);
-		}
-
-		const user = await ctx.db.get("users", args.userId);
-		if (!user) {
-			throw new ConvexError(appError("USER_NOT_FOUND", "User not found"));
-		}
-		await assertEditorsUnderLimit(ctx, args.listId);
-		await ctx.db.insert("listEditors", {
-			listId: args.listId,
-			userId: args.userId,
-			nickname: args.nickname,
-			addedAt: Date.now(),
-		});
-	},
-});
-
-/**
  * Add an editor to a list by email (owner only).
  */
 export const addListEditorByEmail = mutation({

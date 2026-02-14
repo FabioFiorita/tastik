@@ -171,6 +171,92 @@ describe("lists", () => {
 			expect(tags).toHaveLength(1);
 			expect(tags[0].name).toBe("TagA");
 		});
+
+		it("allows editors to duplicate shared lists into their own account", async () => {
+			const asBob = await env.createUserIdentity("Bob");
+			await seedSubscribedUser(asBob);
+			const bob = await asBob.query(api.users.getCurrentUser, {});
+			if (!bob) throw new Error("expected Bob user");
+			await env.t.run(async (ctx) => {
+				await ctx.db.patch("users", bob._id, { email: "bob@example.com" });
+			});
+
+			await asAlice.mutation(api.listEditors.addListEditorByEmail, {
+				listId,
+				email: "bob@example.com",
+				nickname: "Bob",
+			});
+
+			const duplicatedListId = await asBob.mutation(api.lists.duplicateList, {
+				listId,
+			});
+			const bobLists = await asBob.query(api.lists.getUserLists, {});
+			const duplicated = bobLists.find((list) => list._id === duplicatedListId);
+
+			expect(duplicated).toBeDefined();
+			expect(duplicated?.isOwner).toBe(true);
+			expect(duplicated?.name).toBe("List (copy)");
+		});
+
+		it("copies item fields and remaps tag ids when duplicating", async () => {
+			await asAlice.mutation(api.tags.createTag, {
+				listId,
+				name: "TagA",
+			});
+			const [tag] = await asAlice.query(api.tags.getListTags, { listId });
+
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Stepper Item",
+				type: "stepper",
+				currentValue: 4,
+				step: 2,
+				description: "progress",
+				url: "https://example.com",
+				tagId: tag._id,
+			});
+
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Calculator Item",
+				type: "calculator",
+				calculatorValue: -3,
+				tagId: tag._id,
+			});
+
+			const newListId = await asAlice.mutation(api.lists.duplicateList, {
+				listId,
+			});
+			const duplicatedItems = await asAlice.query(api.items.getListItems, {
+				listId: newListId,
+			});
+			const duplicatedTags = await asAlice.query(api.tags.getListTags, {
+				listId: newListId,
+			});
+
+			expect(duplicatedTags).toHaveLength(1);
+			expect(duplicatedItems).toHaveLength(2);
+			expect(
+				duplicatedItems.every((item) => item.tagId === duplicatedTags[0]._id),
+			).toBe(true);
+			expect(duplicatedItems).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						name: "Stepper Item",
+						type: "stepper",
+						currentValue: 4,
+						step: 2,
+						description: "progress",
+						url: "https://example.com",
+					}),
+					expect.objectContaining({
+						name: "Calculator Item",
+						type: "calculator",
+						calculatorValue: -3,
+					}),
+				]),
+			);
+		});
 	});
 
 	describe("lists.exportList", () => {
@@ -179,24 +265,34 @@ describe("lists", () => {
 				listId,
 				name: "Task A",
 			});
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Stepper A",
+				type: "stepper",
+				currentValue: 6,
+				step: 2,
+			});
 			const txt = await asAlice.query(api.lists.exportList, {
 				listId,
 				format: "txt",
 			});
 			expect(txt).toContain("List");
 			expect(txt).toContain("Task A");
+			expect(txt).toContain("Value: 6 (step: 2)");
 			const md = await asAlice.query(api.lists.exportList, {
 				listId,
 				format: "md",
 			});
 			expect(md).toContain("# List");
 			expect(md).toContain("Task A");
+			expect(md).toContain("Value: 6 (step: 2)");
 			const csv = await asAlice.query(api.lists.exportList, {
 				listId,
 				format: "csv",
 			});
 			expect(csv).toContain("Task A");
 			expect(csv).toContain("Name,Completed");
+			expect(csv).not.toContain("TargetValue");
 		});
 	});
 });

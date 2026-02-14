@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Plus, Users } from "lucide-react";
 import { useState } from "react";
-import { EditListDialog } from "@/components/lists/edit-list-dialog";
+import { ItemFormDialog } from "@/components/lists/item-form-dialog";
 import { ListActionsMenu } from "@/components/lists/list-actions-menu";
+import { ListFormDialog } from "@/components/lists/list-form-dialog";
 import { ListPreferencesMenu } from "@/components/lists/list-preferences-menu";
 import { ManageTagsDialog } from "@/components/lists/manage-tags-dialog";
 import { ShareListDialog } from "@/components/lists/share-list-dialog";
@@ -31,16 +32,11 @@ interface ListDetailHeaderProps {
 		hideCheckbox?: boolean;
 		showTotal?: boolean;
 	};
-	onAddItem: () => void;
 }
 
-type DialogType = "edit" | "share" | "tags" | null;
+type DialogType = "edit" | "share" | "tags" | "createItem" | null;
 
-export function ListDetailHeader({
-	listId,
-	list,
-	onAddItem,
-}: ListDetailHeaderProps) {
+export function ListDetailHeader({ listId, list }: ListDetailHeaderProps) {
 	const { isShared } = useListCollaborators(listId);
 	const [activeDialog, setActiveDialog] = useState<DialogType>(null);
 	const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -49,7 +45,7 @@ export function ListDetailHeader({
 	const openDialog = (dialog: Exclude<DialogType, null>) =>
 		setActiveDialog(dialog);
 
-	useKeyboardShortcut("c", onAddItem);
+	useKeyboardShortcut("c", () => openDialog("createItem"));
 
 	return (
 		<>
@@ -108,15 +104,17 @@ export function ListDetailHeader({
 						onOpenDialog={openDialog}
 					/>
 
-					<ListPreferencesMenu
-						listId={listId}
-						list={list}
-						open={preferencesMenuOpen}
-						onOpenChange={setPreferencesMenuOpen}
-					/>
+					{list.isOwner && (
+						<ListPreferencesMenu
+							listId={listId}
+							list={list}
+							open={preferencesMenuOpen}
+							onOpenChange={setPreferencesMenuOpen}
+						/>
+					)}
 
 					<Button
-						onClick={onAddItem}
+						onClick={() => openDialog("createItem")}
 						size="default"
 						data-testid="add-item-button"
 					>
@@ -130,7 +128,8 @@ export function ListDetailHeader({
 			</div>
 
 			{activeDialog === "edit" && (
-				<EditListDialog
+				<ListFormDialog
+					mode="edit"
 					listId={listId}
 					initialValues={{
 						name: list.name,
@@ -159,6 +158,18 @@ export function ListDetailHeader({
 				<ManageTagsDialog
 					listId={listId}
 					listName={list.name}
+					open={true}
+					onOpenChange={(open) => {
+						if (!open) setActiveDialog(null);
+					}}
+				/>
+			)}
+
+			{activeDialog === "createItem" && (
+				<ItemFormDialog
+					mode="create"
+					listId={listId}
+					listType={list.type}
 					open={true}
 					onOpenChange={(open) => {
 						if (!open) setActiveDialog(null);

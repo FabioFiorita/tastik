@@ -12,6 +12,8 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import type { ConvexReactClient } from "convex/react";
 import { NotFoundPage } from "@/components/common/not-found";
+import { currentUserQueryOptions } from "@/hooks/queries/use-current-user";
+import { subscriptionQueryOptions } from "@/hooks/queries/use-subscription";
 import appCss from "../styles.css?url";
 
 const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
@@ -28,6 +30,8 @@ export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
 	convexClient: ConvexReactClient;
 	convexQueryClient: ConvexQueryClient;
+	userId: string | null;
+	token: string | null;
 }>()({
 	head: () => ({
 		meta: [
@@ -57,6 +61,13 @@ export const Route = createRootRouteWithContext<{
 
 		if (token) {
 			ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+		}
+
+		if (userId) {
+			await Promise.all([
+				ctx.context.queryClient.ensureQueryData(currentUserQueryOptions()),
+				ctx.context.queryClient.ensureQueryData(subscriptionQueryOptions()),
+			]);
 		}
 
 		return {

@@ -101,7 +101,6 @@ const schema = defineSchema({
 		completedAt: v.optional(v.number()),
 		// For stepper items
 		currentValue: v.optional(v.number()),
-		targetValue: v.optional(v.number()),
 		step: v.optional(v.number()),
 		// For calculator items
 		calculatorValue: v.optional(v.number()),

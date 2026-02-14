@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { Webhook } from "svix";
 import { internal } from "./_generated/api";
 import { httpAction, internalMutation } from "./_generated/server";
+import { hasTastikProPlan, TASTIK_PRO_PLAN_SLUG } from "./lib/subscription";
 import { normalizeEmail } from "./lib/validation";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -79,6 +80,32 @@ export function toOptionalBoolean(
 	return value ?? undefined;
 }
 
+/**
+ * Find the best subscription item from a list of items.
+ * Prefers active paid items over ended/free ones.
+ */
+export function findBestSubscriptionItem(
+	items: BillingSubscriptionWebhookData["items"],
+): BillingSubscriptionItemWebhookData | undefined {
+	if (!items || items.length === 0) return undefined;
+	if (items.length === 1) return items[0];
+
+	const sorted = [...items].sort((a, b) => {
+		// Active items first
+		if (a.status === "active" && b.status !== "active") return -1;
+		if (b.status === "active" && a.status !== "active") return 1;
+		// Paid plan over free plan
+		const aIsPaid = a.plan?.slug === TASTIK_PRO_PLAN_SLUG;
+		const bIsPaid = b.plan?.slug === TASTIK_PRO_PLAN_SLUG;
+		if (aIsPaid && !bIsPaid) return -1;
+		if (bIsPaid && !aIsPaid) return 1;
+		// Then by period_start descending
+		return (b.period_start ?? 0) - (a.period_start ?? 0);
+	});
+
+	return sorted[0];
+}
+
 // ── HTTP Action ──────────────────────────────────────────────────────
 
 export const handleClerkWebhook = httpAction(async (ctx, request) => {
@@ -143,7 +170,7 @@ export const handleClerkWebhook = httpAction(async (ctx, request) => {
 			return new Response(null, { status: 200 });
 		}
 
-		const firstItem = subscriptionData.items?.[0];
+		const firstItem = findBestSubscriptionItem(subscriptionData.items);
 
 		await ctx.runMutation(internal.clerkWebhook.handleBillingEvent, {
 			eventId: svixId,
@@ -155,6 +182,7 @@ export const handleClerkWebhook = httpAction(async (ctx, request) => {
 			periodStart: toOptionalNumber(firstItem?.period_start),
 			periodEnd: toOptionalNumber(firstItem?.period_end),
 			isFreeTrial: toOptionalBoolean(firstItem?.is_free_trial),
+			subscriptionStatus: subscriptionData.status,
 		});
 	} else if (type.startsWith("subscriptionItem.")) {
 		const itemData = data as BillingSubscriptionItemWebhookData;
@@ -287,6 +315,7 @@ export const handleBillingEvent = internalMutation({
 		periodEnd: v.optional(v.number()),
 		canceledAt: v.optional(v.number()),
 		isFreeTrial: v.optional(v.boolean()),
+		subscriptionStatus: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		// Idempotency check
@@ -327,6 +356,18 @@ export const handleBillingEvent = internalMutation({
 				status = "active";
 				break;
 			}
+			case "subscription.updated": {
+				// Derive status from the actual subscription status sent by Clerk
+				const clerkStatus = args.subscriptionStatus;
+				if (clerkStatus === "past_due") {
+					status = "past_due";
+				} else if (clerkStatus === "canceled" || clerkStatus === "ended") {
+					status = "canceled";
+				} else {
+					status = "active";
+				}
+				break;
+			}
 			case "subscription.pastDue": {
 				status = "past_due";
 				break;
@@ -355,6 +396,17 @@ export const handleBillingEvent = internalMutation({
 				status = "past_due";
 				break;
 			}
+			case "subscriptionItem.updated": {
+				// Preserve existing status, update plan/period metadata
+				status = existingSubscription?.status ?? "active";
+				break;
+			}
+			case "subscriptionItem.expired": {
+				// Trial expired without conversion
+				status = "inactive";
+				break;
+			}
+			case "subscriptionItem.freeTrialEnding":
 			case "subscriptionItem.abandoned":
 			case "subscriptionItem.incomplete": {
 				// No subscription change needed
@@ -375,10 +427,10 @@ export const handleBillingEvent = internalMutation({
 		const currentPeriodEnd =
 			args.periodEnd ?? existingSubscription?.currentPeriodEnd;
 
-		// Precompute isActive for query efficiency
+		// Precompute isActive for query efficiency — only true for paid plans
 		const isActive =
 			status === "active" &&
-			planSlug !== undefined &&
+			hasTastikProPlan(planSlug) &&
 			(currentPeriodEnd === undefined || currentPeriodEnd > Date.now());
 
 		const payload = {

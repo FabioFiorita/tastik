@@ -52,7 +52,7 @@ export function ListsSortControl({
 				data-testid="sort-preferences-button"
 			>
 				<Settings2 className="size-4" />
-				<span className="hidden md:inline">Sort</span>
+				<span className="hidden md:inline">Preferences</span>
 				<KbdGroup className="ml-1 hidden md:inline-flex">
 					<Kbd>P</Kbd>
 				</KbdGroup>

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
-import { CreateListDialog } from "@/components/lists/create-list-dialog";
+import { ListFormDialog } from "@/components/lists/list-form-dialog";
 import { ListsSortControl } from "@/components/lists/lists-sort-control";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,8 @@ export function ListsView() {
 						open={sortPreferencesOpen}
 						onOpenChange={setSortPreferencesOpen}
 					/>
-					<CreateListDialog
+					<ListFormDialog
+						mode="create"
 						open={createListOpen}
 						onOpenChange={setCreateListOpen}
 						trigger={

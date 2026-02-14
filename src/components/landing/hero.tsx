@@ -70,41 +70,41 @@ export function Hero() {
 							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
 								<span className="text-foreground text-sm">Apples</span>
 								<div className="flex items-center gap-2">
-									<button
-										type="button"
+									<span
+										aria-hidden="true"
 										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
 									>
 										<Minus className="h-3 w-3" />
-									</button>
+									</span>
 									<span className="min-w-6 text-center font-medium text-sm">
 										6
 									</span>
-									<button
-										type="button"
+									<span
+										aria-hidden="true"
 										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
 									>
 										<Plus className="h-3 w-3" />
-									</button>
+									</span>
 								</div>
 							</div>
 							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
 								<span className="text-foreground text-sm">Milk</span>
 								<div className="flex items-center gap-2">
-									<button
-										type="button"
+									<span
+										aria-hidden="true"
 										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
 									>
 										<Minus className="h-3 w-3" />
-									</button>
+									</span>
 									<span className="min-w-6 text-center font-medium text-sm">
 										2
 									</span>
-									<button
-										type="button"
+									<span
+										aria-hidden="true"
 										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
 									>
 										<Plus className="h-3 w-3" />
-									</button>
+									</span>
 								</div>
 							</div>
 						</div>

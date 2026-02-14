@@ -1,7 +1,6 @@
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import type * as React from "react";
 import {
-	DialogClose,
+	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
@@ -10,7 +9,6 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetFooter,
@@ -21,11 +19,13 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils/cn";
 
-function ResponsiveDialog({ ...props }: DialogPrimitive.Root.Props) {
-	return <DialogPrimitive.Root data-slot="responsive-dialog" {...props} />;
+function ResponsiveDialog({ ...props }: React.ComponentProps<typeof Dialog>) {
+	return <Dialog data-slot="responsive-dialog" {...props} />;
 }
 
-function ResponsiveDialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+function ResponsiveDialogTrigger({
+	...props
+}: React.ComponentProps<typeof DialogTrigger>) {
 	const isMobile = useIsMobile();
 
 	if (isMobile) {
@@ -35,24 +35,12 @@ function ResponsiveDialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
 	return <DialogTrigger {...props} />;
 }
 
-function ResponsiveDialogClose({ ...props }: DialogPrimitive.Close.Props) {
-	const isMobile = useIsMobile();
-
-	if (isMobile) {
-		return <SheetClose {...props} />;
-	}
-
-	return <DialogClose {...props} />;
-}
-
 function ResponsiveDialogContent({
 	className,
 	children,
 	showCloseButton = true,
 	...props
-}: DialogPrimitive.Popup.Props & {
-	showCloseButton?: boolean;
-}) {
+}: React.ComponentProps<typeof DialogContent>) {
 	const isMobile = useIsMobile();
 
 	if (isMobile) {
@@ -60,7 +48,10 @@ function ResponsiveDialogContent({
 			<SheetContent
 				side="bottom"
 				showCloseButton={showCloseButton}
-				className={cn("max-h-[85vh] overflow-y-auto p-6", className)}
+				className={cn(
+					"flex max-h-[85vh] min-h-0 flex-col overflow-hidden p-6",
+					className,
+				)}
 				{...props}
 			>
 				{children}
@@ -69,7 +60,14 @@ function ResponsiveDialogContent({
 	}
 
 	return (
-		<DialogContent showCloseButton={showCloseButton} {...props}>
+		<DialogContent
+			className={cn(
+				"flex max-h-[85vh] min-h-0 flex-col overflow-hidden",
+				className,
+			)}
+			showCloseButton={showCloseButton}
+			{...props}
+		>
 			{children}
 		</DialogContent>
 	);
@@ -120,7 +118,7 @@ function ResponsiveDialogFooter({
 function ResponsiveDialogTitle({
 	className,
 	...props
-}: DialogPrimitive.Title.Props) {
+}: React.ComponentProps<typeof DialogTitle>) {
 	const isMobile = useIsMobile();
 
 	if (isMobile) {
@@ -133,7 +131,7 @@ function ResponsiveDialogTitle({
 function ResponsiveDialogDescription({
 	className,
 	...props
-}: DialogPrimitive.Description.Props) {
+}: React.ComponentProps<typeof DialogDescription>) {
 	const isMobile = useIsMobile();
 
 	if (isMobile) {
@@ -145,7 +143,6 @@ function ResponsiveDialogDescription({
 
 export {
 	ResponsiveDialog,
-	ResponsiveDialogClose,
 	ResponsiveDialogContent,
 	ResponsiveDialogDescription,
 	ResponsiveDialogFooter,

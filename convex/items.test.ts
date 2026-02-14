@@ -37,12 +37,11 @@ describe("items", () => {
 			});
 		});
 
-		it("creates stepper item with currentValue, targetValue, step", async () => {
+		it("creates stepper item with currentValue and step", async () => {
 			await asAlice.mutation(api.items.createItem, {
 				listId,
 				name: "Stepper",
 				type: "stepper",
-				targetValue: 10,
 				step: 2,
 			});
 			const items = await asAlice.query(api.items.getListItems, { listId });
@@ -50,7 +49,6 @@ describe("items", () => {
 				name: "Stepper",
 				type: "stepper",
 				currentValue: 0,
-				targetValue: 10,
 				step: 2,
 			});
 		});
@@ -66,6 +64,21 @@ describe("items", () => {
 				name: "Kanban",
 				type: "kanban",
 				status: "todo",
+			});
+		});
+
+		it("creates calculator item with provided value", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Calculator",
+				type: "calculator",
+				calculatorValue: -12,
+			});
+			const items = await asAlice.query(api.items.getListItems, { listId });
+			expect(items[0]).toMatchObject({
+				name: "Calculator",
+				type: "calculator",
+				calculatorValue: -12,
 			});
 		});
 
@@ -151,6 +164,38 @@ describe("items", () => {
 			const items = await asAlice.query(api.items.getListItems, { listId });
 			expect(items).toEqual([]);
 		});
+
+		it("respects list sort preferences", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Bravo",
+			});
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Alpha",
+			});
+
+			await asAlice.mutation(api.lists.updateList, {
+				listId,
+				sortBy: "name",
+				sortAscending: true,
+			});
+			const byNameAsc = await asAlice.query(api.items.getListItems, { listId });
+			expect(byNameAsc.map((item) => item.name)).toEqual(["Alpha", "Bravo"]);
+
+			await asAlice.mutation(api.lists.updateList, {
+				listId,
+				sortBy: "created_at",
+				sortAscending: false,
+			});
+			const byCreatedDesc = await asAlice.query(api.items.getListItems, {
+				listId,
+			});
+			expect(byCreatedDesc.map((item) => item.name)).toEqual([
+				"Alpha",
+				"Bravo",
+			]);
+		});
 	});
 
 	describe("items.getItem", () => {
@@ -218,6 +263,32 @@ describe("items", () => {
 				}),
 			).rejects.toThrow(ConvexError);
 		});
+
+		it("updates calculator value and kanban status", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Track",
+				type: "calculator",
+			});
+			const items = await asAlice.query(api.items.getListItems, { listId });
+			const itemId = items[0]._id;
+
+			await asAlice.mutation(api.items.updateItem, {
+				itemId,
+				calculatorValue: 25,
+			});
+			let item = await asAlice.query(api.items.getItem, { itemId });
+			expect(item?.calculatorValue).toBe(25);
+
+			await asAlice.mutation(api.items.updateItem, {
+				itemId,
+				type: "kanban",
+				status: "done",
+			});
+			item = await asAlice.query(api.items.getItem, { itemId });
+			expect(item?.status).toBe("done");
+			expect(item?.completed).toBe(true);
+		});
 	});
 
 	describe("items.toggleItemComplete", () => {
@@ -239,12 +310,11 @@ describe("items", () => {
 	});
 
 	describe("items.incrementItemValue", () => {
-		it("increments by delta and marks completed when target reached", async () => {
+		it("increments by delta without auto-completing stepper items", async () => {
 			await asAlice.mutation(api.items.createItem, {
 				listId,
 				name: "Stepper",
 				type: "stepper",
-				targetValue: 4,
 				step: 2,
 			});
 			const items = await asAlice.query(api.items.getListItems, { listId });
@@ -262,15 +332,14 @@ describe("items", () => {
 			});
 			item = await asAlice.query(api.items.getItem, { itemId });
 			expect(item?.currentValue).toBe(4);
-			expect(item?.completed).toBe(true);
+			expect(item?.completed).toBe(false);
 		});
 
-		it("setValue sets current value directly", async () => {
+		it("setValue sets current value directly without auto-completing", async () => {
 			await asAlice.mutation(api.items.createItem, {
 				listId,
 				name: "Stepper",
 				type: "stepper",
-				targetValue: 10,
 			});
 			const items = await asAlice.query(api.items.getListItems, { listId });
 			const itemId = items[0]._id;
@@ -280,7 +349,41 @@ describe("items", () => {
 			});
 			const item = await asAlice.query(api.items.getItem, { itemId });
 			expect(item?.currentValue).toBe(10);
-			expect(item?.completed).toBe(true);
+			expect(item?.completed).toBe(false);
+		});
+
+		it("supports calculator setValue updates", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Calculator",
+				type: "calculator",
+				calculatorValue: 7,
+			});
+			const items = await asAlice.query(api.items.getListItems, { listId });
+			const itemId = items[0]._id;
+			await asAlice.mutation(api.items.incrementItemValue, {
+				itemId,
+				setValue: -7,
+			});
+			const item = await asAlice.query(api.items.getItem, { itemId });
+			expect(item?.calculatorValue).toBe(-7);
+		});
+	});
+
+	describe("items.searchItems", () => {
+		it("matches items by description as well as name", async () => {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Groceries",
+				description: "Buy almond milk",
+			});
+
+			const results = await asAlice.query(api.items.searchItems, {
+				query: "almond",
+			});
+
+			expect(results).toHaveLength(1);
+			expect(results[0].name).toBe("Groceries");
 		});
 	});
 

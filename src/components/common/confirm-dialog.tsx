@@ -8,24 +8,30 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDuplicateList } from "@/hooks/actions/use-duplicate-list";
-import type { Id } from "../../../convex/_generated/dataModel";
 
-interface DuplicateListAlertDialogProps {
+type ConfirmDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	listId: Id<"lists">;
-}
+	title: string;
+	description: string;
+	confirmLabel: string;
+	onConfirm: () => unknown;
+	variant?: "destructive" | "default";
+	testId: string;
+};
 
-export function DuplicateListAlertDialog({
+export function ConfirmDialog({
 	open,
 	onOpenChange,
-	listId,
-}: DuplicateListAlertDialogProps) {
-	const { duplicateList } = useDuplicateList();
-
+	title,
+	description,
+	confirmLabel,
+	onConfirm,
+	variant = "default",
+	testId,
+}: ConfirmDialogProps) {
 	const handleConfirm = async () => {
-		await duplicateList({ listId });
+		await onConfirm();
 		onOpenChange(false);
 	};
 
@@ -33,18 +39,17 @@ export function DuplicateListAlertDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Duplicate list?</AlertDialogTitle>
-					<AlertDialogDescription>
-						A copy of this list will be created.
-					</AlertDialogDescription>
+					<AlertDialogTitle>{title}</AlertDialogTitle>
+					<AlertDialogDescription>{description}</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
+						variant={variant === "destructive" ? "destructive" : undefined}
 						onClick={handleConfirm}
-						data-testid="duplicate-confirm"
+						data-testid={testId}
 					>
-						Duplicate
+						{confirmLabel}
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

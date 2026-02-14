@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
 	Copy,
 	Download,
@@ -8,8 +9,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { DeleteListAlertDialog } from "@/components/lists/delete-list-alert-dialog";
-import { DuplicateListAlertDialog } from "@/components/lists/duplicate-list-alert-dialog";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -21,6 +21,8 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDeleteList } from "@/hooks/actions/use-delete-list";
+import { useDuplicateList } from "@/hooks/actions/use-duplicate-list";
 import { useExportList } from "@/hooks/actions/use-export-list";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { LIST_EXPORT_FORMATS } from "@/lib/constants/list-export-formats";
@@ -44,6 +46,9 @@ export function ListActionsMenu({
 	onOpenChange,
 	onOpenDialog,
 }: ListActionsMenuProps) {
+	const navigate = useNavigate();
+	const { deleteList } = useDeleteList();
+	const { duplicateList } = useDuplicateList();
 	const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const { exportList, isPending: isExporting } = useExportList(
@@ -86,7 +91,7 @@ export function ListActionsMenu({
 				>
 					<MoreVertical className="size-4" />
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="w-48">
+				<DropdownMenuContent align="end" className="w-40">
 					<DropdownMenuItem
 						onClick={openDuplicateDialog}
 						data-testid="duplicate-list-item"
@@ -102,7 +107,7 @@ export function ListActionsMenu({
 								data-testid="edit-list-item"
 							>
 								<Pencil className="mr-2 size-4" />
-								Edit Details
+								Edit
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => openDialog("share")}
@@ -116,7 +121,7 @@ export function ListActionsMenu({
 								data-testid="manage-tags-item"
 							>
 								<Tag className="mr-2 size-4" />
-								Manage Tags
+								Tags
 							</DropdownMenuItem>
 						</>
 					)}
@@ -149,21 +154,33 @@ export function ListActionsMenu({
 							data-testid="delete-list-item"
 						>
 							<Trash2 className="size-4" />
-							Delete List
+							Delete
 						</DropdownMenuItem>
 					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 
-			<DuplicateListAlertDialog
+			<ConfirmDialog
 				open={duplicateDialogOpen}
 				onOpenChange={setDuplicateDialogOpen}
-				listId={listId}
+				title="Duplicate list?"
+				description="A copy of this list will be created."
+				confirmLabel="Duplicate"
+				onConfirm={() => duplicateList({ listId })}
+				testId="duplicate-confirm"
 			/>
-			<DeleteListAlertDialog
+			<ConfirmDialog
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
-				listId={listId}
+				title="Delete list?"
+				description="This cannot be undone. All items and tags will be removed."
+				confirmLabel="Delete"
+				onConfirm={async () => {
+					navigate({ to: "/", replace: true });
+					await deleteList({ listId });
+				}}
+				variant="destructive"
+				testId="delete-confirm"
 			/>
 		</>
 	);

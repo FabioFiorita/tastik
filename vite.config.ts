@@ -1,9 +1,9 @@
+import { cloudflare } from "@cloudflare/vite-plugin";
 import { sentryTanstackStart } from "@sentry/tanstackstart-react";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { nitro } from "nitro/vite";
 import { createLogger, defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
@@ -32,15 +32,9 @@ const customLogger = {
 
 const config = defineConfig({
 	customLogger,
-	nitro: {
-		rollupConfig: {
-			external: ["fsevents"],
-		},
-	},
 	plugins: [
+		cloudflare({ viteEnvironment: { name: "ssr" } }),
 		devtools(),
-		nitro(),
-		// this is the plugin that enables path aliases
 		viteTsConfigPaths({
 			projects: ["./tsconfig.json"],
 		}),

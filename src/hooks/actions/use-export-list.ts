@@ -1,13 +1,14 @@
 import { useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListExported } from "@/lib/metrics";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useExportList(listId: Id<"lists">, listName: string) {
 	const { convexClient } = useRouteContext({ from: "__root__" });
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const exportList = async (format: "txt" | "md" | "csv") => {
@@ -37,7 +38,7 @@ export function useExportList(listId: Id<"lists">, listName: string) {
 			toast.success(`Exported as ${format.toUpperCase()}`);
 		} catch (error) {
 			trackListExported("failure");
-			toast.error(getErrorMessage(error, "Failed to export list"));
+			handleMutationError(error, "Failed to export list");
 		} finally {
 			setIsPending(false);
 		}

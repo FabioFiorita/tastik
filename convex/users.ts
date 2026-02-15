@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 
 export const getCurrentUser = query({
 	args: {},
@@ -85,5 +86,27 @@ export const deleteUserData = internalMutation({
 		if (profile) {
 			await ctx.db.delete(profile._id);
 		}
+
+		const profileImage = await ctx.db
+			.query("userProfileImages")
+			.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+			.unique();
+		if (profileImage) {
+			await ctx.storage.delete(profileImage.storageId);
+			await ctx.db.delete(profileImage._id);
+		}
+	},
+});
+
+export const deleteAccount = action({
+	args: {},
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new Error("Unauthorized");
+		}
+		await ctx.runMutation(internal.users.deleteUserData, {
+			userId: identity.subject,
+		});
 	},
 });

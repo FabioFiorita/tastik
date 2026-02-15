@@ -4,8 +4,6 @@ export const envSchema = z
 	.object({
 		VITE_CONVEX_URL: z.string().min(1),
 		VITE_CONVEX_SITE_URL: z.string().min(1),
-		VITE_STRIPE_MONTHLY_PRICE_ID: z.string().min(1),
-		VITE_STRIPE_YEARLY_PRICE_ID: z.string().min(1),
 		VITE_SENTRY_DSN: z.string().optional(),
 		MODE: z.string().optional(),
 	})

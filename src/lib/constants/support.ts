@@ -53,6 +53,6 @@ export const SUPPORT_FAQS: SupportFaq[] = [
 	},
 	{
 		question: "How do I export my data?",
-		answer: `You can export individual lists at any time from the list settings menu. Account-wide data export requests can be made by contacting support at ${LEGAL_CONTACT.supportEmail}. We'll provide your data in a standard format within 30 days.`,
+		answer: `You can export individual lists at any time from the list settings menu. Account-wide data export requests can be made by contacting support at ${LEGAL_CONTACT.supportEmail}. I'll provide your data in a standard format within 30 days.`,
 	},
 ];

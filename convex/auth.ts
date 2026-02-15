@@ -49,4 +49,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
 		},
 		socialProviders: getSocialProviders(),
 		plugins: [convex({ authConfig })],
+		user: {
+			deleteUser: { enabled: true },
+		},
 	});

@@ -1,6 +1,6 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackItemStatusUpdated } from "@/lib/metrics";
 import type { ItemStatus } from "@/lib/types/item-status";
 import { api } from "../../../convex/_generated/api";
@@ -8,6 +8,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useUpdateItemStatus() {
 	const mutation = useMutation(api.items.updateItemStatus);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const updateStatus = async (args: {
@@ -18,9 +19,9 @@ export function useUpdateItemStatus() {
 		try {
 			await mutation(args);
 			trackItemStatusUpdated("success");
-		} catch {
+		} catch (error) {
 			trackItemStatusUpdated("failure");
-			toast.error("Failed to update status");
+			handleMutationError(error, "Failed to update status");
 		} finally {
 			setIsPending(false);
 		}

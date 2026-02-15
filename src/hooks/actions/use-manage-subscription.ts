@@ -1,12 +1,13 @@
 import { useAction } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { api } from "../../../convex/_generated/api";
 
 export function useManageSubscription() {
 	const createBillingPortalSession = useAction(
 		api.stripe.createBillingPortalSession,
 	);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const openBillingPortal = async () => {
@@ -16,8 +17,11 @@ export function useManageSubscription() {
 				returnUrl: window.location.href,
 			});
 			window.location.href = url;
-		} catch {
-			toast.error("Failed to open billing portal. Please try again.");
+		} catch (error) {
+			handleMutationError(
+				error,
+				"Failed to open billing portal. Please try again.",
+			);
 		} finally {
 			setIsPending(false);
 		}

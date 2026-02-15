@@ -23,6 +23,7 @@ import type * as preferences from "../preferences.js";
 import type * as stripe from "../stripe.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
+import type * as userProfileImages from "../userProfileImages.js";
 import type * as users from "../users.js";
 
 import type {
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   stripe: typeof stripe;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
+  userProfileImages: typeof userProfileImages;
   users: typeof users;
 }>;
 

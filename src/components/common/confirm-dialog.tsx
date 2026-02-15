@@ -18,6 +18,7 @@ type ConfirmDialogProps = {
 	onConfirm: () => unknown;
 	variant?: "destructive" | "default";
 	testId: string;
+	disabled?: boolean;
 };
 
 export function ConfirmDialog({
@@ -29,6 +30,7 @@ export function ConfirmDialog({
 	onConfirm,
 	variant = "default",
 	testId,
+	disabled = false,
 }: ConfirmDialogProps) {
 	const handleConfirm = async () => {
 		await onConfirm();
@@ -43,11 +45,12 @@ export function ConfirmDialog({
 					<AlertDialogDescription>{description}</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogCancel disabled={disabled}>Cancel</AlertDialogCancel>
 					<AlertDialogAction
 						variant={variant === "destructive" ? "destructive" : undefined}
 						onClick={handleConfirm}
 						data-testid={testId}
+						disabled={disabled}
 					>
 						{confirmLabel}
 					</AlertDialogAction>

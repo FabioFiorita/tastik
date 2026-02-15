@@ -1,14 +1,15 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListDuplicated } from "@/lib/metrics";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useDuplicateList() {
 	const mutation = useMutation(api.lists.duplicateList);
 	const navigate = useNavigate();
+	const handleMutationError = useHandleMutationError();
 
 	const duplicateList = async (args: { listId: Id<"lists"> }) => {
 		try {
@@ -19,7 +20,7 @@ export function useDuplicateList() {
 			return newListId;
 		} catch (error) {
 			trackListDuplicated("failure");
-			toast.error(getErrorMessage(error, "Failed to duplicate list"));
+			handleMutationError(error, "Failed to duplicate list");
 			return undefined;
 		}
 	};

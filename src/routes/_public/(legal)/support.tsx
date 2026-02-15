@@ -19,10 +19,10 @@ function SupportPage() {
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="mx-auto max-w-2xl text-center">
 						<h1 className="mb-4 font-bold text-4xl text-foreground tracking-tight md:text-5xl">
-							How can we help?
+							How can I help?
 						</h1>
 						<p className="text-lg text-muted-foreground">
-							Find answers to common questions or reach out to our support team.
+							Find answers to common questions or reach out.
 						</p>
 					</div>
 				</div>
@@ -39,7 +39,7 @@ function SupportPage() {
 								Email Support
 							</h3>
 							<p className="mb-4 text-muted-foreground">
-								Get help from our team. We typically respond within 24 hours.
+								Get help. I typically respond within a few business days.
 							</p>
 							<Button
 								variant="outline"
@@ -66,7 +66,7 @@ function SupportPage() {
 								Feedback
 							</h3>
 							<p className="mb-4 text-muted-foreground">
-								Have ideas to make Tastik better? We'd love to hear from you.
+								Have ideas to make Tastik better? I'd love to hear from you.
 							</p>
 							<Button
 								variant="outline"
@@ -129,8 +129,7 @@ function SupportPage() {
 							Still have questions?
 						</h2>
 						<p className="mb-6 text-muted-foreground">
-							Our team is here to help. Reach out anytime and we'll get back to
-							you as soon as possible.
+							Reach out anytime. I'll get back to you as soon as possible.
 						</p>
 						<Button
 							render={(props) => (

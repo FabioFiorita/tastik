@@ -83,14 +83,10 @@ function PrivacyPage() {
 								Data Storage & Security
 							</h2>
 							<p className="text-muted-foreground">
-								Your data is stored securely using industry-standard encryption
-								both in transit and at rest. We use enterprise-grade
-								infrastructure providers that maintain strong security
-								practices, compliance certifications, and regular security
-								audits. While we implement robust security measures, no method
-								of transmission over the internet or electronic storage is 100%
-								secure. We continuously monitor and improve our security
-								practices to protect your information.
+								Your data is encrypted in transit and at rest. We use trusted
+								infrastructure providers. No method of transmission over the
+								internet is 100% secure; we take reasonable steps to protect
+								your information.
 							</p>
 						</section>
 
@@ -208,30 +204,10 @@ function PrivacyPage() {
 								within 30 days. You can also delete your account directly
 								through your account settings.
 							</p>
-							<div className="space-y-2">
-								<h3 className="font-medium text-lg">
-									California Residents (CCPA)
-								</h3>
-								<p className="text-muted-foreground">
-									If you are a California resident, you have additional rights
-									under the California Consumer Privacy Act (CCPA):
-								</p>
-								<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-									<li>
-										Right to know what personal information is collected, used,
-										shared, or sold
-									</li>
-									<li>Right to delete personal information</li>
-									<li>Right to opt-out of the sale of personal information</li>
-									<li>
-										Right to non-discrimination for exercising your CCPA rights
-									</li>
-								</ul>
-								<p className="text-muted-foreground">
-									<strong>Important:</strong> We do not sell your personal
-									information to third parties.
-								</p>
-							</div>
+							<p className="text-muted-foreground">
+								California residents have additional rights under the CCPA. We
+								do not sell your personal information.
+							</p>
 						</section>
 
 						<section className="space-y-3">
@@ -239,16 +215,9 @@ function PrivacyPage() {
 								International Data Transfers
 							</h2>
 							<p className="text-muted-foreground">
-								Your data may be transferred to and processed in the United
-								States and other countries where our service providers operate.
-								These countries may have data protection laws that differ from
-								those in your country of residence.
-							</p>
-							<p className="text-muted-foreground">
-								When we transfer personal data from the European Economic Area
-								(EEA) to other countries, we use standard contractual clauses
-								approved by the European Commission and implement appropriate
-								safeguards to ensure your data receives adequate protection.
+								Your data may be processed in the United States and other
+								countries where our service providers operate. Laws in those
+								countries may differ from yours.
 							</p>
 						</section>
 

@@ -8,9 +8,11 @@ import {
 	Moon,
 	Shield,
 	Sun,
+	User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
+import { AccountDialog } from "@/components/account/account-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -23,6 +25,7 @@ import {
 import { useManageSubscription } from "@/hooks/actions/use-manage-subscription";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils/cn";
+import { getInitials } from "@/lib/utils/get-initials";
 
 export function NavUser() {
 	const { theme, setTheme } = useTheme();
@@ -30,9 +33,10 @@ export function NavUser() {
 	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
 	const [isSigningOut, setIsSigningOut] = useState(false);
+	const [accountDialogOpen, setAccountDialogOpen] = useState(false);
 
 	const user = session?.user;
-	const initials = (user?.name ?? user?.email ?? "U").slice(0, 2).toUpperCase();
+	const initials = getInitials(user?.name ?? user?.email ?? "U");
 
 	const handleSignOut = async () => {
 		setIsSigningOut(true);
@@ -56,7 +60,7 @@ export function NavUser() {
 						<AvatarFallback>{initials}</AvatarFallback>
 					</Avatar>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
+				<DropdownMenuContent align="end" className="min-w-52">
 					<DropdownMenuItem onClick={() => setTheme("light")}>
 						<Sun className="size-4" />
 						Light{theme === "light" ? " ✓" : ""}
@@ -70,9 +74,13 @@ export function NavUser() {
 						System{theme === "system" ? " ✓" : ""}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
+					<DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
+						<User className="size-4" />
+						Account
+					</DropdownMenuItem>
 					<DropdownMenuItem onClick={openBillingPortal}>
 						<CreditCard className="size-4" />
-						Manage Subscription
+						Subscription
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => navigate({ to: "/archive" })}>
 						<Archive className="size-4" />
@@ -100,6 +108,10 @@ export function NavUser() {
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
+			<AccountDialog
+				open={accountDialogOpen}
+				onOpenChange={setAccountDialogOpen}
+			/>
 		</div>
 	);
 }

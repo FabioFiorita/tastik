@@ -1,12 +1,13 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackItemToggleComplete } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useToggleItemComplete() {
 	const mutation = useMutation(api.items.toggleItemComplete);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const toggleItemComplete = async (args: { itemId: Id<"items"> }) => {
@@ -14,9 +15,9 @@ export function useToggleItemComplete() {
 		try {
 			await mutation(args);
 			trackItemToggleComplete("success");
-		} catch {
+		} catch (error) {
 			trackItemToggleComplete("failure");
-			toast.error("Failed to update item");
+			handleMutationError(error, "Failed to update item");
 		} finally {
 			setIsPending(false);
 		}

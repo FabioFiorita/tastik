@@ -1,5 +1,5 @@
 import { useMutation } from "convex/react";
-import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import type { SortBy } from "@/lib/types/sort-by";
 import { api } from "../../../convex/_generated/api";
 import { useUserPreferences } from "../queries/use-user-preferences";
@@ -9,6 +9,7 @@ export function useListsSort() {
 	const updatePreferenceMutation = useMutation(
 		api.preferences.updateListsSortPreference,
 	);
+	const handleMutationError = useHandleMutationError();
 
 	const sortBy: SortBy = preferences?.listsSortBy ?? "created_at";
 	const sortAscending = preferences?.listsSortAscending ?? false;
@@ -20,8 +21,7 @@ export function useListsSort() {
 				sortAscending,
 			});
 		} catch (error) {
-			toast.error("Failed to update sort preference");
-			console.error(error);
+			handleMutationError(error, "Failed to update sort preference");
 		}
 	};
 
@@ -32,8 +32,7 @@ export function useListsSort() {
 				sortAscending: !sortAscending,
 			});
 		} catch (error) {
-			toast.error("Failed to update sort direction");
-			console.error(error);
+			handleMutationError(error, "Failed to update sort direction");
 		}
 	};
 

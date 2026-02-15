@@ -1,7 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -14,6 +14,7 @@ type UpdateListParams = {
 
 export function useUpdateList() {
 	const mutation = useMutation(api.lists.updateList);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const updateList = async (params: UpdateListParams): Promise<boolean> => {
@@ -28,7 +29,7 @@ export function useUpdateList() {
 			toast.success("List updated");
 			return true;
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to update list"));
+			handleMutationError(error, "Failed to update list");
 			return false;
 		} finally {
 			setIsPending(false);

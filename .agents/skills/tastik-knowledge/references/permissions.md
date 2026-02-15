@@ -1,7 +1,7 @@
 # Permission Architecture
 
 - Access chain: `requireAuth()` then `requireListAccess()` or `requireListOwner()`.
-- Subscription checks are applied for paid features/limits, not all operations.
+- Subscription required for all app access (hard paywall).
 - Owner permissions: list, item, tag, and editor CRUD.
 - Editor permissions: item CRUD, read-only tags, no list settings.
 - Privacy rule for sharing: owner can view full editor identity; editors should only see nickname-safe collaborator data.
@@ -15,6 +15,7 @@
 - Delete list
 
 ### Editor actions
-- Duplicate list
-- Manage tags (assign tags to items, create/edit/delete tags)
-- Access list preferences (sorting, visibility settings)
+- Duplicate list (copy becomes owner's list; editors not copied)
+- Item CRUD (create, update, toggle complete, delete)
+- Assign tags to items (set tagId on items)
+- Read-only tags (cannot create, edit, or delete tags)

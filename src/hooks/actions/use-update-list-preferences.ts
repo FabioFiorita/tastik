@@ -1,8 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import type { SortBy } from "@/lib/types/sort-by";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -17,6 +16,7 @@ export function useUpdateListPreferences(
 	},
 ) {
 	const mutation = useMutation(api.lists.updateList);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const updateSortBy = async (sortBy: SortBy) => {
@@ -24,7 +24,7 @@ export function useUpdateListPreferences(
 		try {
 			await mutation({ listId, sortBy });
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to update sort preference"));
+			handleMutationError(error, "Failed to update sort preference");
 		} finally {
 			setIsPending(false);
 		}
@@ -38,7 +38,7 @@ export function useUpdateListPreferences(
 				sortAscending: !currentPreferences.sortAscending,
 			});
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to update sort direction"));
+			handleMutationError(error, "Failed to update sort direction");
 		} finally {
 			setIsPending(false);
 		}
@@ -52,9 +52,7 @@ export function useUpdateListPreferences(
 				showCompleted: !currentPreferences.showCompleted,
 			});
 		} catch (error) {
-			toast.error(
-				getErrorMessage(error, "Failed to update visibility preference"),
-			);
+			handleMutationError(error, "Failed to update visibility preference");
 		} finally {
 			setIsPending(false);
 		}
@@ -68,9 +66,7 @@ export function useUpdateListPreferences(
 				hideCheckbox: !currentPreferences.hideCheckbox,
 			});
 		} catch (error) {
-			toast.error(
-				getErrorMessage(error, "Failed to update checkbox visibility"),
-			);
+			handleMutationError(error, "Failed to update checkbox visibility");
 		} finally {
 			setIsPending(false);
 		}
@@ -81,7 +77,7 @@ export function useUpdateListPreferences(
 		try {
 			await mutation({ listId, showTotal: !currentPreferences.showTotal });
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to update total visibility"));
+			handleMutationError(error, "Failed to update total visibility");
 		} finally {
 			setIsPending(false);
 		}

@@ -112,6 +112,11 @@ const schema = defineSchema({
 			searchField: "name",
 			filterFields: ["listId"],
 		}),
+
+	userProfileImages: defineTable({
+		userId: v.string(),
+		storageId: v.id("_storage"),
+	}).index("by_user_id", ["userId"]),
 });
 
 export default schema;

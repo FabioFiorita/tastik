@@ -1,15 +1,17 @@
 # Feature Behavior
 
-## Feature Tiers
-- **Free tier**: Simple and calculator list types (5 lists, 50 items each), keyboard shortcuts, flexible preferences
-- **Pro tier**: Advanced list types (stepper, kanban, multi), tags, sharing/editors
+## Access
+- All features require an active subscription (hard paywall, plan `tastik_pro`).
+
+## Limits
+- 50 lists per user.
 
 ## List Types
-- Simple (FREE): checkbox items that toggle complete/incomplete.
-- Calculator (FREE): running total summary at top of list.
-- Stepper (PRO): progress items that auto-complete at target.
-- Kanban (PRO): status workflow across columns.
-- Multi (PRO): list can contain mixed item types.
+- Simple: checkbox items that toggle complete/incomplete.
+- Calculator: running total summary at top of list.
+- Stepper: progress items that auto-complete at target.
+- Kanban: status workflow across columns.
+- Multi: list can contain mixed item types.
 
 ## Items
 - Items are ordered and can be completed.
@@ -21,7 +23,7 @@
 - Name (required)
 - Description (optional)
 - URL (optional)
-- Tag inputs (optional, Pro feature)
+- Tag inputs (optional)
 
 ### Type-specific fields
 
@@ -45,19 +47,18 @@
 
 Note: For multi-type lists, the item type determines which fields are displayed, effectively using the item type as if it were the list type for field rendering purposes.
 
-## Tags (Pro-only feature)
+## Tags
 - Tags are list-scoped for privacy in shared lists.
 - Tags are visible to editors but only owners can modify them.
 - Up to 50 tags per list.
 
-## Sharing (Pro-only feature)
+## Sharing
 - Owner adds editors by email or user ID and assigns a nickname.
 - Editors see nicknames only, not real identities.
 - Owners can manage list settings; editors cannot.
 - Up to 10 editors per list.
 
-## Keyboard Shortcuts (Free feature)
-- Available to all users (both Free and Pro plans).
+## Keyboard Shortcuts
 - Enables fast workflows for list and item management.
 
 ## List Preferences

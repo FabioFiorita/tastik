@@ -46,48 +46,22 @@ function TermsPage() {
 						<section className="space-y-3">
 							<h2 className="font-semibold text-2xl">Plans and Pricing</h2>
 							<p className="text-muted-foreground">
-								Tastik offers a Free plan and a Pro plan. The Free plan is
-								available at no cost with the following limits:
-							</p>
-							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-								<li>Up to 5 lists</li>
-								<li>Up to 50 items per list</li>
-								<li>Simple and calculator list types only</li>
-								<li>
-									No tags, list sharing, or premium list types (stepper, kanban,
-									multi)
-								</li>
-							</ul>
-							<p className="mt-3 text-muted-foreground">
-								Keyboard shortcuts are available to all users for efficient list
-								and item management.
-							</p>
-							<p className="text-muted-foreground">
-								The Pro plan is available as a monthly or yearly subscription,
+								Tastik requires a subscription to use the app. Plans are
 								processed through our billing provider:
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>Monthly: $1.99 per month</li>
 								<li>
-									Yearly: $19.92 per year (billed annually, equivalent to
-									$1.66/month - save 17%)
+									Yearly: $19.99 per year (billed annually, equivalent to
+									$1.67/month)
 								</li>
 							</ul>
 							<p className="text-muted-foreground">
-								Pro subscribers get access to:
-							</p>
-							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-								<li>Up to 50 lists</li>
-								<li>Up to 500 items per list</li>
-								<li>
-									All list types (simple, calculator, stepper, kanban, multi)
-								</li>
-								<li>Tags (up to 50 per list)</li>
-								<li>List sharing with editors (up to 10 per list)</li>
-							</ul>
-							<p className="text-muted-foreground">
-								New Pro subscribers receive a 7-day free trial for both monthly
-								and yearly plans.
+								Monthly subscribers receive a 7-day free trial; yearly
+								subscribers receive a 14-day free trial. All subscribers get
+								access to: up to 50 lists, up to 500 items per list, all list
+								types (simple, calculator, stepper, kanban, multi), tags (up to
+								50 per list), and list sharing with editors (up to 10 per list).
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>
@@ -151,8 +125,10 @@ function TermsPage() {
 								Account Suspension and Termination
 							</h2>
 							<p className="text-muted-foreground">
-								We may suspend or terminate your account under the following
-								conditions:
+								We may suspend or terminate your access at any time, without
+								prior notice, for conduct that violates these Terms or is
+								harmful to other users or the App. We may also suspend or
+								terminate under the following conditions:
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>Violation of these Terms of Service</li>
@@ -224,15 +200,6 @@ function TermsPage() {
 								To the maximum extent permitted by law, Tastik shall not be
 								liable for any indirect, incidental, special, consequential, or
 								punitive damages arising from your use of the App.
-							</p>
-						</section>
-
-						<section className="space-y-3">
-							<h2 className="font-semibold text-2xl">Termination</h2>
-							<p className="text-muted-foreground">
-								We may terminate or suspend your access to the App at any time,
-								without prior notice, for conduct that we believe violates these
-								Terms or is harmful to other users or the App.
 							</p>
 						</section>
 

@@ -1,12 +1,11 @@
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackTagCreated } from "@/lib/metrics";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { ERROR_CODES, isAppErrorData } from "../../../convex/lib/errors";
+import { ERROR_CODES } from "../../../convex/lib/errors";
 
 type CreateTagParams = {
 	listId: Id<"lists">;
@@ -16,6 +15,7 @@ type CreateTagParams = {
 
 export function useCreateTag() {
 	const mutation = useMutation(api.tags.createTag);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const createTag = async (
@@ -38,13 +38,15 @@ export function useCreateTag() {
 			return tagId;
 		} catch (error) {
 			trackTagCreated("failure");
-			if (error instanceof ConvexError && isAppErrorData(error.data)) {
-				if (error.data.code === ERROR_CODES.TAG_NAME_EXISTS) {
-					toast.error(error.data.message);
-					return null;
-				}
-			}
-			toast.error(getErrorMessage(error, "Failed to add tag"));
+			handleMutationError(error, "Failed to add tag", {
+				beforeToast: (data) => {
+					if (data.code === ERROR_CODES.TAG_NAME_EXISTS) {
+						toast.error(data.message);
+						return true;
+					}
+					return false;
+				},
+			});
 			return null;
 		} finally {
 			setIsPending(false);

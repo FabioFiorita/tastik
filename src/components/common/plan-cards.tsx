@@ -9,7 +9,7 @@ type PlanCardsProps = {
 
 export function PlanCards({ renderAction }: PlanCardsProps) {
 	return (
-		<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<div className="grid gap-4 sm:grid-cols-2">
 			{PLANS.map((plan) => (
 				<PlanCard key={plan.name} plan={plan} renderAction={renderAction} />
 			))}

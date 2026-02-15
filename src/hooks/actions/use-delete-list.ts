@@ -1,12 +1,14 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListDeleted } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useDeleteList() {
 	const mutation = useMutation(api.lists.deleteList);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const deleteList = async (args: { listId: Id<"lists"> }) => {
@@ -16,9 +18,9 @@ export function useDeleteList() {
 			trackListDeleted("success");
 			toast.success("List deleted");
 			return true;
-		} catch {
+		} catch (error) {
 			trackListDeleted("failure");
-			toast.error("Failed to delete list");
+			handleMutationError(error, "Failed to delete list");
 			return false;
 		} finally {
 			setIsPending(false);

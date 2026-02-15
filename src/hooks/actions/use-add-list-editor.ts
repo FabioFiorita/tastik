@@ -1,13 +1,14 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListEditorAdded } from "@/lib/metrics";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function useAddListEditor() {
 	const mutation = useMutation(api.listEditors.addListEditorByEmail);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const addEditor = async (args: {
@@ -27,7 +28,7 @@ export function useAddListEditor() {
 			return true;
 		} catch (error) {
 			trackListEditorAdded("failure");
-			toast.error(getErrorMessage(error, "Failed to add editor"));
+			handleMutationError(error, "Failed to add editor");
 			return false;
 		} finally {
 			setIsPending(false);

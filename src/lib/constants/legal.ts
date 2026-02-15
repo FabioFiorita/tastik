@@ -5,7 +5,7 @@ export const LEGAL_CONTACT = {
 };
 
 export const LEGAL_METADATA = {
-	lastUpdated: "February 8, 2026",
+	lastUpdated: "February 15, 2026",
 	termsVersion: "2.1",
 	privacyVersion: "2.0",
 };
@@ -29,6 +29,12 @@ export const THIRD_PARTY_SERVICES = [
 		purpose: "Authentication and account management",
 		dataShared:
 			"Email address, name, and profile image used for authentication",
-		privacyPolicyUrl: "https://www.better-auth.com",
+		privacyPolicyUrl: "https://better-auth.com",
+	},
+	{
+		name: "Stripe",
+		purpose: "Payment processing and subscription billing",
+		dataShared: "Email address and payment information",
+		privacyPolicyUrl: "https://stripe.com/privacy",
 	},
 ];

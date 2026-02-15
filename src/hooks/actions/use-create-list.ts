@@ -2,8 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListCreated } from "@/lib/metrics";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -16,6 +16,7 @@ type CreateListParams = {
 export function useCreateList() {
 	const navigate = useNavigate();
 	const mutation = useMutation(api.lists.createList);
+	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
 	const createList = async (
@@ -36,7 +37,7 @@ export function useCreateList() {
 			return listId;
 		} catch (error) {
 			trackListCreated(params.type ?? "simple", "failure");
-			toast.error(getErrorMessage(error, "Failed to create list"));
+			handleMutationError(error, "Failed to create list");
 			return undefined;
 		} finally {
 			setIsPending(false);

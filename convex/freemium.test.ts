@@ -63,7 +63,7 @@ function expectConvexErrorCode(error: unknown, code: string) {
 	expect(appErrorData.code).toBe(code);
 }
 
-describe("freemium rules", () => {
+describe("hard paywall", () => {
 	let env: Awaited<ReturnType<typeof createTestEnv>>;
 	let asAlice: TestIdentity;
 
@@ -72,50 +72,18 @@ describe("freemium rules", () => {
 		asAlice = env.asAlice;
 	});
 
-	it("free users cannot create more than 5 lists", async () => {
-		const user = await asAlice.query(api.users.getCurrentUser, {});
-		if (!user) {
-			throw new Error("Expected authenticated user");
-		}
-
-		await env.t.run(async (ctx) => {
-			for (let i = 0; i < 5; i += 1) {
-				await ctx.db.insert("lists", {
-					ownerId: user._id,
-					name: `List ${i + 1}`,
-					type: "simple",
-					status: "active",
-					sortBy: "created_at",
-					sortAscending: true,
-					showCompleted: true,
-					hideCheckbox: false,
-					showTotal: false,
-					updatedAt: Date.now(),
-				});
-			}
-		});
-
+	it("unsubscribed users cannot create lists", async () => {
 		try {
-			await asAlice.mutation(api.lists.createList, { name: "List 6" });
-			throw new Error("Expected list limit error");
+			await asAlice.mutation(api.lists.createList, { name: "My List" });
+			throw new Error("Expected subscription required error");
 		} catch (error) {
-			expectConvexErrorCode(error, ERROR_CODES.LISTS_LIMIT_EXCEEDED);
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_REQUIRED);
 		}
 	});
 
-	it("free users cannot create pro list types", async () => {
-		try {
-			await asAlice.mutation(api.lists.createList, {
-				name: "Kanban Board",
-				type: "kanban",
-			});
-			throw new Error("Expected upgrade required error");
-		} catch (error) {
-			expectConvexErrorCode(error, ERROR_CODES.UPGRADE_REQUIRED);
-		}
-	});
-
-	it("free users cannot exceed 50 items per list", async () => {
+	it("unsubscribed users cannot create items", async () => {
+		// Seed a list directly in DB (bypassing mutation checks)
+		await seedSubscribedUser(asAlice);
 		await asAlice.mutation(api.lists.createList, { name: "Shopping" });
 		const lists = await asAlice.query(api.lists.getUserLists, {});
 		const listId = lists[0]?._id;
@@ -123,8 +91,68 @@ describe("freemium rules", () => {
 			throw new Error("Expected list");
 		}
 
+		// Expire the subscription
+		const user = await asAlice.query(api.users.getCurrentUser, {});
+		if (!user) throw new Error("Expected user");
 		await env.t.run(async (ctx) => {
-			for (let i = 0; i < 50; i += 1) {
+			const subscription = await ctx.db
+				.query("subscriptions")
+				.withIndex("by_user", (q) => q.eq("userId", user._id))
+				.unique();
+			if (!subscription) throw new Error("Expected subscription");
+			await ctx.db.patch("subscriptions", subscription._id, {
+				status: "inactive",
+				isActive: false,
+				planSlug: "tastik_pro",
+				currentPeriodEnd: Date.now() - 1_000,
+			});
+		});
+
+		try {
+			await asAlice.mutation(api.items.createItem, {
+				listId,
+				name: "Item 1",
+			});
+			throw new Error("Expected subscription expired error");
+		} catch (error) {
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
+		}
+	});
+
+	it("subscribed users can create lists of any type", async () => {
+		await seedSubscribedUser(asAlice);
+
+		const kanbanId = await asAlice.mutation(api.lists.createList, {
+			name: "Kanban Board",
+			type: "kanban",
+		});
+		expect(kanbanId).toBeDefined();
+
+		const stepperId = await asAlice.mutation(api.lists.createList, {
+			name: "Stepper List",
+			type: "stepper",
+		});
+		expect(stepperId).toBeDefined();
+
+		const multiId = await asAlice.mutation(api.lists.createList, {
+			name: "Multi List",
+			type: "multi",
+		});
+		expect(multiId).toBeDefined();
+	});
+
+	it("subscribed users can create items up to 500 limit", async () => {
+		await seedSubscribedUser(asAlice);
+		await asAlice.mutation(api.lists.createList, { name: "Big List" });
+		const lists = await asAlice.query(api.lists.getUserLists, {});
+		const listId = lists[0]?._id;
+		if (!listId) {
+			throw new Error("Expected list");
+		}
+
+		// Seed 500 items directly
+		await env.t.run(async (ctx) => {
+			for (let i = 0; i < 500; i += 1) {
 				await ctx.db.insert("items", {
 					listId,
 					name: `Item ${i + 1}`,
@@ -136,10 +164,11 @@ describe("freemium rules", () => {
 			}
 		});
 
+		// 501st item should fail
 		try {
 			await asAlice.mutation(api.items.createItem, {
 				listId,
-				name: "Item 51",
+				name: "Item 501",
 			});
 			throw new Error("Expected item limit error");
 		} catch (error) {
@@ -147,82 +176,31 @@ describe("freemium rules", () => {
 		}
 	});
 
-	it("free users cannot use paid sharing and tags features", async () => {
-		await asAlice.mutation(api.lists.createList, { name: "Shared List" });
-		const lists = await asAlice.query(api.lists.getUserLists, {});
-		const listId = lists[0]?._id;
-		if (!listId) {
-			throw new Error("Expected list");
-		}
-
-		try {
-			await asAlice.mutation(api.tags.createTag, { listId, name: "Urgent" });
-			throw new Error("Expected upgrade required error for tags");
-		} catch (error) {
-			expectConvexErrorCode(error, ERROR_CODES.UPGRADE_REQUIRED);
-		}
-
-		try {
-			await asAlice.mutation(api.listEditors.addListEditorByEmail, {
-				listId,
-				email: "bob@example.com",
-				nickname: "Bob",
-			});
-			throw new Error("Expected upgrade required error for sharing");
-		} catch (error) {
-			expectConvexErrorCode(error, ERROR_CODES.UPGRADE_REQUIRED);
-		}
-	});
-
-	it("downgraded users cannot duplicate lists above free item limits", async () => {
+	it("expired subscription blocks all mutations", async () => {
 		await seedSubscribedUser(asAlice);
-		await asAlice.mutation(api.lists.createList, { name: "Big List" });
-		const lists = await asAlice.query(api.lists.getUserLists, {});
-		const listId = lists[0]?._id;
-		if (!listId) {
-			throw new Error("Expected list");
-		}
-
-		await env.t.run(async (ctx) => {
-			for (let i = 0; i < 51; i += 1) {
-				await ctx.db.insert("items", {
-					listId,
-					name: `Seeded ${i + 1}`,
-					type: "simple",
-					completed: false,
-					sortOrder: i + 1,
-					updatedAt: Date.now(),
-				});
-			}
-		});
-
 		const user = await asAlice.query(api.users.getCurrentUser, {});
-		if (!user) {
-			throw new Error("Expected authenticated user");
-		}
+		if (!user) throw new Error("Expected user");
 
+		// Expire the subscription
 		await env.t.run(async (ctx) => {
 			const subscription = await ctx.db
 				.query("subscriptions")
 				.withIndex("by_user", (q) => q.eq("userId", user._id))
 				.unique();
-			if (!subscription) {
-				throw new Error("Expected subscription");
-			}
+			if (!subscription) throw new Error("Expected subscription");
 			await ctx.db.patch("subscriptions", subscription._id, {
 				status: "inactive",
 				isActive: false,
-				freeTrial: false,
-				planSlug: "free_user",
+				planSlug: "tastik_pro",
 				currentPeriodEnd: Date.now() - 1_000,
 			});
 		});
 
 		try {
-			await asAlice.mutation(api.lists.duplicateList, { listId });
-			throw new Error("Expected item limit error after downgrade");
+			await asAlice.mutation(api.lists.createList, { name: "New List" });
+			throw new Error("Expected subscription expired error");
 		} catch (error) {
-			expectConvexErrorCode(error, ERROR_CODES.ITEMS_LIMIT_EXCEEDED);
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
 		}
 	});
 });

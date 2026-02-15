@@ -1,17 +1,12 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trackListEditorAdded } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
-import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { ERROR_CODES, isAppErrorData } from "../../../convex/lib/errors";
 
 export function useAddListEditor() {
-	const navigate = useNavigate();
 	const mutation = useMutation(api.listEditors.addListEditorByEmail);
 	const [isPending, setIsPending] = useState(false);
 
@@ -32,12 +27,6 @@ export function useAddListEditor() {
 			return true;
 		} catch (error) {
 			trackListEditorAdded("failure");
-			if (error instanceof ConvexError && isAppErrorData(error.data)) {
-				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
-					showUpgradeToast(error.data.message, navigate);
-					return false;
-				}
-			}
 			toast.error(getErrorMessage(error, "Failed to add editor"));
 			return false;
 		} finally {

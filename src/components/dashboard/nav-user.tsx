@@ -2,20 +2,20 @@ import { UserButton } from "@clerk/tanstack-react-start";
 import { shadcn } from "@clerk/themes";
 import {
 	Archive,
+	CreditCard,
 	FileText,
 	HelpCircle,
 	Monitor,
 	Moon,
 	Shield,
-	Sparkles,
 	Sun,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useTrialStatus } from "@/hooks/use-trial-status";
+import { useManageSubscription } from "@/hooks/actions/use-manage-subscription";
 
 export function NavUser() {
 	const { theme, setTheme } = useTheme();
-	const { isTrialing, trialLabel } = useTrialStatus();
+	const { openBillingPortal } = useManageSubscription();
 
 	return (
 		<div data-testid="nav-user">
@@ -38,6 +38,11 @@ export function NavUser() {
 					/>
 				</UserButton.MenuItems>
 				<UserButton.MenuItems>
+					<UserButton.Action
+						label="Manage Subscription"
+						labelIcon={<CreditCard className="size-4" />}
+						onClick={openBillingPortal}
+					/>
 					<UserButton.Link
 						label="Archive"
 						labelIcon={<Archive className="size-4" />}
@@ -58,13 +63,6 @@ export function NavUser() {
 						labelIcon={<FileText className="size-4" />}
 						href="/terms"
 					/>
-					{isTrialing && (
-						<UserButton.Link
-							label={`Subscription (${trialLabel})`}
-							labelIcon={<Sparkles className="size-4" />}
-							href="/subscription"
-						/>
-					)}
 				</UserButton.MenuItems>
 			</UserButton>
 		</div>

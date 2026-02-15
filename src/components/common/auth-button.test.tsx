@@ -23,11 +23,8 @@ vi.mock("@clerk/tanstack-react-start", () => ({
 		React.createElement("div", { "data-testid": "clerk-user-button" }),
 }));
 
-vi.mock("@/hooks/queries/use-subscription", () => ({
-	useSubscriptionQuery: () => ({
-		isTrialing: false,
-		trialLabel: null,
-	}),
+vi.mock("convex/react", () => ({
+	useAction: () => vi.fn(),
 }));
 
 vi.mock("@clerk/themes", () => ({

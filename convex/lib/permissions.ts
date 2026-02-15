@@ -105,19 +105,6 @@ export async function isUserSubscribed(
 	return isPaidSubscriptionActive(subscription);
 }
 
-export async function requirePaidFeature(
-	ctx: QueryCtx | MutationCtx,
-	userId: Id<"users">,
-	featureName: string,
-): Promise<void> {
-	const subscribed = await isUserSubscribed(ctx, userId);
-	if (!subscribed) {
-		throw new ConvexError(
-			appError("UPGRADE_REQUIRED", `Upgrade to Pro to use ${featureName}`),
-		);
-	}
-}
-
 export async function requireSubscription(
 	ctx: QueryCtx | MutationCtx,
 	userId: Id<"users">,

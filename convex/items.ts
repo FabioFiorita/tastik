@@ -6,9 +6,9 @@ import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import {
 	getListAccessOrNull,
-	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
+	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import {
@@ -180,9 +180,9 @@ export const createItem = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
-		const isSubscribed = await isUserSubscribed(ctx, userId);
+		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "createItem", userId);
-		await assertItemsUnderLimit(ctx, args.listId, isSubscribed);
+		await assertItemsUnderLimit(ctx, args.listId);
 		validateItemName(args.name);
 
 		// Validate optional fields if provided

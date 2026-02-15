@@ -1,14 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trackListCreated } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
-import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { ERROR_CODES, isAppErrorData } from "../../../convex/lib/errors";
 
 type CreateListParams = {
 	name: string;
@@ -39,12 +36,6 @@ export function useCreateList() {
 			return listId;
 		} catch (error) {
 			trackListCreated(params.type ?? "simple", "failure");
-			if (error instanceof ConvexError && isAppErrorData(error.data)) {
-				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
-					showUpgradeToast(error.data.message, navigate);
-					return undefined;
-				}
-			}
 			toast.error(getErrorMessage(error, "Failed to create list"));
 			return undefined;
 		} finally {

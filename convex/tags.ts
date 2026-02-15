@@ -2,11 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertTagsUnderLimit } from "./lib/limits";
-import {
-	requireListAccess,
-	requireListOwner,
-	requirePaidFeature,
-} from "./lib/permissions";
+import { requireListAccess, requireListOwner } from "./lib/permissions";
 import { validateTagName } from "./lib/validation";
 
 /**
@@ -39,8 +35,7 @@ export const createTag = mutation({
 		color: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListOwner(ctx, args.listId);
-		await requirePaidFeature(ctx, userId, "tags");
+		await requireListOwner(ctx, args.listId);
 		await assertTagsUnderLimit(ctx, args.listId);
 		validateTagName(args.name);
 
@@ -82,8 +77,7 @@ export const updateTag = mutation({
 			throw new ConvexError(appError("TAG_NOT_FOUND", "Tag not found"));
 		}
 
-		const { userId } = await requireListOwner(ctx, tag.listId);
-		await requirePaidFeature(ctx, userId, "tags");
+		await requireListOwner(ctx, tag.listId);
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -133,8 +127,7 @@ export const deleteTag = mutation({
 			throw new ConvexError(appError("TAG_NOT_FOUND", "Tag not found"));
 		}
 
-		const { userId } = await requireListOwner(ctx, tag.listId);
-		await requirePaidFeature(ctx, userId, "tags");
+		await requireListOwner(ctx, tag.listId);
 
 		const itemsWithTag = await ctx.db
 			.query("items")

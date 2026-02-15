@@ -64,7 +64,7 @@ function TermsPage() {
 							</p>
 							<p className="text-muted-foreground">
 								The Pro plan is available as a monthly or yearly subscription,
-								processed through Clerk:
+								processed through our billing provider:
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>Monthly: $1.99 per month</li>
@@ -96,11 +96,11 @@ function TermsPage() {
 								</li>
 								<li>
 									You can manage your subscription and cancel at any time
-									through your account settings or the Clerk consumer portal
+									through your account settings and billing portal
 								</li>
 								<li>
-									Refund requests can be made through your Clerk consumer portal
-									or by emailing {LEGAL_CONTACT.supportEmail}
+									Refund requests can be made through the billing portal or by
+									emailing {LEGAL_CONTACT.supportEmail}
 								</li>
 								<li>
 									We reserve the right to change subscription pricing with at

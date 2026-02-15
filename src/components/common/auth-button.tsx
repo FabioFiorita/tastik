@@ -1,19 +1,22 @@
-import { SignInButton, useAuth } from "@clerk/tanstack-react-start";
+import { Link } from "@tanstack/react-router";
 import { NavUser } from "@/components/dashboard/nav-user";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { useIsAuthenticated } from "@/hooks/use-is-authenticated";
 
 export function AuthButton() {
-	const { isSignedIn } = useAuth();
+	const isAuthenticated = useIsAuthenticated();
 
-	if (isSignedIn) {
+	if (isAuthenticated) {
 		return <NavUser />;
 	}
 
 	return (
-		<SignInButton mode="redirect" forceRedirectUrl="/">
-			<Button variant="default" size="sm">
-				Sign In
-			</Button>
-		</SignInButton>
+		<Link
+			to="/sign-in"
+			className={buttonVariants({ variant: "default", size: "sm" })}
+			data-testid="auth-sign-in-link"
+		>
+			Sign In
+		</Link>
 	);
 }

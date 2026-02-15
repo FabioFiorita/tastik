@@ -25,10 +25,10 @@ export const THIRD_PARTY_SERVICES = [
 		privacyPolicyUrl: "https://www.convex.dev/privacy",
 	},
 	{
-		name: "Clerk",
-		purpose: "Authentication, account management, and subscription billing",
+		name: "Better Auth",
+		purpose: "Authentication and account management",
 		dataShared:
-			"Email address, name, profile image, subscription status, and transaction data",
-		privacyPolicyUrl: "https://clerk.com/legal/privacy",
+			"Email address, name, and profile image used for authentication",
+		privacyPolicyUrl: "https://www.better-auth.com",
 	},
 ];

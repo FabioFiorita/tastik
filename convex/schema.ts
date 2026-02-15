@@ -35,22 +35,20 @@ export const listStatusValidator = v.union(
 );
 
 const schema = defineSchema({
-	users: defineTable({
-		clerkId: v.string(),
+	profiles: defineTable({
+		authUserId: v.string(),
 		name: v.optional(v.string()),
 		image: v.optional(v.string()),
 		email: v.optional(v.string()),
-		termsAcceptedAt: v.optional(v.number()),
-		lastSeenAt: v.optional(v.number()),
 		listsSortBy: v.optional(sortByValidator),
 		listsSortAscending: v.optional(v.boolean()),
-	})
-		.index("email", ["email"])
-		.index("by_clerk_id", ["clerkId"]),
+		lastSeenAt: v.optional(v.number()),
+		updatedAt: v.optional(v.number()),
+	}).index("by_auth_user_id", ["authUserId"]),
 
 	// User lists with type, icon, settings
 	lists: defineTable({
-		ownerId: v.id("users"),
+		ownerId: v.string(),
 		name: v.string(),
 		icon: v.optional(v.string()),
 		type: listTypeValidator,
@@ -68,7 +66,7 @@ const schema = defineSchema({
 	// Shared list access (junction table)
 	listEditors: defineTable({
 		listId: v.id("lists"),
-		userId: v.id("users"),
+		userId: v.string(),
 		nickname: v.optional(v.string()),
 		addedAt: v.number(),
 	})

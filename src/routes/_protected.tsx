@@ -4,7 +4,7 @@ import { subscriptionQueryOptions } from "@/hooks/queries/use-subscription";
 
 export const Route = createFileRoute("/_protected")({
 	beforeLoad: async ({ context, location }) => {
-		if (!context.userId) {
+		if (!context.isAuthenticated) {
 			throw redirect({ to: "/sign-in" });
 		}
 

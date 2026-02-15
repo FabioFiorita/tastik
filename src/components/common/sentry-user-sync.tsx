@@ -1,22 +1,22 @@
-import { useAuth, useUser } from "@clerk/tanstack-react-start";
 import * as Sentry from "@sentry/tanstackstart-react";
 import { useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export function SentryUserSync({ children }: { children: React.ReactNode }) {
-	const { isSignedIn } = useAuth();
-	const { user } = useUser();
+	const { data: session } = authClient.useSession();
+	const user = session?.user;
 
 	useEffect(() => {
-		if (!isSignedIn || !user) {
+		if (!user) {
 			Sentry.setUser(null);
 			return;
 		}
 		Sentry.setUser({
 			id: user.id,
-			email: user.primaryEmailAddress?.emailAddress ?? undefined,
-			username: user.username ?? undefined,
+			email: user.email ?? undefined,
+			username: user.name ?? undefined,
 		});
-	}, [isSignedIn, user]);
+	}, [user]);
 
 	return <>{children}</>;
 }

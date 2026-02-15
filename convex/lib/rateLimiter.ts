@@ -1,7 +1,6 @@
 import { HOUR, MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { ConvexError } from "convex/values";
 import { components } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { appError } from "./errors";
 
@@ -34,7 +33,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 export async function assertRateLimit(
 	ctx: MutationCtx,
 	name: "createList" | "createItem" | "addListEditor" | "duplicateList",
-	key: Id<"users">,
+	key: string,
 ): Promise<void> {
 	const status = await rateLimiter.limit(ctx, name, { key });
 	if (!status.ok) {

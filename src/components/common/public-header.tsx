@@ -1,10 +1,10 @@
-import { useAuth } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
 import { AuthButton } from "@/components/common/auth-button";
 import { ModeToggle } from "@/components/common/mode-toggle";
+import { useIsAuthenticated } from "@/hooks/use-is-authenticated";
 
 export function PublicHeader() {
-	const { isSignedIn } = useAuth();
+	const isAuthenticated = useIsAuthenticated();
 
 	return (
 		<header
@@ -53,7 +53,7 @@ export function PublicHeader() {
 				</nav>
 
 				<div className="flex items-center gap-3">
-					{!isSignedIn && <ModeToggle />}
+					{!isAuthenticated && <ModeToggle />}
 					<AuthButton />
 				</div>
 			</div>

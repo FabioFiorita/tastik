@@ -9,9 +9,9 @@ export const Route = createFileRoute("/")({
 });
 
 function IndexPage() {
-	const { userId } = Route.useRouteContext();
+	const { isAuthenticated } = Route.useRouteContext();
 
-	if (userId) {
+	if (isAuthenticated) {
 		return (
 			<ProtectedLayout>
 				<ListsView />

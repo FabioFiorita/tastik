@@ -1,4 +1,3 @@
-import { auth } from "@clerk/tanstack-react-start/server";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
@@ -16,24 +15,32 @@ import { useEffect } from "react";
 import { NotFoundPage } from "@/components/common/not-found";
 import { currentUserQueryOptions } from "@/hooks/queries/use-current-user";
 import { subscriptionQueryOptions } from "@/hooks/queries/use-subscription";
+import { serverAuth } from "@/lib/auth-server";
 import { trackPageView } from "@/lib/metrics";
+import { api } from "../../convex/_generated/api";
 import appCss from "../styles.css?url";
 
-const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
-	const clerkAuth = await auth();
-	const token = await clerkAuth.getToken({ template: "convex" });
+const fetchAuthState = createServerFn({ method: "GET" }).handler(async () => {
+	const token = await serverAuth.getToken();
 
-	return {
-		userId: clerkAuth.userId,
-		token,
-	};
+	if (!token) {
+		return { token: null };
+	}
+
+	try {
+		await serverAuth.fetchAuthMutation(api.users.ensureCurrentUser, {});
+	} catch {
+		return { token: null };
+	}
+
+	return { token };
 });
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
 	convexClient: ConvexReactClient;
 	convexQueryClient: ConvexQueryClient;
-	userId: string | null;
+	isAuthenticated: boolean;
 	token: string | null;
 }>()({
 	head: () => ({
@@ -60,13 +67,13 @@ export const Route = createRootRouteWithContext<{
 	notFoundComponent: () => <NotFoundPage />,
 
 	beforeLoad: async (ctx) => {
-		const { userId, token } = await fetchClerkAuth();
+		const { token } = await fetchAuthState();
 
 		if (token) {
 			ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
 		}
 
-		if (userId) {
+		if (token) {
 			await Promise.all([
 				ctx.context.queryClient.ensureQueryData(currentUserQueryOptions()),
 				ctx.context.queryClient.ensureQueryData(subscriptionQueryOptions()),
@@ -74,7 +81,7 @@ export const Route = createRootRouteWithContext<{
 		}
 
 		return {
-			userId,
+			isAuthenticated: Boolean(token),
 			token,
 		};
 	},

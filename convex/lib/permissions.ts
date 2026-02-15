@@ -7,19 +7,12 @@ import { isComponentSubscriptionActive } from "./subscription";
 
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
-): Promise<Id<"users">> {
+): Promise<string> {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) {
 		throw new ConvexError(appError("NOT_AUTHENTICATED", "Not authenticated"));
 	}
-	const user = await ctx.db
-		.query("users")
-		.withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-		.unique();
-	if (!user) {
-		throw new ConvexError(appError("NOT_AUTHENTICATED", "User not found"));
-	}
-	return user._id;
+	return identity.subject;
 }
 
 export async function requireListOwner(
@@ -58,7 +51,7 @@ export async function getListAccessOrNull(
 	ctx: QueryCtx | MutationCtx,
 	listId: Id<"lists">,
 ): Promise<{
-	userId: Id<"users">;
+	userId: string;
 	list: Doc<"lists">;
 	isOwner: boolean;
 } | null> {
@@ -94,14 +87,11 @@ export async function getListAccessOrNull(
 
 export async function isUserSubscribed(
 	ctx: QueryCtx | MutationCtx,
-	userId: Id<"users">,
+	userId: string,
 ): Promise<boolean> {
-	const user = await ctx.db.get("users", userId);
-	if (!user) return false;
-
 	const subs = await ctx.runQuery(
 		components.stripe.public.listSubscriptionsByUserId,
-		{ userId: user.clerkId },
+		{ userId },
 	);
 
 	const now = Math.floor(Date.now() / 1000);
@@ -110,18 +100,11 @@ export async function isUserSubscribed(
 
 export async function requireSubscription(
 	ctx: QueryCtx | MutationCtx,
-	userId: Id<"users">,
+	userId: string,
 ): Promise<void> {
-	const user = await ctx.db.get("users", userId);
-	if (!user) {
-		throw new ConvexError(
-			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
-		);
-	}
-
 	const subs = await ctx.runQuery(
 		components.stripe.public.listSubscriptionsByUserId,
-		{ userId: user.clerkId },
+		{ userId },
 	);
 
 	const now = Math.floor(Date.now() / 1000);

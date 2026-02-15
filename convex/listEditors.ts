@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { components } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertEditorsUnderLimit } from "./lib/limits";
@@ -30,10 +31,14 @@ export const getListEditors = query({
 			.withIndex("by_list", (q) => q.eq("listId", args.listId))
 			.collect();
 
-		// Batch fetch user details for each editor
-		const userIds = editors.map((editor) => editor.userId);
+		// Batch fetch Better Auth user details for each editor
 		const users = await Promise.all(
-			userIds.map((id) => ctx.db.get("users", id)),
+			editors.map((editor) =>
+				ctx.runQuery(components.betterAuth.adapter.findOne, {
+					model: "user",
+					where: [{ field: "_id", operator: "eq", value: editor.userId }],
+				}),
+			),
 		);
 
 		const editorsWithUsers = editors.map((editor, index) => {
@@ -42,9 +47,9 @@ export const getListEditors = query({
 				...editor,
 				user: user
 					? {
-							_id: user._id,
-							email: user.email,
-							name: user.name,
+							_id: user._id as string,
+							email: user.email as string | undefined,
+							name: user.name as string | undefined,
 						}
 					: null,
 			};
@@ -100,10 +105,10 @@ export const addListEditorByEmail = mutation({
 
 		// Use email index for efficient lookup
 		const normalizedEmail = normalizeEmail(args.email);
-		const user = await ctx.db
-			.query("users")
-			.withIndex("email", (q) => q.eq("email", normalizedEmail))
-			.unique();
+		const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+			model: "user",
+			where: [{ field: "email", operator: "eq", value: normalizedEmail }],
+		});
 
 		if (!user) {
 			throw new ConvexError(
@@ -116,7 +121,8 @@ export const addListEditorByEmail = mutation({
 			validateNickname(args.nickname);
 		}
 
-		if (user._id === ownerId) {
+		const targetUserId = user._id as string;
+		if (targetUserId === ownerId) {
 			throw new ConvexError(
 				appError(
 					"CANNOT_ADD_SELF_AS_EDITOR",
@@ -128,7 +134,7 @@ export const addListEditorByEmail = mutation({
 		const existingEditor = await ctx.db
 			.query("listEditors")
 			.withIndex("by_list_and_user", (q) =>
-				q.eq("listId", args.listId).eq("userId", user._id),
+				q.eq("listId", args.listId).eq("userId", targetUserId),
 			)
 			.unique();
 
@@ -143,7 +149,7 @@ export const addListEditorByEmail = mutation({
 		await assertEditorsUnderLimit(ctx, args.listId);
 		await ctx.db.insert("listEditors", {
 			listId: args.listId,
-			userId: user._id,
+			userId: targetUserId,
 			nickname: args.nickname,
 			addedAt: Date.now(),
 		});

@@ -1,16 +1,15 @@
-import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
-import { shadcn } from "@clerk/themes";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import * as Sentry from "@sentry/tanstackstart-react";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { ConvexReactClient } from "convex/react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { Toaster } from "sonner";
 import { LoadingState } from "@/components/common/loading-state";
 import { SentryUserSync } from "@/components/common/sentry-user-sync";
 import { RouteErrorComponent } from "@/components/layout/route-error-component";
+import { authClient } from "@/lib/auth-client";
 import { env } from "@/lib/env";
 import { ThemeProvider } from "./components/common/theme-provider";
 import { routeTree } from "./routeTree.gen";
@@ -40,28 +39,19 @@ export function getRouter() {
 				queryClient,
 				convexClient,
 				convexQueryClient,
-				userId: null,
+				isAuthenticated: false,
 				token: null,
 			},
 			scrollRestoration: true,
 			InnerWrap: ({ children }) => (
-				<ClerkProvider
-					publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
-					appearance={{ baseTheme: shadcn }}
-				>
-					<ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-						<SentryUserSync>
-							<ThemeProvider
-								attribute="class"
-								defaultTheme="system"
-								enableSystem
-							>
-								{children}
-								<Toaster richColors position="top-right" />
-							</ThemeProvider>
-						</SentryUserSync>
-					</ConvexProviderWithClerk>
-				</ClerkProvider>
+				<ConvexBetterAuthProvider client={convexClient} authClient={authClient}>
+					<SentryUserSync>
+						<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+							{children}
+							<Toaster richColors position="top-right" />
+						</ThemeProvider>
+					</SentryUserSync>
+				</ConvexBetterAuthProvider>
 			),
 		}),
 		queryClient,

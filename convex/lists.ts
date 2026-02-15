@@ -30,10 +30,13 @@ export const getUserLists = query({
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
 
-		// Get user to read sort preferences
-		const user = await ctx.db.get(userId);
-		const sortBy = user?.listsSortBy ?? "created_at";
-		const sortAscending = user?.listsSortAscending ?? false;
+		// Get profile to read sort preferences
+		const profile = await ctx.db
+			.query("profiles")
+			.withIndex("by_auth_user_id", (q) => q.eq("authUserId", userId))
+			.unique();
+		const sortBy = profile?.listsSortBy ?? "created_at";
+		const sortAscending = profile?.listsSortAscending ?? false;
 
 		// Get owned lists
 		const ownedListsQuery = ctx.db

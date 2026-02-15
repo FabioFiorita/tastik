@@ -4,7 +4,7 @@ export interface EditorInfo {
 	_id: Id<"listEditors">;
 	nickname?: string;
 	user: {
-		_id: Id<"users">;
+		_id: string;
 		email?: string;
 		name?: string;
 	} | null;

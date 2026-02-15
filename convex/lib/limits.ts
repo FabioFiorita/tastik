@@ -10,7 +10,7 @@ export const MAX_EDITORS_PER_LIST = 10;
 
 export async function assertListsUnderLimit(
 	ctx: MutationCtx,
-	userId: Id<"users">,
+	userId: string,
 ): Promise<void> {
 	const lists = await ctx.db
 		.query("lists")

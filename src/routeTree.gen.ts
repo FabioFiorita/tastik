@@ -16,6 +16,7 @@ import { Route as PublicSignUpRouteImport } from './routes/_public/sign-up'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as ProtectedSubscriptionRouteImport } from './routes/_protected/subscription'
 import { Route as ProtectedArchiveRouteImport } from './routes/_protected/archive'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PublicSignUpSplatRouteImport } from './routes/_public/sign-up.$'
 import { Route as PublicSignInSplatRouteImport } from './routes/_public/sign-in.$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
@@ -55,6 +56,11 @@ const ProtectedArchiveRoute = ProtectedArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
   getParentRoute: () => ProtectedRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PublicSignUpSplatRoute = PublicSignUpSplatRouteImport.update({
   id: '/$',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof PubliclegalTermsRoute
   '/sign-in/$': typeof PublicSignInSplatRoute
   '/sign-up/$': typeof PublicSignUpSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/terms': typeof PubliclegalTermsRoute
   '/sign-in/$': typeof PublicSignInSplatRoute
   '/sign-up/$': typeof PublicSignUpSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_public/(legal)/terms': typeof PubliclegalTermsRoute
   '/_public/sign-in/$': typeof PublicSignInSplatRoute
   '/_public/sign-up/$': typeof PublicSignUpSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
@@ -171,12 +182,14 @@ export interface FileRouteTypes {
     | '/_public/(legal)/terms'
     | '/_public/sign-in/$'
     | '/_public/sign-up/$'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -229,6 +242,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/archive'
       preLoaderRoute: typeof ProtectedArchiveRouteImport
       parentRoute: typeof ProtectedRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_public/sign-up/$': {
       id: '/_public/sign-up/$'
@@ -338,6 +358,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

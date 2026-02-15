@@ -2,16 +2,16 @@ import { useMutation } from "convex/react";
 import { toast } from "sonner";
 import type { SortBy } from "@/lib/types/sort-by";
 import { api } from "../../../convex/_generated/api";
-import { useCurrentUser } from "../queries/use-current-user";
+import { useUserPreferences } from "../queries/use-user-preferences";
 
 export function useListsSort() {
-	const user = useCurrentUser();
+	const preferences = useUserPreferences();
 	const updatePreferenceMutation = useMutation(
-		api.users.updateListsSortPreference,
+		api.preferences.updateListsSortPreference,
 	);
 
-	const sortBy: SortBy = user?.listsSortBy ?? "created_at";
-	const sortAscending = user?.listsSortAscending ?? false;
+	const sortBy: SortBy = preferences?.listsSortBy ?? "created_at";
+	const sortAscending = preferences?.listsSortAscending ?? false;
 
 	const updateSortBy = async (newSortBy: SortBy) => {
 		try {

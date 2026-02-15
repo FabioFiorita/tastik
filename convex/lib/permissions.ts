@@ -85,19 +85,6 @@ export async function getListAccessOrNull(
 	return { userId, list, isOwner };
 }
 
-export async function isUserSubscribed(
-	ctx: QueryCtx | MutationCtx,
-	userId: string,
-): Promise<boolean> {
-	const subs = await ctx.runQuery(
-		components.stripe.public.listSubscriptionsByUserId,
-		{ userId },
-	);
-
-	const now = Math.floor(Date.now() / 1000);
-	return subs.some((sub) => isComponentSubscriptionActive(sub, now));
-}
-
 export async function requireSubscription(
 	ctx: QueryCtx | MutationCtx,
 	userId: string,
@@ -110,15 +97,9 @@ export async function requireSubscription(
 	const now = Math.floor(Date.now() / 1000);
 	const hasActive = subs.some((sub) => isComponentSubscriptionActive(sub, now));
 
-	if (subs.length === 0) {
-		throw new ConvexError(
-			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
-		);
-	}
-
 	if (!hasActive) {
 		throw new ConvexError(
-			appError("SUBSCRIPTION_EXPIRED", "Subscription expired"),
+			appError("NOT_SUBSCRIBED", "Active subscription required"),
 		);
 	}
 }

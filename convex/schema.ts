@@ -36,15 +36,11 @@ export const listStatusValidator = v.union(
 
 const schema = defineSchema({
 	profiles: defineTable({
-		authUserId: v.string(),
-		name: v.optional(v.string()),
-		image: v.optional(v.string()),
-		email: v.optional(v.string()),
+		userId: v.string(),
 		listsSortBy: v.optional(sortByValidator),
 		listsSortAscending: v.optional(v.boolean()),
 		lastSeenAt: v.optional(v.number()),
-		updatedAt: v.optional(v.number()),
-	}).index("by_auth_user_id", ["authUserId"]),
+	}).index("by_user_id", ["userId"]),
 
 	// User lists with type, icon, settings
 	lists: defineTable({

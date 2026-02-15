@@ -33,7 +33,7 @@ export const getUserLists = query({
 		// Get profile to read sort preferences
 		const profile = await ctx.db
 			.query("profiles")
-			.withIndex("by_auth_user_id", (q) => q.eq("authUserId", userId))
+			.withIndex("by_user_id", (q) => q.eq("userId", userId))
 			.unique();
 		const sortBy = profile?.listsSortBy ?? "created_at";
 		const sortAscending = profile?.listsSortAscending ?? false;

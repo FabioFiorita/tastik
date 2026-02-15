@@ -34,13 +34,6 @@ export const listStatusValidator = v.union(
 	v.literal("archived"),
 );
 
-export const subscriptionStatusValidator = v.union(
-	v.literal("inactive"),
-	v.literal("active"),
-	v.literal("past_due"),
-	v.literal("canceled"),
-);
-
 const schema = defineSchema({
 	users: defineTable({
 		clerkId: v.string(),
@@ -125,30 +118,6 @@ const schema = defineSchema({
 			searchField: "name",
 			filterFields: ["listId"],
 		}),
-
-	// Payment/subscription data (provider-agnostic: Stripe web, RevenueCat mobile)
-	subscriptions: defineTable({
-		userId: v.id("users"),
-		status: subscriptionStatusValidator,
-		isActive: v.optional(v.boolean()),
-		freeTrial: v.optional(v.boolean()),
-		provider: v.optional(v.string()), // "stripe" | "revenuecat"
-		providerSubscriptionId: v.optional(v.string()),
-		planSlug: v.optional(v.string()),
-		currentPeriodStart: v.optional(v.number()),
-		currentPeriodEnd: v.optional(v.number()),
-		canceledAt: v.optional(v.number()),
-		// Legacy Clerk fields (kept for migration, will be removed)
-		clerkSubscriptionId: v.optional(v.string()),
-		clerkSubscriptionItemId: v.optional(v.string()),
-	})
-		.index("by_user", ["userId"])
-		.index("by_provider_subscription", ["providerSubscriptionId"])
-		.index("by_clerk_subscription", ["clerkSubscriptionId"]),
-
-	processedWebhookEvents: defineTable({
-		eventId: v.string(),
-	}).index("by_event_id", ["eventId"]),
 });
 
 export default schema;

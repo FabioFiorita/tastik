@@ -1,8 +1,9 @@
 import { ConvexError } from "convex/values";
+import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { appError } from "./errors";
-import { isPaidSubscriptionActive } from "./subscription";
+import { isComponentSubscriptionActive } from "./subscription";
 
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
@@ -95,32 +96,44 @@ export async function isUserSubscribed(
 	ctx: QueryCtx | MutationCtx,
 	userId: Id<"users">,
 ): Promise<boolean> {
-	const subscription = await ctx.db
-		.query("subscriptions")
-		.withIndex("by_user", (q) => q.eq("userId", userId))
-		.unique();
+	const user = await ctx.db.get("users", userId);
+	if (!user) return false;
 
-	if (!subscription) return false;
+	const subs = await ctx.runQuery(
+		components.stripe.public.listSubscriptionsByUserId,
+		{ userId: user.clerkId },
+	);
 
-	return isPaidSubscriptionActive(subscription);
+	const now = Math.floor(Date.now() / 1000);
+	return subs.some((sub) => isComponentSubscriptionActive(sub, now));
 }
 
 export async function requireSubscription(
 	ctx: QueryCtx | MutationCtx,
 	userId: Id<"users">,
 ): Promise<void> {
-	const subscription = await ctx.db
-		.query("subscriptions")
-		.withIndex("by_user", (q) => q.eq("userId", userId))
-		.unique();
-
-	if (!subscription) {
+	const user = await ctx.db.get("users", userId);
+	if (!user) {
 		throw new ConvexError(
 			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
 		);
 	}
 
-	if (!isPaidSubscriptionActive(subscription)) {
+	const subs = await ctx.runQuery(
+		components.stripe.public.listSubscriptionsByUserId,
+		{ userId: user.clerkId },
+	);
+
+	const now = Math.floor(Date.now() / 1000);
+	const hasActive = subs.some((sub) => isComponentSubscriptionActive(sub, now));
+
+	if (subs.length === 0) {
+		throw new ConvexError(
+			appError("SUBSCRIPTION_REQUIRED", "Subscription required"),
+		);
+	}
+
+	if (!hasActive) {
 		throw new ConvexError(
 			appError("SUBSCRIPTION_EXPIRED", "Subscription expired"),
 		);

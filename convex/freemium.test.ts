@@ -82,7 +82,6 @@ describe("hard paywall", () => {
 	});
 
 	it("unsubscribed users cannot create items", async () => {
-		// Seed a list directly in DB (bypassing mutation checks)
 		await seedSubscribedUser(asAlice);
 		await asAlice.mutation(api.lists.createList, { name: "Shopping" });
 		const lists = await asAlice.query(api.lists.getUserLists, {});
@@ -91,21 +90,21 @@ describe("hard paywall", () => {
 			throw new Error("Expected list");
 		}
 
-		// Expire the subscription
 		const user = await asAlice.query(api.users.getCurrentUser, {});
 		if (!user) throw new Error("Expected user");
+
 		await env.t.run(async (ctx) => {
-			const subscription = await ctx.db
-				.query("subscriptions")
-				.withIndex("by_user", (q) => q.eq("userId", user._id))
-				.unique();
-			if (!subscription) throw new Error("Expected subscription");
-			await ctx.db.patch("subscriptions", subscription._id, {
-				status: "inactive",
-				isActive: false,
-				planSlug: "tastik_pro",
-				currentPeriodEnd: Date.now() - 1_000,
-			});
+			const { components } = await import("./_generated/api");
+			await ctx.runMutation(
+				components.stripe.private.handleSubscriptionUpdated,
+				{
+					stripeSubscriptionId: `sub_test_${user.clerkId}`,
+					status: "active",
+					currentPeriodEnd: Math.floor(Date.now() / 1000) - 1000,
+					cancelAtPeriodEnd: false,
+					metadata: { plan_slug: "tastik_pro", userId: user.clerkId },
+				},
+			);
 		});
 
 		try {
@@ -181,23 +180,117 @@ describe("hard paywall", () => {
 		const user = await asAlice.query(api.users.getCurrentUser, {});
 		if (!user) throw new Error("Expected user");
 
-		// Expire the subscription
 		await env.t.run(async (ctx) => {
-			const subscription = await ctx.db
-				.query("subscriptions")
-				.withIndex("by_user", (q) => q.eq("userId", user._id))
-				.unique();
-			if (!subscription) throw new Error("Expected subscription");
-			await ctx.db.patch("subscriptions", subscription._id, {
-				status: "inactive",
-				isActive: false,
-				planSlug: "tastik_pro",
-				currentPeriodEnd: Date.now() - 1_000,
-			});
+			const { components } = await import("./_generated/api");
+			await ctx.runMutation(
+				components.stripe.private.handleSubscriptionUpdated,
+				{
+					stripeSubscriptionId: `sub_test_${user.clerkId}`,
+					status: "active",
+					currentPeriodEnd: Math.floor(Date.now() / 1000) - 1000,
+					cancelAtPeriodEnd: false,
+					metadata: { plan_slug: "tastik_pro", userId: user.clerkId },
+				},
+			);
 		});
 
 		try {
 			await asAlice.mutation(api.lists.createList, { name: "New List" });
+			throw new Error("Expected subscription expired error");
+		} catch (error) {
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
+		}
+	});
+
+	it("expired subscription blocks tag create/update/delete", async () => {
+		await seedSubscribedUser(asAlice);
+		await asAlice.mutation(api.lists.createList, { name: "List" });
+		const listId = (await asAlice.query(api.lists.getUserLists, {}))[0]?._id;
+		if (!listId) throw new Error("Expected list");
+		await asAlice.mutation(api.tags.createTag, { listId, name: "Tag" });
+		const tags = await asAlice.query(api.tags.getListTags, { listId });
+		const tagId = tags[0]?._id;
+		if (!tagId) throw new Error("Expected tag");
+		const user = await asAlice.query(api.users.getCurrentUser, {});
+		if (!user) throw new Error("Expected user");
+
+		await env.t.run(async (ctx) => {
+			const { components } = await import("./_generated/api");
+			await ctx.runMutation(
+				components.stripe.private.handleSubscriptionUpdated,
+				{
+					stripeSubscriptionId: `sub_test_${user.clerkId}`,
+					status: "active",
+					currentPeriodEnd: Math.floor(Date.now() / 1000) - 1000,
+					cancelAtPeriodEnd: false,
+					metadata: { plan_slug: "tastik_pro", userId: user.clerkId },
+				},
+			);
+		});
+
+		try {
+			await asAlice.mutation(api.tags.createTag, {
+				listId,
+				name: "AnotherTag",
+			});
+			throw new Error("Expected subscription expired error");
+		} catch (error) {
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
+		}
+
+		try {
+			await asAlice.mutation(api.tags.updateTag, {
+				tagId,
+				name: "Updated",
+			});
+			throw new Error("Expected subscription expired error");
+		} catch (error) {
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
+		}
+
+		try {
+			await asAlice.mutation(api.tags.deleteTag, { tagId });
+			throw new Error("Expected subscription expired error");
+		} catch (error) {
+			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);
+		}
+	});
+
+	it("expired subscription blocks list sharing", async () => {
+		await seedSubscribedUser(asAlice);
+		const asBob = await env.createUserIdentity("bob");
+		const bobUser = await asBob.query(api.users.getCurrentUser, {});
+		if (!bobUser) throw new Error("Expected Bob user");
+		await env.t.run(async (ctx) => {
+			await ctx.db.patch("users", bobUser._id, {
+				email: "bob@example.com",
+			});
+		});
+		await asAlice.mutation(api.lists.createList, { name: "Shared List" });
+		const listId = (await asAlice.query(api.lists.getUserLists, {}))[0]?._id;
+		if (!listId) throw new Error("Expected list");
+		const user = await asAlice.query(api.users.getCurrentUser, {});
+		if (!user) throw new Error("Expected user");
+
+		await env.t.run(async (ctx) => {
+			const { components } = await import("./_generated/api");
+			await ctx.runMutation(
+				components.stripe.private.handleSubscriptionUpdated,
+				{
+					stripeSubscriptionId: `sub_test_${user.clerkId}`,
+					status: "active",
+					currentPeriodEnd: Math.floor(Date.now() / 1000) - 1000,
+					cancelAtPeriodEnd: false,
+					metadata: { plan_slug: "tastik_pro", userId: user.clerkId },
+				},
+			);
+		});
+
+		try {
+			await asAlice.mutation(api.listEditors.addListEditorByEmail, {
+				listId,
+				email: "bob@example.com",
+			});
 			throw new Error("Expected subscription expired error");
 		} catch (error) {
 			expectConvexErrorCode(error, ERROR_CODES.SUBSCRIPTION_EXPIRED);

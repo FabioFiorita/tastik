@@ -1,56 +1,16 @@
 export const TASTIK_PRO_PLAN_SLUG = "tastik_pro";
 
-type SubscriptionRecord = {
-	status: "inactive" | "active" | "past_due" | "canceled";
-	isActive?: boolean;
-	planSlug?: string;
-	currentPeriodEnd?: number;
-};
-
-export function hasTastikProPlan(planSlug: string | undefined): boolean {
-	return planSlug === TASTIK_PRO_PLAN_SLUG;
-}
-
-export function isSubscriptionStatusValid(
-	status: SubscriptionRecord["status"],
-) {
-	return status === "active";
-}
-
-export function isPaidSubscriptionActive(
-	subscription: SubscriptionRecord,
-	now: number = Date.now(),
+export function isComponentSubscriptionActive(
+	sub: {
+		status: string;
+		currentPeriodEnd: number;
+		metadata?: Record<string, string>;
+		priceId?: string;
+	},
+	nowSeconds: number = Math.floor(Date.now() / 1000),
 ): boolean {
-	// Use precomputed isActive field with staleness safety checks
-	if (subscription.isActive !== undefined) {
-		if (!subscription.isActive) return false;
-
-		// Safety net: even if isActive was set to true, verify it's still valid
-		if (!hasTastikProPlan(subscription.planSlug)) return false;
-		if (
-			subscription.currentPeriodEnd !== undefined &&
-			subscription.currentPeriodEnd <= now
-		) {
-			return false;
-		}
-		return true;
-	}
-
-	// Fallback to computed logic for backward compatibility during migration
-	if (!hasTastikProPlan(subscription.planSlug)) {
-		return false;
-	}
-
-	if (!isSubscriptionStatusValid(subscription.status)) {
-		return false;
-	}
-
-	if (
-		subscription.currentPeriodEnd !== undefined &&
-		subscription.currentPeriodEnd <= now
-	) {
-		return false;
-	}
-
-	return true;
+	if (sub.status !== "active" && sub.status !== "trialing") return false;
+	if (sub.currentPeriodEnd <= nowSeconds) return false;
+	const planSlug = sub.metadata?.plan_slug ?? TASTIK_PRO_PLAN_SLUG;
+	return planSlug === TASTIK_PRO_PLAN_SLUG;
 }

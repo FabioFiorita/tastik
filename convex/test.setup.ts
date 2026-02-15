@@ -15,8 +15,20 @@ export const modules = Object.fromEntries(
 );
 
 export async function createTestEnv() {
+	const stripeModule = await import(
+		"../node_modules/@convex-dev/stripe/src/component/schema.js"
+	);
+	const stripeSchema = stripeModule.default;
+	if (!stripeSchema) {
+		throw new Error("Stripe schema not found");
+	}
+	const stripeModules = import.meta.glob(
+		"../node_modules/@convex-dev/stripe/src/component/**/*.ts",
+	);
+
 	const t = convexTest(schema, modules);
 	rateLimiterTest.register(t);
+	t.registerComponent("stripe", stripeSchema, stripeModules);
 	const aliceClerkId = "clerk_alice_123";
 	await t.run(async (ctx) => {
 		await ctx.db.insert("users", { clerkId: aliceClerkId });

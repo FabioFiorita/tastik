@@ -1,23 +1,6 @@
-import { v } from "convex/values";
-import { internalQuery, query } from "./_generated/server";
-import { requireAuth } from "./lib/permissions";
-import { hasTastikProPlan, isPaidSubscriptionActive } from "./lib/subscription";
-
-export const isSubscribed = query({
-	args: {},
-	handler: async (ctx) => {
-		const userId = await requireAuth(ctx);
-
-		const subscription = await ctx.db
-			.query("subscriptions")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!subscription) return false;
-
-		return isPaidSubscriptionActive(subscription);
-	},
-});
+import { components } from "./_generated/api";
+import { query } from "./_generated/server";
+import { isComponentSubscriptionActive } from "./lib/subscription";
 
 export const getSubscription = query({
 	args: {},
@@ -28,72 +11,34 @@ export const getSubscription = query({
 			return {
 				isSubscribed: false,
 				isTrialing: false,
-				status: "inactive" as const,
-				freeTrial: false,
-				planSlug: undefined,
 				currentPeriodEnd: undefined,
-				canceledAt: undefined,
 			};
 		}
 
-		const user = await ctx.db
-			.query("users")
-			.withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-			.unique();
+		const subs = await ctx.runQuery(
+			components.stripe.public.listSubscriptionsByUserId,
+			{ userId: identity.subject },
+		);
 
-		if (!user) {
+		const now = Math.floor(Date.now() / 1000);
+		const activeSub = subs
+			.filter((sub) => isComponentSubscriptionActive(sub, now))
+			.sort((a, b) => b.currentPeriodEnd - a.currentPeriodEnd)[0];
+
+		if (!activeSub) {
 			return {
 				isSubscribed: false,
 				isTrialing: false,
-				status: "inactive" as const,
-				freeTrial: false,
-				planSlug: undefined,
 				currentPeriodEnd: undefined,
-				canceledAt: undefined,
 			};
 		}
 
-		const subscription = await ctx.db
-			.query("subscriptions")
-			.withIndex("by_user", (q) => q.eq("userId", user._id))
-			.unique();
-
-		if (!subscription) {
-			return {
-				isSubscribed: false,
-				isTrialing: false,
-				status: "inactive" as const,
-				freeTrial: false,
-				planSlug: undefined,
-				currentPeriodEnd: undefined,
-				canceledAt: undefined,
-			};
-		}
-
-		const isSubscribed = isPaidSubscriptionActive(subscription);
-		const isTrialing =
-			isSubscribed &&
-			subscription.freeTrial === true &&
-			hasTastikProPlan(subscription.planSlug);
+		const isTrialing = activeSub.status === "trialing";
 
 		return {
-			isSubscribed,
+			isSubscribed: true,
 			isTrialing,
-			status: subscription.status,
-			freeTrial: subscription.freeTrial ?? false,
-			planSlug: subscription.planSlug,
-			currentPeriodEnd: subscription.currentPeriodEnd,
-			canceledAt: subscription.canceledAt,
+			currentPeriodEnd: activeSub.currentPeriodEnd * 1000,
 		};
-	},
-});
-
-export const getSubscriptionByUserId = internalQuery({
-	args: { userId: v.id("users") },
-	handler: async (ctx, args) => {
-		return await ctx.db
-			.query("subscriptions")
-			.withIndex("by_user", (q) => q.eq("userId", args.userId))
-			.unique();
 	},
 });

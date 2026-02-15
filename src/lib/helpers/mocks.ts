@@ -120,3 +120,29 @@ const userMocks = userMocksRef.__userMocks;
 export function mockUseCurrentUser() {
 	return { mockUseCurrentUser: userMocks.mockUserFn };
 }
+
+vi.mock("@/lib/metrics", () => ({
+	trackListCreated: vi.fn(),
+	trackListDeleted: vi.fn(),
+	trackListDuplicated: vi.fn(),
+	trackListArchived: vi.fn(),
+	trackListRestored: vi.fn(),
+	trackListExported: vi.fn(),
+	trackListEditorAdded: vi.fn(),
+	trackListEditorRemoved: vi.fn(),
+	trackItemCreated: vi.fn(),
+	trackItemDeleted: vi.fn(),
+	trackItemUpdated: vi.fn(),
+	trackItemToggleComplete: vi.fn(),
+	trackItemIncrement: vi.fn(),
+	trackItemStatusUpdated: vi.fn(),
+	trackTagCreated: vi.fn(),
+	trackTagDeleted: vi.fn(),
+	trackPageView: vi.fn(),
+	trackCtaClicked: vi.fn(),
+}));
+
+export function mockMetrics() {
+	// Mock is auto-registered via vi.mock above.
+	// Call this function to signal intent in test files.
+}

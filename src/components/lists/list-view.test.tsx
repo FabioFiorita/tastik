@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockReactRouterLink } from "@/lib/helpers/mocks";
+import { mockMetrics, mockReactRouterLink } from "@/lib/helpers/mocks";
 import { renderWithUser, screen } from "@/test-utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ListView } from "./list-view";
 
 mockReactRouterLink();
+mockMetrics();
 
 const mockUseList = vi.fn();
 const mockUseListItems = vi.fn();

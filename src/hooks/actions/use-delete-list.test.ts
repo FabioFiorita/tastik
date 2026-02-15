@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockMetrics } from "@/lib/helpers/mocks";
 import { act, renderHook } from "@/test-utils";
-
-vi.mock("@/lib/metrics", () => ({
-	trackListDeleted: vi.fn(),
-}));
-
 import type { Id } from "../../../convex/_generated/dataModel";
+
+mockMetrics();
+
 import { useDeleteList } from "./use-delete-list";
 
 vi.mock("convex/react", () => {

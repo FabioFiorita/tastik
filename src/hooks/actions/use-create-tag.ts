@@ -1,11 +1,9 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trackTagCreated } from "@/lib/metrics";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
-import { showUpgradeToast } from "@/lib/utils/show-upgrade-toast";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ERROR_CODES, isAppErrorData } from "../../../convex/lib/errors";
@@ -17,7 +15,6 @@ type CreateTagParams = {
 };
 
 export function useCreateTag() {
-	const navigate = useNavigate();
 	const mutation = useMutation(api.tags.createTag);
 	const [isPending, setIsPending] = useState(false);
 
@@ -44,10 +41,6 @@ export function useCreateTag() {
 			if (error instanceof ConvexError && isAppErrorData(error.data)) {
 				if (error.data.code === ERROR_CODES.TAG_NAME_EXISTS) {
 					toast.error(error.data.message);
-					return null;
-				}
-				if (error.data.code === ERROR_CODES.UPGRADE_REQUIRED) {
-					showUpgradeToast(error.data.message, navigate);
 					return null;
 				}
 			}

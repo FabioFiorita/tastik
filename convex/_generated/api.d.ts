@@ -20,6 +20,8 @@ import type * as lib_subscription from "../lib/subscription.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as listEditors from "../listEditors.js";
 import type * as lists from "../lists.js";
+import type * as stripe from "../stripe.js";
+import type * as stripeWebhook from "../stripeWebhook.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
 import type * as testHelpers from "../testHelpers.js";
@@ -44,6 +46,8 @@ declare const fullApi: ApiFromModules<{
   "lib/validation": typeof lib_validation;
   listEditors: typeof listEditors;
   lists: typeof lists;
+  stripe: typeof stripe;
+  stripeWebhook: typeof stripeWebhook;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
   testHelpers: typeof testHelpers;

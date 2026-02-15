@@ -2,19 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithUser, screen } from "@/test-utils";
 import { SubscriptionPage } from "./subscription-page";
 
-vi.mock("@clerk/tanstack-react-start", () => ({
-	PricingTable: (props: Record<string, unknown>) => (
-		<div
-			data-testid="clerk-pricing-table"
-			data-redirect={props.newSubscriptionRedirectUrl}
-		>
-			Clerk PricingTable
-		</div>
-	),
+vi.mock("convex/react", () => ({
+	useAction: () => vi.fn(),
 }));
 
-vi.mock("@clerk/themes", () => ({
-	shadcn: {},
+vi.mock("@/lib/env", () => ({
+	env: {
+		VITE_STRIPE_MONTHLY_PRICE_ID: "price_monthly_test",
+		VITE_STRIPE_YEARLY_PRICE_ID: "price_yearly_test",
+	},
 }));
 
 describe("subscription-page", () => {
@@ -30,20 +26,10 @@ describe("subscription-page", () => {
 		);
 	});
 
-	it("renders Clerk PricingTable", () => {
+	it("renders plan cards with checkout buttons", () => {
 		renderWithUser(<SubscriptionPage />);
-		expect(screen.getByTestId("clerk-pricing-table")).toBeInTheDocument();
-		expect(screen.getByTestId("clerk-pricing-table")).toHaveTextContent(
-			"Clerk PricingTable",
-		);
-	});
-
-	it("sets redirect URL on PricingTable", () => {
-		renderWithUser(<SubscriptionPage />);
-		expect(screen.getByTestId("clerk-pricing-table")).toHaveAttribute(
-			"data-redirect",
-			"/",
-		);
+		expect(screen.getByTestId("checkout-monthly")).toBeInTheDocument();
+		expect(screen.getByTestId("checkout-yearly")).toBeInTheDocument();
 	});
 
 	it("renders pricing table container", () => {

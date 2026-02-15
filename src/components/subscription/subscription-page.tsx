@@ -1,7 +1,17 @@
-import { PricingTable } from "@clerk/tanstack-react-start";
-import { shadcn } from "@clerk/themes";
+import { PlanCards } from "@/components/common/plan-cards";
+import { PricingFeatures } from "@/components/common/pricing-features";
+import { Button } from "@/components/ui/button";
+import { useStripeCheckout } from "@/hooks/actions/use-stripe-checkout";
+import { env } from "@/lib/env";
+
+const PRICE_IDS: Record<string, string> = {
+	Monthly: env.VITE_STRIPE_MONTHLY_PRICE_ID,
+	Yearly: env.VITE_STRIPE_YEARLY_PRICE_ID,
+};
 
 export function SubscriptionPage() {
+	const { checkout, isPending } = useStripeCheckout();
+
 	return (
 		<section className="relative overflow-hidden bg-background">
 			<div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.18),transparent_55%)]" />
@@ -26,12 +36,34 @@ export function SubscriptionPage() {
 				</div>
 
 				<div
-					className="mt-12 flex justify-center"
+					className="mx-auto mt-12 max-w-4xl"
+					data-testid="subscription-pricing-features"
+				>
+					<PricingFeatures />
+				</div>
+
+				<div
+					className="mx-auto mt-12 max-w-2xl"
 					data-testid="subscription-pricing-table"
 				>
-					<PricingTable
-						appearance={{ theme: shadcn }}
-						newSubscriptionRedirectUrl="/"
+					<PlanCards
+						renderAction={(plan) => (
+							<Button
+								variant={plan.popular ? "default" : "outline"}
+								size="lg"
+								className="w-full"
+								disabled={isPending}
+								onClick={() => {
+									const priceId = PRICE_IDS[plan.name];
+									if (priceId) {
+										checkout(priceId);
+									}
+								}}
+								data-testid={`checkout-${plan.name.toLowerCase()}`}
+							>
+								{isPending ? "Redirecting..." : plan.cta}
+							</Button>
+						)}
 					/>
 				</div>
 			</div>

@@ -2,19 +2,13 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
-import {
-	assertListsUnderLimit,
-	FREE_ALLOWED_LIST_TYPES,
-	FREE_MAX_ITEMS_PER_LIST,
-	MAX_ITEMS_PER_LIST,
-} from "./lib/limits";
+import { assertListsUnderLimit, MAX_ITEMS_PER_LIST } from "./lib/limits";
 import {
 	getListAccessOrNull,
-	isUserSubscribed,
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
-	requirePaidFeature,
+	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import { validateListName } from "./lib/validation";
@@ -179,16 +173,11 @@ export const createList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		const isSubscribed = await isUserSubscribed(ctx, userId);
+		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "createList", userId);
-		await assertListsUnderLimit(ctx, userId, isSubscribed);
+		await assertListsUnderLimit(ctx, userId);
 
 		const listType = args.type ?? "simple";
-		if (!isSubscribed && !FREE_ALLOWED_LIST_TYPES.includes(listType)) {
-			throw new ConvexError(
-				appError("UPGRADE_REQUIRED", "Upgrade to Pro to use this list type"),
-			);
-		}
 
 		validateListName(args.name);
 		const listId = await ctx.db.insert("lists", {
@@ -225,13 +214,7 @@ export const updateList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListOwner(ctx, args.listId);
-
-		if (
-			args.type !== undefined &&
-			!FREE_ALLOWED_LIST_TYPES.includes(args.type)
-		) {
-			await requirePaidFeature(ctx, userId, "this list type");
-		}
+		await requireSubscription(ctx, userId);
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -345,18 +328,9 @@ export const duplicateList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId, list } = await requireListAccess(ctx, args.listId);
-		const isSubscribed = await isUserSubscribed(ctx, userId);
+		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "duplicateList", userId);
-		await assertListsUnderLimit(ctx, userId, isSubscribed);
-
-		if (!isSubscribed && !FREE_ALLOWED_LIST_TYPES.includes(list.type)) {
-			throw new ConvexError(
-				appError(
-					"UPGRADE_REQUIRED",
-					"Upgrade to Pro to duplicate this list type",
-				),
-			);
-		}
+		await assertListsUnderLimit(ctx, userId);
 
 		// Fetch source items
 		const sourceItems = await ctx.db
@@ -364,16 +338,12 @@ export const duplicateList = mutation({
 			.withIndex("by_list", (q) => q.eq("listId", args.listId))
 			.collect();
 
-		// Check item count against current plan limits.
-		// This prevents downgraded free users from duplicating oversized lists.
-		const maxItemsForPlan = isSubscribed
-			? MAX_ITEMS_PER_LIST
-			: FREE_MAX_ITEMS_PER_LIST;
-		if (sourceItems.length > maxItemsForPlan) {
+		// Check item count against plan limits
+		if (sourceItems.length > MAX_ITEMS_PER_LIST) {
 			throw new ConvexError(
 				appError(
 					"ITEMS_LIMIT_EXCEEDED",
-					`Cannot duplicate list with more than ${maxItemsForPlan} items`,
+					`Cannot duplicate list with more than ${MAX_ITEMS_PER_LIST} items`,
 				),
 			);
 		}

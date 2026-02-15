@@ -6,7 +6,6 @@ import {
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
-	requirePaidFeature,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import {
@@ -91,7 +90,6 @@ export const addListEditorByEmail = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId: ownerId } = await requireListOwner(ctx, args.listId);
-		await requirePaidFeature(ctx, ownerId, "sharing");
 		await assertRateLimit(ctx, "addListEditor", ownerId);
 
 		if (!isValidEmail(args.email)) {

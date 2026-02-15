@@ -70,6 +70,7 @@ export function getRouter() {
 	if (!router.isServer && env.VITE_SENTRY_DSN) {
 		Sentry.init({
 			dsn: env.VITE_SENTRY_DSN,
+			environment: env.MODE ?? "production",
 			sendDefaultPii: true,
 			integrations: [Sentry.tanstackRouterBrowserTracingIntegration(router)],
 			tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,

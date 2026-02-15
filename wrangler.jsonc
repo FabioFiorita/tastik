@@ -1,9 +1,15 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "tastik",
-	"compatibility_date": "2025-02-14",
+	"compatibility_date": "2025-04-01",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "@tanstack/react-start/server-entry",
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		}
+	},
 	"vars": {
 		"VITE_CONVEX_URL": "",
 		"VITE_CONVEX_SITE_URL": "",

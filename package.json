@@ -5,7 +5,8 @@
 	"scripts": {
 		"build": "vite build",
 		"dev": "vite dev --port 3000",
-		"deploy": "bun run build && wrangler deploy",
+		"deploy": "bun run build && ./scripts/deploy-worker.sh",
+		"deploy:dev": "bun run build && ./scripts/deploy-worker.sh .env.local development",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest",

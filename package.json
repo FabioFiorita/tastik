@@ -10,7 +10,7 @@
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest",
-		"test:once": "vitest run",
+		"test:once": "vitest run --passWithNoTests",
 		"test:watch": "vitest --watch",
 		"test:ui": "vitest --ui",
 		"test:debug": "vitest --inspect-brk --no-file-parallelism",

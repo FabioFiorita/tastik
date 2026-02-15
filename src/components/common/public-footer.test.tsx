@@ -66,7 +66,7 @@ describe("public-footer", () => {
 	it("contact us link has correct mailto href", () => {
 		renderWithUser(<PublicFooter />);
 		const contactLink = screen.getByTestId("public-footer-link-contact");
-		expect(contactLink).toHaveAttribute("href", "mailto:team@tastikapp.com");
+		expect(contactLink).toHaveAttribute("href", "mailto:fabiolfp@gmail.com");
 	});
 
 	it("help center link navigates to support", () => {

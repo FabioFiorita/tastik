@@ -69,7 +69,7 @@ describe("not-found", () => {
 		renderWithUser(<NotFoundPage />);
 		const supportLink = screen.getByTestId("not-found-support-link");
 		expect(supportLink).toBeInTheDocument();
-		expect(supportLink).toHaveAttribute("href", "mailto:team@tastikapp.com");
+		expect(supportLink).toHaveAttribute("href", "mailto:fabiolfp@gmail.com");
 	});
 
 	it("preserves leading slash when path already has one", async () => {

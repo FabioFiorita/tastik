@@ -1,5 +1,5 @@
 export const LEGAL_CONTACT = {
-	supportEmail: "team@tastikapp.com",
+	supportEmail: "fabiolfp@gmail.com",
 	companyName: "Tastik",
 	copyrightYear: new Date().getFullYear(),
 };

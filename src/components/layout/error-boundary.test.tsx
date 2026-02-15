@@ -84,7 +84,7 @@ describe("error-boundary", () => {
 		renderWithUser(<ErrorBoundary error={error} />);
 		const supportLink = screen.getByTestId("error-boundary-support");
 		expect(supportLink).toBeInTheDocument();
-		expect(supportLink).toHaveAttribute("href", "mailto:team@tastikapp.com");
+		expect(supportLink).toHaveAttribute("href", "mailto:fabiolfp@gmail.com");
 	});
 
 	it("handles error without message", () => {

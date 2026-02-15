@@ -53,8 +53,9 @@ else
   echo "Warning: CLERK_SECRET_KEY not set (add to $ENV_FILE or env). Clerk auth may fail."
 fi
 
+DEPLOY_ARGS=("${VAR_ARGS[@]}")
 if [[ -n "$WRANGLER_ENV" ]]; then
-  npx wrangler deploy --env "$WRANGLER_ENV" "${VAR_ARGS[@]}"
-else
-  npx wrangler deploy "${VAR_ARGS[@]}"
+  DEPLOY_ARGS+=(--env "$WRANGLER_ENV" --name "tastik-dev")
 fi
+
+npx wrangler deploy "${DEPLOY_ARGS[@]}"

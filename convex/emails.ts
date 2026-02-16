@@ -1,4 +1,5 @@
 import { Resend } from "@convex-dev/resend";
+import { v } from "convex/values";
 import { components } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
 
@@ -11,9 +12,9 @@ const FROM_EMAIL =
 
 export const sendOtpEmail = internalMutation({
 	args: {
-		email: { type: "string" },
-		otp: { type: "string" },
-		type: { type: "string" },
+		email: v.string(),
+		otp: v.string(),
+		type: v.string(),
 	},
 	handler: async (ctx, args) => {
 		const subject =

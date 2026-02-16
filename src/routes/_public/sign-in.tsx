@@ -58,7 +58,6 @@ export function SignInPage() {
 			const result = await authClient.signIn.emailOtp({
 				email,
 				otp,
-				callbackURL: "/",
 			});
 
 			if (result.error) {

@@ -1,5 +1,6 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { betterAuth } from "better-auth";
 import { emailOTP } from "better-auth/plugins";
 import { components, internal } from "./_generated/api";
@@ -59,17 +60,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
 					if (OTP_DEV_BYPASS) return "424242";
 					const bytes = new Uint8Array(4);
 					crypto.getRandomValues(bytes);
-					return (
-						(((bytes[0]! << 24) |
-							(bytes[1]! << 16) |
-							(bytes[2]! << 8) |
-							bytes[3]!) %
-							900000) +
-						100000
-					).toString();
+					const n =
+						(bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+					return ((Math.abs(n) % 900000) + 100000).toString();
 				},
 				async sendVerificationOTP({ email, otp, type }) {
 					if (OTP_DEV_BYPASS) return;
+					if (!isRunMutationCtx(ctx)) return;
 					await ctx.runMutation(internal.emails.sendOtpEmail, {
 						email,
 						otp,

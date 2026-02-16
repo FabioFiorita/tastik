@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as emails from "../emails.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
 import type * as lib_errors from "../lib/errors.js";
@@ -34,6 +35,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  emails: typeof emails;
   http: typeof http;
   items: typeof items;
   "lib/errors": typeof lib_errors;

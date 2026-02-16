@@ -58,7 +58,6 @@ export function SignUpPage() {
 			const result = await authClient.signIn.emailOtp({
 				email,
 				otp,
-				callbackURL: "/subscription",
 			});
 
 			if (result.error) {

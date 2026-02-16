@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as emailTemplates_otpEmail from "../emailTemplates/otpEmail.js";
 import type * as emails from "../emails.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
@@ -35,6 +36,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "emailTemplates/otpEmail": typeof emailTemplates_otpEmail;
   emails: typeof emails;
   http: typeof http;
   items: typeof items;

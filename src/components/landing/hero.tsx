@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle, Minus, Plus, Smartphone } from "lucide-react";
+import { CheckCircle, Minus, Plus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackCtaClicked } from "@/lib/metrics";
 import { cn } from "@/lib/utils/cn";
@@ -45,18 +45,6 @@ export function Hero() {
 						>
 							Get Started
 						</Link>
-						<a
-							href="#download"
-							rel="noopener noreferrer"
-							className={cn(
-								buttonVariants({ variant: "outline", size: "lg" }),
-								"gap-2",
-							)}
-							data-testid="hero-download-ios"
-						>
-							<Smartphone className="h-5 w-5" />
-							Download for iOS
-						</a>
 					</div>
 				</div>
 

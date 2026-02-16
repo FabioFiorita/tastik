@@ -42,9 +42,12 @@ function getSocialProviders() {
 	return socialProviders;
 }
 
+const baseURL = process.env.SITE_URL ?? "http://localhost:3000";
+
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
 	betterAuth({
-		baseURL: process.env.SITE_URL ?? "http://localhost:3000",
+		baseURL,
+		trustedOrigins: [baseURL, "http://localhost:3000"],
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
 		database: authComponent.adapter(ctx),
 		emailAndPassword: {

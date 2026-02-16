@@ -58,7 +58,7 @@ export function PlanCard({ plan, renderAction }: PlanCardProps) {
 			)}
 
 			<div
-				className="mb-6 flex flex-grow items-start gap-2 text-muted-foreground text-sm"
+				className="mb-6 flex grow items-start gap-2 text-muted-foreground text-sm"
 				data-testid="plan-card-trial"
 			>
 				<Check className="size-4 text-primary" />

@@ -1,7 +1,8 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth";
-import { components } from "./_generated/api";
+import { emailOTP } from "better-auth/plugins";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
 
@@ -14,6 +15,8 @@ function requireServerEnv(name: string) {
 	}
 	return value;
 }
+
+const OTP_DEV_BYPASS = process.env.OTP_DEV_BYPASS === "true";
 
 function getSocialProviders() {
 	const socialProviders: Record<
@@ -44,11 +47,37 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
 		database: authComponent.adapter(ctx),
 		emailAndPassword: {
-			enabled: true,
-			requireEmailVerification: false,
+			enabled: false,
 		},
 		socialProviders: getSocialProviders(),
-		plugins: [convex({ authConfig })],
+		plugins: [
+			convex({ authConfig }),
+			emailOTP({
+				otpLength: 6,
+				expiresIn: 300,
+				generateOTP: () => {
+					if (OTP_DEV_BYPASS) return "424242";
+					const bytes = new Uint8Array(4);
+					crypto.getRandomValues(bytes);
+					return (
+						(((bytes[0]! << 24) |
+							(bytes[1]! << 16) |
+							(bytes[2]! << 8) |
+							bytes[3]!) %
+							900000) +
+						100000
+					).toString();
+				},
+				async sendVerificationOTP({ email, otp, type }) {
+					if (OTP_DEV_BYPASS) return;
+					await ctx.runMutation(internal.emails.sendOtpEmail, {
+						email,
+						otp,
+						type,
+					});
+				},
+			}),
+		],
 		user: {
 			deleteUser: { enabled: true },
 		},

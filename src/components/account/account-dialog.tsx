@@ -5,14 +5,14 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import {
+	ResponsiveDialog,
+	ResponsiveDialogContent,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+} from "@/components/common/responsive-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -146,16 +146,16 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
 	return (
 		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent
+			<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+				<ResponsiveDialogContent
 					className="max-w-md sm:max-w-md"
 					data-testid="account-dialog"
 				>
-					<DialogHeader>
-						<DialogTitle data-testid="account-dialog-title">
+					<ResponsiveDialogHeader>
+						<ResponsiveDialogTitle data-testid="account-dialog-title">
 							Account
-						</DialogTitle>
-					</DialogHeader>
+						</ResponsiveDialogTitle>
+					</ResponsiveDialogHeader>
 
 					<div className="space-y-6">
 						<div className="flex flex-col items-center gap-4">
@@ -242,8 +242,8 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 							</Button>
 						</div>
 					</div>
-				</DialogContent>
-			</Dialog>
+				</ResponsiveDialogContent>
+			</ResponsiveDialog>
 
 			<ConfirmDialog
 				open={deleteDialogOpen}

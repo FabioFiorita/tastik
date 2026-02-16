@@ -197,7 +197,7 @@ export function ItemFormDialog({
 						{description}
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
-				<div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+				<div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
 					<form
 						id="item-form"
 						onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {

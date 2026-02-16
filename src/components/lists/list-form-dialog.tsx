@@ -91,31 +91,33 @@ export function ListFormDialog({
 		<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
 			{trigger && <ResponsiveDialogTrigger render={trigger} />}
 			<ResponsiveDialogContent>
-				<ResponsiveDialogHeader>
+				<ResponsiveDialogHeader className="shrink-0">
 					<ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
 					<ResponsiveDialogDescription>
 						{description}
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
-				<form
-					id="list-form"
-					onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
-						e.preventDefault();
-						form.handleSubmit();
-					}}
-				>
-					<CreateListFormFields
-						form={
-							form as {
-								Field: (props: {
-									name: "name" | "type" | "icon";
-									children: (field: unknown) => React.ReactNode;
-								}) => React.ReactNode;
+				<div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+					<form
+						id="list-form"
+						onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
+							e.preventDefault();
+							form.handleSubmit();
+						}}
+					>
+						<CreateListFormFields
+							form={
+								form as {
+									Field: (props: {
+										name: "name" | "type" | "icon";
+										children: (field: unknown) => React.ReactNode;
+									}) => React.ReactNode;
+								}
 							}
-						}
-					/>
-				</form>
-				<ResponsiveDialogFooter>
+						/>
+					</form>
+				</div>
+				<ResponsiveDialogFooter className="shrink-0">
 					<Button
 						type="button"
 						variant="outline"

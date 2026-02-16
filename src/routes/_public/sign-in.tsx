@@ -4,6 +4,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSeparator,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { authClient } from "@/lib/auth-client";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 
@@ -14,18 +20,44 @@ export const Route = createFileRoute("/_public/sign-in")({
 export function SignInPage() {
 	const navigate = useNavigate();
 	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
+	const [step, setStep] = useState<"email" | "otp">("email");
+	const [otp, setOtp] = useState("");
 	const [isPending, setIsPending] = useState(false);
 
-	const handleEmailSignIn = async (
+	const handleSendCode = async (
 		event: React.SyntheticEvent<HTMLFormElement>,
 	) => {
 		event.preventDefault();
 		setIsPending(true);
 		try {
-			const result = await authClient.signIn.email({
+			const result = await authClient.emailOtp.sendVerificationOtp({
 				email,
-				password,
+				type: "sign-in",
+			});
+
+			if (result.error) {
+				toast.error(result.error.message ?? "Unable to send code");
+				return;
+			}
+
+			toast.success("Check your email for the verification code");
+			setStep("otp");
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Unable to send code"));
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	const handleVerifyOtp = async (
+		event: React.SyntheticEvent<HTMLFormElement>,
+	) => {
+		event.preventDefault();
+		setIsPending(true);
+		try {
+			const result = await authClient.signIn.emailOtp({
+				email,
+				otp,
 				callbackURL: "/",
 			});
 
@@ -70,32 +102,74 @@ export function SignInPage() {
 					</p>
 				</div>
 
-				<form className="space-y-3" onSubmit={handleEmailSignIn}>
-					<Input
-						type="email"
-						value={email}
-						onChange={(event) => setEmail(event.target.value)}
-						placeholder="Email"
-						required
-						data-testid="sign-in-email-input"
-					/>
-					<Input
-						type="password"
-						value={password}
-						onChange={(event) => setPassword(event.target.value)}
-						placeholder="Password"
-						required
-						data-testid="sign-in-password-input"
-					/>
-					<Button
-						type="submit"
-						className="w-full"
-						disabled={isPending}
-						data-testid="sign-in-submit"
-					>
-						Sign In
-					</Button>
-				</form>
+				{step === "email" ? (
+					<form className="space-y-3" onSubmit={handleSendCode}>
+						<Input
+							type="email"
+							value={email}
+							onChange={(event) => setEmail(event.target.value)}
+							placeholder="Email"
+							required
+							data-testid="sign-in-email-input"
+						/>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={isPending}
+							data-testid="sign-in-send-code"
+						>
+							Send code
+						</Button>
+					</form>
+				) : (
+					<form className="space-y-3" onSubmit={handleVerifyOtp}>
+						<p className="text-muted-foreground text-sm">
+							Code sent to {email}
+						</p>
+						<InputOTP
+							maxLength={6}
+							value={otp}
+							onChange={setOtp}
+							data-testid="sign-in-otp-input"
+						>
+							<InputOTPGroup className="justify-center">
+								<InputOTPSlot index={0} />
+								<InputOTPSlot index={1} />
+								<InputOTPSlot index={2} />
+								<InputOTPSeparator />
+								<InputOTPSlot index={3} />
+								<InputOTPSlot index={4} />
+								<InputOTPSlot index={5} />
+							</InputOTPGroup>
+						</InputOTP>
+						{import.meta.env.DEV && (
+							<p className="text-muted-foreground text-xs">
+								Dev mode: use 424242 if bypass is on
+							</p>
+						)}
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={isPending || otp.length !== 6}
+							data-testid="sign-in-verify"
+						>
+							Verify
+						</Button>
+						<Button
+							type="button"
+							variant="ghost"
+							className="w-full"
+							disabled={isPending}
+							onClick={() => {
+								setStep("email");
+								setOtp("");
+							}}
+							data-testid="sign-in-change-email"
+						>
+							Use a different email
+						</Button>
+					</form>
+				)}
 
 				<div className="space-y-2">
 					<Button

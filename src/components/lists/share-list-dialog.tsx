@@ -65,7 +65,7 @@ export function ShareListDialog({
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
 
-				<div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto">
+				<div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
 					<section>
 						<h3 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
 							List

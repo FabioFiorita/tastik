@@ -27,11 +27,11 @@ function validateCallbackUrl(url: string, paramName: string): void {
 
 const PLAN_CONFIG = {
 	Monthly: {
-		priceIdEnv: "STRIPE_MONTHLY_PRICE_ID",
+		productIdEnv: "STRIPE_MONTHLY_PRODUCT_ID",
 		trialPeriodDays: 7,
 	},
 	Yearly: {
-		priceIdEnv: "STRIPE_YEARLY_PRICE_ID",
+		productIdEnv: "STRIPE_YEARLY_PRODUCT_ID",
 		trialPeriodDays: 14,
 	},
 } as const;
@@ -52,10 +52,10 @@ export const createCheckoutSession = action({
 		validateCallbackUrl(args.cancelUrl, "cancelUrl");
 
 		const config = PLAN_CONFIG[args.plan];
-		const priceId = process.env[config.priceIdEnv];
-		if (!priceId) {
+		const productId = process.env[config.productIdEnv];
+		if (!productId) {
 			throw new Error(
-				`Missing ${config.priceIdEnv} in Convex environment variables`,
+				`Missing ${config.productIdEnv} in Convex environment variables`,
 			);
 		}
 
@@ -70,6 +70,17 @@ export const createCheckoutSession = action({
 			throw new Error("STRIPE_SECRET_KEY is not set in Convex environment");
 		}
 		const stripe = new Stripe(apiKey);
+
+		const product = await stripe.products.retrieve(productId);
+		const defaultPrice = product.default_price;
+		const priceId =
+			typeof defaultPrice === "string" ? defaultPrice : defaultPrice?.id;
+		if (!priceId) {
+			throw new Error(
+				`Product ${productId} has no default price set in Stripe`,
+			);
+		}
+
 		const session = await stripe.checkout.sessions.create({
 			mode: "subscription",
 			customer: customer.customerId,
@@ -81,8 +92,14 @@ export const createCheckoutSession = action({
 			],
 			success_url: args.successUrl,
 			cancel_url: args.cancelUrl,
+			payment_method_collection: "if_required",
 			subscription_data: {
 				trial_period_days: config.trialPeriodDays,
+				trial_settings: {
+					end_behavior: {
+						missing_payment_method: "pause",
+					},
+				},
 				metadata: {
 					userId: identity.subject,
 					plan_slug: "tastik_pro",

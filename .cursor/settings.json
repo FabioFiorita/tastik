@@ -1,0 +1,16 @@
+{
+	"plugins": {
+		"convex": {
+			"enabled": true
+		},
+		"stripe": {
+			"enabled": true
+		},
+		"sentry": {
+			"enabled": true
+		},
+		"cloudflare": {
+			"enabled": true
+		}
+	}
+}

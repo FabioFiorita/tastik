@@ -47,6 +47,11 @@ export async function requireListAccess(
 	return access;
 }
 
+/**
+ * Returns access info for the given list, or null if the caller has no access.
+ * Returns null for unauthenticated users (does not throw).
+ * Use `requireListAccess` when you want an error instead of null.
+ */
 export async function getListAccessOrNull(
 	ctx: QueryCtx | MutationCtx,
 	listId: Id<"lists">,
@@ -55,7 +60,12 @@ export async function getListAccessOrNull(
 	list: Doc<"lists">;
 	isOwner: boolean;
 } | null> {
-	const userId = await requireAuth(ctx);
+	let userId: string;
+	try {
+		userId = await requireAuth(ctx);
+	} catch {
+		return null;
+	}
 	const list = await ctx.db.get("lists", listId);
 
 	if (!list) {
@@ -73,12 +83,7 @@ export async function getListAccessOrNull(
 			.unique();
 
 		if (!editor) {
-			throw new ConvexError(
-				appError(
-					"NOT_LIST_ACCESS",
-					"Not authorized: you don't have access to this list",
-				),
-			);
+			return null;
 		}
 	}
 
@@ -86,16 +91,17 @@ export async function getListAccessOrNull(
 }
 
 export async function requireSubscription(
-	ctx: QueryCtx | MutationCtx,
+	ctx: MutationCtx,
 	userId: string,
 ): Promise<void> {
 	const subs = await ctx.runQuery(
 		components.stripe.public.listSubscriptionsByUserId,
 		{ userId },
 	);
-
-	const now = Math.floor(Date.now() / 1000);
-	const hasActive = subs.some((sub) => isComponentSubscriptionActive(sub, now));
+	const nowSeconds = Math.floor(Date.now() / 1000);
+	const hasActive = subs.some((sub) =>
+		isComponentSubscriptionActive(sub, nowSeconds),
+	);
 
 	if (!hasActive) {
 		throw new ConvexError(

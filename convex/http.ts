@@ -30,7 +30,12 @@ http.route({
 			return new Response("Image not found", { status: 404 });
 		}
 
-		const blob = await ctx.storage.get(storageId);
+		let blob: Blob | null;
+		try {
+			blob = await ctx.storage.get(storageId);
+		} catch {
+			return new Response("Storage unavailable", { status: 503 });
+		}
 		if (!blob) {
 			return new Response("Image not found", { status: 404 });
 		}

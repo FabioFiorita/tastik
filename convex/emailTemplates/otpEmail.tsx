@@ -3,8 +3,10 @@ import {
 	Container,
 	Head,
 	Heading,
+	Hr,
 	Html,
 	Img,
+	Link,
 	Preview,
 	pixelBasedPreset,
 	Section,
@@ -14,71 +16,77 @@ import {
 
 export interface OtpEmailProps {
 	otp: string;
-	type: string;
 	logoUrl: string;
 	supportEmail: string;
+	expiresInMinutes: number;
 }
 
-function getPurposeText(type: OtpEmailProps["type"]) {
-	switch (type) {
-		case "sign-in":
-			return "Use this code to sign in to your Tastik account.";
-		case "email-verification":
-			return "Use this code to verify your email address.";
-		case "password-reset":
-			return "Use this code to reset your password.";
-		default:
-			return "Use this code to complete your request.";
-	}
-}
-
-export function OtpEmail({ otp, type, logoUrl, supportEmail }: OtpEmailProps) {
-	const purposeText = getPurposeText(type);
-
+export function OtpEmail({
+	otp,
+	logoUrl,
+	supportEmail,
+	expiresInMinutes,
+}: OtpEmailProps) {
 	return (
 		<Html lang="en">
 			<Tailwind config={{ presets: [pixelBasedPreset] }}>
 				<Head />
-				<Preview>Your Tastik verification code: {otp}</Preview>
+				<Preview>Your Tastik sign-in code: {otp}</Preview>
 				<Body className="bg-gray-100 py-10 font-sans">
-					<Container className="mx-auto max-w-xl bg-white p-10">
+					<Container
+						className="mx-auto max-w-xl bg-white p-10"
+						style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}
+					>
 						<Section className="mb-8 text-center">
 							<Img
 								src={logoUrl}
 								alt="Tastik"
 								width={120}
 								height={40}
-								className="mx-auto"
+								style={{ display: "block", margin: "0 auto" }}
 							/>
 						</Section>
-						<Heading className="mb-4 font-semibold text-gray-800 text-xl">
-							Your verification code
+						<Heading className="mb-2 font-semibold text-gray-900 text-xl">
+							Your sign-in code
 						</Heading>
-						<Text className="mb-4 text-base text-gray-800">{purposeText}</Text>
-						<Section className="mb-6 rounded bg-gray-100 px-6 py-6 text-center">
+						<Text className="mb-6 text-base text-gray-600">
+							Use this code to sign in to your Tastik account.
+						</Text>
+						<Section
+							className="mb-6 text-center"
+							style={{
+								backgroundColor: "#f3f4f6",
+								borderRadius: "8px",
+								padding: "24px",
+							}}
+						>
 							<Text
-								className="m-0 font-mono font-semibold text-2xl text-gray-900 tracking-widest"
+								className="m-0 text-gray-900"
 								style={{
-									fontSize: "28px",
-									letterSpacing: "6px",
+									fontSize: "32px",
+									fontWeight: "700",
+									letterSpacing: "8px",
 									fontFamily: "ui-monospace, monospace",
 								}}
 							>
 								{otp}
 							</Text>
 						</Section>
-						<Text className="mb-4 text-gray-600 text-sm">
-							This code expires in 5 minutes. Don&apos;t share it with anyone.
+						<Text className="mb-2 text-gray-500 text-sm">
+							This code expires in {expiresInMinutes} minute
+							{expiresInMinutes === 1 ? "" : "s"}. Don&apos;t share it with
+							anyone.
 						</Text>
-						<Text className="text-gray-600 text-sm">
+						<Hr className="my-6 border-gray-200 border-solid" />
+						<Text className="m-0 text-gray-400 text-xs">
 							If you didn&apos;t request this code, you can safely ignore this
-							email. If you have concerns, contact us at{" "}
-							<a
+							email. Need help?{" "}
+							<Link
 								href={`mailto:${supportEmail}`}
-								className="text-blue-600 no-underline"
+								className="text-gray-500 underline"
 							>
 								{supportEmail}
-							</a>
+							</Link>
 						</Text>
 					</Container>
 				</Body>
@@ -89,7 +97,7 @@ export function OtpEmail({ otp, type, logoUrl, supportEmail }: OtpEmailProps) {
 
 OtpEmail.PreviewProps = {
 	otp: "424242",
-	type: "sign-in",
 	logoUrl: "https://tastik.app/logo.png",
-	supportEmail: "fabiolfp@gmail.com",
+	supportEmail: "support@tastik.app",
+	expiresInMinutes: 5,
 } satisfies OtpEmailProps;

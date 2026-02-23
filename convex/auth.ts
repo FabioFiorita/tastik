@@ -19,6 +19,12 @@ function requireServerEnv(name: string) {
 
 const OTP_DEV_BYPASS = process.env.OTP_DEV_BYPASS === "true";
 
+if (OTP_DEV_BYPASS && process.env.NODE_ENV === "production") {
+	throw new Error(
+		"OTP_DEV_BYPASS must not be enabled in production. Remove the OTP_DEV_BYPASS environment variable.",
+	);
+}
+
 function getSocialProviders() {
 	const socialProviders: Record<
 		string,
@@ -42,12 +48,10 @@ function getSocialProviders() {
 	return socialProviders;
 }
 
-const baseURL = process.env.SITE_URL ?? "http://localhost:3000";
-
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
 	betterAuth({
-		baseURL,
-		trustedOrigins: [baseURL, "http://localhost:3000"],
+		baseURL: requireServerEnv("BETTER_AUTH_URL"),
+		trustedOrigins: [requireServerEnv("BETTER_AUTH_URL")],
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
 		database: authComponent.adapter(ctx),
 		emailAndPassword: {
@@ -67,13 +71,12 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
 						(bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
 					return ((Math.abs(n) % 900000) + 100000).toString();
 				},
-				async sendVerificationOTP({ email, otp, type }) {
+				async sendVerificationOTP({ email, otp }) {
 					if (OTP_DEV_BYPASS) return;
 					if (!isRunMutationCtx(ctx)) return;
 					await ctx.runMutation(internal.emails.sendOtpEmail, {
 						email,
 						otp,
-						type,
 					});
 				},
 			}),

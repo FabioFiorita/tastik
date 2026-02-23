@@ -17,6 +17,7 @@ import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
+import type * as lib_sorting from "../lib/sorting.js";
 import type * as lib_subscription from "../lib/subscription.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as listEditors from "../listEditors.js";
@@ -25,6 +26,7 @@ import type * as preferences from "../preferences.js";
 import type * as stripe from "../stripe.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tags from "../tags.js";
+import type * as tests_helpers from "../tests/helpers.js";
 import type * as userProfileImages from "../userProfileImages.js";
 import type * as users from "../users.js";
 
@@ -44,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   "lib/limits": typeof lib_limits;
   "lib/permissions": typeof lib_permissions;
   "lib/rateLimiter": typeof lib_rateLimiter;
+  "lib/sorting": typeof lib_sorting;
   "lib/subscription": typeof lib_subscription;
   "lib/validation": typeof lib_validation;
   listEditors: typeof listEditors;
@@ -52,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   stripe: typeof stripe;
   subscriptions: typeof subscriptions;
   tags: typeof tags;
+  "tests/helpers": typeof tests_helpers;
   userProfileImages: typeof userProfileImages;
   users: typeof users;
 }>;

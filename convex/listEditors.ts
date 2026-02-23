@@ -146,6 +146,21 @@ export const addListEditorByEmail = mutation({
 				),
 			);
 		}
+		// Re-verify the user still exists right before inserting to avoid
+		// orphaned editor records if the account was deleted concurrently.
+		const stillExists = await ctx.runQuery(
+			components.betterAuth.adapter.findOne,
+			{
+				model: "user",
+				where: [{ field: "_id", operator: "eq", value: targetUserId }],
+			},
+		);
+		if (!stillExists) {
+			throw new ConvexError(
+				appError("USER_NOT_FOUND", "User account no longer exists"),
+			);
+		}
+
 		await assertEditorsUnderLimit(ctx, args.listId);
 		await ctx.db.insert("listEditors", {
 			listId: args.listId,

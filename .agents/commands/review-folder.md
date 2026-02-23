@@ -9,7 +9,7 @@ Perform a comprehensive code review of a folder, identify issues, and create an 
 
 ## Context
 
-- Project instructions: !`cat INSTRUCTIONS.md`
+- Project instructions: Use your AGENTS.md or CLAUDE.md
 - Target folder: $ARGUMENTS
 
 ## Prerequisites

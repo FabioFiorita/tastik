@@ -35,66 +35,80 @@ export const ensureCurrentUser = mutation({
 			await ctx.db.patch(existingProfile._id, {
 				lastSeenAt: now,
 			});
-			return existingProfile._id;
+			return { ...existingProfile, lastSeenAt: now };
 		}
 
-		return await ctx.db.insert("profiles", {
+		const newId = await ctx.db.insert("profiles", {
 			userId: identity.subject,
 			lastSeenAt: now,
 		});
+		return await ctx.db.get(newId);
 	},
 });
 
 export const deleteUserData = internalMutation({
 	args: { userId: v.string() },
 	handler: async (ctx, args) => {
-		const ownedLists = ctx.db
+		// Collect all owned lists, then delete their children in parallel
+		const ownedLists = await ctx.db
 			.query("lists")
-			.withIndex("by_owner", (q) => q.eq("ownerId", args.userId));
-		for await (const list of ownedLists) {
-			const items = ctx.db
-				.query("items")
-				.withIndex("by_list", (q) => q.eq("listId", list._id));
-			for await (const item of items) {
-				await ctx.db.delete(item._id);
-			}
-			const tags = ctx.db
-				.query("listTags")
-				.withIndex("by_list", (q) => q.eq("listId", list._id));
-			for await (const tag of tags) {
-				await ctx.db.delete(tag._id);
-			}
-			const editors = ctx.db
-				.query("listEditors")
-				.withIndex("by_list", (q) => q.eq("listId", list._id));
-			for await (const editor of editors) {
-				await ctx.db.delete(editor._id);
-			}
-			await ctx.db.delete(list._id);
-		}
+			.withIndex("by_owner", (q) => q.eq("ownerId", args.userId))
+			.collect();
 
-		const editorEntries = ctx.db
+		await Promise.all(
+			ownedLists.map(async (list) => {
+				const [items, tags, editors] = await Promise.all([
+					ctx.db
+						.query("items")
+						.withIndex("by_list", (q) => q.eq("listId", list._id))
+						.collect(),
+					ctx.db
+						.query("listTags")
+						.withIndex("by_list", (q) => q.eq("listId", list._id))
+						.collect(),
+					ctx.db
+						.query("listEditors")
+						.withIndex("by_list", (q) => q.eq("listId", list._id))
+						.collect(),
+				]);
+
+				await Promise.all([
+					...items.map((item) => ctx.db.delete(item._id)),
+					...tags.map((tag) => ctx.db.delete(tag._id)),
+					...editors.map((editor) => ctx.db.delete(editor._id)),
+				]);
+
+				await ctx.db.delete(list._id);
+			}),
+		);
+
+		// Remove this user's editor entries from lists they don't own
+		const editorEntries = await ctx.db
 			.query("listEditors")
-			.withIndex("by_user", (q) => q.eq("userId", args.userId));
-		for await (const entry of editorEntries) {
-			await ctx.db.delete(entry._id);
-		}
-		const profile = await ctx.db
-			.query("profiles")
-			.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-			.unique();
-		if (profile) {
-			await ctx.db.delete(profile._id);
-		}
+			.withIndex("by_user", (q) => q.eq("userId", args.userId))
+			.collect();
+		await Promise.all(editorEntries.map((entry) => ctx.db.delete(entry._id)));
 
-		const profileImage = await ctx.db
-			.query("userProfileImages")
-			.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-			.unique();
-		if (profileImage) {
-			await ctx.storage.delete(profileImage.storageId);
-			await ctx.db.delete(profileImage._id);
-		}
+		const [profiles, profileImages] = await Promise.all([
+			ctx.db
+				.query("profiles")
+				.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+				.collect(),
+			ctx.db
+				.query("userProfileImages")
+				.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+				.collect(),
+		]);
+
+		await Promise.all([
+			...profiles.map((p) => ctx.db.delete(p._id)),
+			...profileImages.map((img) =>
+				Promise.all([
+					ctx.storage.delete(img.storageId),
+					ctx.db.delete(img._id),
+				]),
+			),
+		]);
 	},
 });
 

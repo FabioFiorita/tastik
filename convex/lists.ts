@@ -11,6 +11,7 @@ import {
 	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
+import { compareByDateNameSort } from "./lib/sorting";
 import { validateListName } from "./lib/validation";
 import {
 	listStatusValidator,
@@ -78,23 +79,7 @@ export const getUserLists = query({
 		];
 
 		// Sort based on user preferences
-		allLists.sort((a, b) => {
-			let comparison = 0;
-
-			if (sortBy === "created_at") {
-				comparison = a._creationTime - b._creationTime;
-			} else if (sortBy === "updated_at") {
-				const aUpdated = a.updatedAt ?? a._creationTime;
-				const bUpdated = b.updatedAt ?? b._creationTime;
-				comparison = aUpdated - bUpdated;
-			} else if (sortBy === "name") {
-				comparison = a.name.localeCompare(b.name, undefined, {
-					sensitivity: "base",
-				});
-			}
-
-			return sortAscending ? comparison : -comparison;
-		});
+		allLists.sort((a, b) => compareByDateNameSort(a, b, sortBy, sortAscending));
 
 		return allLists;
 	},

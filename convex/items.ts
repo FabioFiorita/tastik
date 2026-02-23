@@ -11,6 +11,7 @@ import {
 	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
+import { compareByDateNameSort } from "./lib/sorting";
 import {
 	validateDescription,
 	validateItemName,
@@ -52,7 +53,9 @@ export const getListItems = query({
 				.collect();
 		}
 
-		return items.sort((a, b) => compareItemsByListSort(a, b, list));
+		return items.sort((a, b) =>
+			compareByDateNameSort(a, b, list.sortBy, list.sortAscending),
+		);
 	},
 });
 
@@ -219,7 +222,7 @@ export const createItem = mutation({
 			itemType === "stepper" ? (args.currentValue ?? 0) : undefined;
 		const initialCompleted = args.completed ?? initialStatus === "done";
 
-		await ctx.db.insert("items", {
+		const itemId = await ctx.db.insert("items", {
 			listId: args.listId,
 			name: args.name.trim(),
 			type: itemType,
@@ -242,8 +245,8 @@ export const createItem = mutation({
 			updatedAt: now,
 		});
 
-		// Update parent list's updatedAt
 		await ctx.db.patch(args.listId, { updatedAt: now });
+		return itemId;
 	},
 });
 
@@ -349,23 +352,18 @@ export const updateItem = mutation({
 			patchData.completed = status === "done";
 		}
 
-		// Filter out undefined values from updates
-		const filteredUpdates = Object.fromEntries(
-			Object.entries(patchData).filter(([, value]) => value !== undefined),
-		);
-
-		if (Object.keys(filteredUpdates).length > 0) {
+		if (Object.keys(patchData).length > 0) {
 			const now = Date.now();
-			const nextCompleted = filteredUpdates.completed;
+			const nextCompleted = patchData.completed;
 			if (nextCompleted === true && !item.completed) {
-				filteredUpdates.completedAt = now;
+				patchData.completedAt = now;
 			}
 			if (nextCompleted === false && item.completed) {
-				filteredUpdates.completedAt = undefined;
+				patchData.completedAt = undefined;
 			}
 
 			await ctx.db.patch(itemId, {
-				...filteredUpdates,
+				...patchData,
 				updatedAt: now,
 			});
 
@@ -535,30 +533,4 @@ async function assertTagBelongsToList(
 			appError("TAG_NOT_IN_LIST", "Tag does not belong to this list"),
 		);
 	}
-}
-
-function compareItemsByListSort(
-	a: Doc<"items">,
-	b: Doc<"items">,
-	list: Pick<Doc<"lists">, "sortBy" | "sortAscending">,
-): number {
-	let comparison = 0;
-
-	if (list.sortBy === "created_at") {
-		comparison = a._creationTime - b._creationTime;
-	} else if (list.sortBy === "updated_at") {
-		const aUpdated = a.updatedAt ?? a._creationTime;
-		const bUpdated = b.updatedAt ?? b._creationTime;
-		comparison = aUpdated - bUpdated;
-	} else if (list.sortBy === "name") {
-		comparison = a.name.localeCompare(b.name, undefined, {
-			sensitivity: "base",
-		});
-	}
-
-	if (comparison === 0) {
-		comparison = a.sortOrder - b.sortOrder;
-	}
-
-	return list.sortAscending ? comparison : -comparison;
 }

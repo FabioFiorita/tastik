@@ -6,6 +6,25 @@ import { action } from "./_generated/server";
 
 const stripeClient = new StripeSubscriptions(components.stripe, {});
 
+function validateCallbackUrl(url: string, paramName: string): void {
+	const siteUrl = process.env.SITE_URL;
+	if (!siteUrl) return; // Skip validation in dev when SITE_URL is not set
+
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(url);
+	} catch {
+		throw new Error(`Invalid ${paramName}: must be a valid URL`);
+	}
+
+	const siteOrigin = new URL(siteUrl).origin;
+	if (parsedUrl.origin !== siteOrigin) {
+		throw new Error(
+			`${paramName} must be on the same origin as the application (${siteOrigin})`,
+		);
+	}
+}
+
 const PLAN_CONFIG = {
 	Monthly: {
 		priceIdEnv: "STRIPE_MONTHLY_PRICE_ID",
@@ -28,6 +47,9 @@ export const createCheckoutSession = action({
 		if (!identity) {
 			throw new Error("Not authenticated");
 		}
+
+		validateCallbackUrl(args.successUrl, "successUrl");
+		validateCallbackUrl(args.cancelUrl, "cancelUrl");
 
 		const config = PLAN_CONFIG[args.plan];
 		const priceId = process.env[config.priceIdEnv];
@@ -85,6 +107,8 @@ export const createBillingPortalSession = action({
 		if (!identity) {
 			throw new Error("Not authenticated");
 		}
+
+		validateCallbackUrl(args.returnUrl, "returnUrl");
 
 		const customer = await stripeClient.getOrCreateCustomer(ctx, {
 			userId: identity.subject,

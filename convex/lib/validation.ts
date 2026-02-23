@@ -25,12 +25,13 @@ export function normalizeEmail(email: string): string {
 }
 
 /**
- * Basic email validation.
+ * Email validation.
+ * Requires at least 2-character local part, an @, and a domain with a 2+ char TLD.
  */
 export function isValidEmail(email: string): boolean {
-	// Simple regex for basic email validation
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return emailRegex.test(email);
+	const emailRegex =
+		/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+	return emailRegex.test(email) && email.length <= 254;
 }
 
 /**
@@ -154,6 +155,21 @@ export function validateUrl(url: string): void {
 	} catch {
 		throw new ConvexError(
 			appError("INVALID_INPUT", "URL must be a valid http or https URL"),
+		);
+	}
+}
+
+/**
+ * Validate hex color field (#RGB or #RRGGBB format).
+ */
+export function validateColor(color: string): void {
+	const hexColorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+	if (!hexColorRegex.test(color)) {
+		throw new ConvexError(
+			appError(
+				"INVALID_INPUT",
+				"Color must be a valid hex color (e.g., #RGB or #RRGGBB)",
+			),
 		);
 	}
 }

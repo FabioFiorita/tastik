@@ -24,9 +24,9 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	},
 	duplicateList: {
 		kind: "token bucket",
-		rate: 5,
+		rate: 2,
 		period: MINUTE,
-		capacity: 2,
+		capacity: 1,
 	},
 });
 

@@ -7,7 +7,7 @@ import {
 	requireListOwner,
 	requireSubscription,
 } from "./lib/permissions";
-import { validateTagName } from "./lib/validation";
+import { validateColor, validateTagName } from "./lib/validation";
 
 /**
  * Get all tags for a list.
@@ -43,6 +43,9 @@ export const createTag = mutation({
 		await requireSubscription(ctx, userId);
 		await assertTagsUnderLimit(ctx, args.listId);
 		validateTagName(args.name);
+		if (args.color !== undefined) {
+			validateColor(args.color);
+		}
 
 		const trimmedName = args.name.trim();
 
@@ -87,6 +90,9 @@ export const updateTag = mutation({
 
 		if (args.name !== undefined) {
 			validateTagName(args.name);
+		}
+		if (args.color !== undefined && args.color !== null) {
+			validateColor(args.color);
 		}
 
 		const newName = args.name?.trim();

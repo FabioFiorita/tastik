@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicSignUpRouteImport } from './routes/_public/sign-up'
 import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
+import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
+import { Route as PublicRequestResetPasswordRouteImport } from './routes/_public/request-reset-password'
+import { Route as Public2faRouteImport } from './routes/_public/2fa'
 import { Route as ProtectedSubscriptionRouteImport } from './routes/_protected/subscription'
 import { Route as ProtectedArchiveRouteImport } from './routes/_protected/archive'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -34,9 +38,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicSignUpRoute = PublicSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicSignInRoute = PublicSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResetPasswordRoute = PublicResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicRequestResetPasswordRoute =
+  PublicRequestResetPasswordRouteImport.update({
+    id: '/request-reset-password',
+    path: '/request-reset-password',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const Public2faRoute = Public2faRouteImport.update({
+  id: '/2fa',
+  path: '/2fa',
   getParentRoute: () => PublicRoute,
 } as any)
 const ProtectedSubscriptionRoute = ProtectedSubscriptionRouteImport.update({
@@ -79,7 +104,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
   '/subscription': typeof ProtectedSubscriptionRoute
+  '/2fa': typeof Public2faRoute
+  '/request-reset-password': typeof PublicRequestResetPasswordRoute
+  '/reset-password': typeof PublicResetPasswordRoute
   '/sign-in': typeof PublicSignInRoute
+  '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
@@ -90,7 +119,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
   '/subscription': typeof ProtectedSubscriptionRoute
+  '/2fa': typeof Public2faRoute
+  '/request-reset-password': typeof PublicRequestResetPasswordRoute
+  '/reset-password': typeof PublicResetPasswordRoute
   '/sign-in': typeof PublicSignInRoute
+  '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
@@ -104,7 +137,11 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteWithChildren
   '/_protected/archive': typeof ProtectedArchiveRoute
   '/_protected/subscription': typeof ProtectedSubscriptionRoute
+  '/_public/2fa': typeof Public2faRoute
+  '/_public/request-reset-password': typeof PublicRequestResetPasswordRoute
+  '/_public/reset-password': typeof PublicResetPasswordRoute
   '/_public/sign-in': typeof PublicSignInRoute
+  '/_public/sign-up': typeof PublicSignUpRoute
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
@@ -117,7 +154,11 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/subscription'
+    | '/2fa'
+    | '/request-reset-password'
+    | '/reset-password'
     | '/sign-in'
+    | '/sign-up'
     | '/lists/$listId'
     | '/privacy'
     | '/support'
@@ -128,7 +169,11 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/subscription'
+    | '/2fa'
+    | '/request-reset-password'
+    | '/reset-password'
     | '/sign-in'
+    | '/sign-up'
     | '/lists/$listId'
     | '/privacy'
     | '/support'
@@ -141,7 +186,11 @@ export interface FileRouteTypes {
     | '/_public'
     | '/_protected/archive'
     | '/_protected/subscription'
+    | '/_public/2fa'
+    | '/_public/request-reset-password'
+    | '/_public/reset-password'
     | '/_public/sign-in'
+    | '/_public/sign-up'
     | '/_protected/lists/$listId'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
@@ -179,11 +228,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/sign-up': {
+      id: '/_public/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof PublicSignUpRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/sign-in': {
       id: '/_public/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof PublicSignInRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/reset-password': {
+      id: '/_public/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof PublicResetPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/request-reset-password': {
+      id: '/_public/request-reset-password'
+      path: '/request-reset-password'
+      fullPath: '/request-reset-password'
+      preLoaderRoute: typeof PublicRequestResetPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/2fa': {
+      id: '/_public/2fa'
+      path: '/2fa'
+      fullPath: '/2fa'
+      preLoaderRoute: typeof Public2faRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_protected/subscription': {
@@ -255,14 +332,22 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
+  Public2faRoute: typeof Public2faRoute
+  PublicRequestResetPasswordRoute: typeof PublicRequestResetPasswordRoute
+  PublicResetPasswordRoute: typeof PublicResetPasswordRoute
   PublicSignInRoute: typeof PublicSignInRoute
+  PublicSignUpRoute: typeof PublicSignUpRoute
   PubliclegalPrivacyRoute: typeof PubliclegalPrivacyRoute
   PubliclegalSupportRoute: typeof PubliclegalSupportRoute
   PubliclegalTermsRoute: typeof PubliclegalTermsRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
+  Public2faRoute: Public2faRoute,
+  PublicRequestResetPasswordRoute: PublicRequestResetPasswordRoute,
+  PublicResetPasswordRoute: PublicResetPasswordRoute,
   PublicSignInRoute: PublicSignInRoute,
+  PublicSignUpRoute: PublicSignUpRoute,
   PubliclegalPrivacyRoute: PubliclegalPrivacyRoute,
   PubliclegalSupportRoute: PubliclegalSupportRoute,
   PubliclegalTermsRoute: PubliclegalTermsRoute,

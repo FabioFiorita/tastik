@@ -14,7 +14,7 @@ When in doubt, verify against the codebase — never assume.
 - Side project: technical showcase for TanStack Start + Convex for a solo web dev.
 - Stack: TanStack Start (frontend), Convex (backend), Better Auth.
 - Free app. No subscription required.
-- Auth: email OTP via Resend, Google OAuth, Apple Sign In.
+- Auth: email/password (verification & reset), passkeys, 2FA (TOTP + email OTP), Google OAuth, Apple Sign In, GitHub.
 
 ## Hard Limits (source: `convex/lib/limits.ts`)
 - 50 lists per user
@@ -27,4 +27,4 @@ When in doubt, verify against the codebase — never assume.
 - Technical: schema, auth, permissions, routes, file map: `references/technical.md`
 
 ## Last Verified
-- 2026-02-25
+- 2026-02-25 (auth stack update)

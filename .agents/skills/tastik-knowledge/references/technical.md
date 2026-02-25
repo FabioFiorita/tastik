@@ -31,12 +31,11 @@
 
 ## Authentication (source: `convex/auth.ts`, `convex/auth.config.ts`)
 - Package: `@convex-dev/better-auth`
-- Providers: email OTP, Google OAuth, Apple Sign In
-- OTP: 6-digit, 5-min expiry, 5 req/hour rate limit (env vars: `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET`)
-- OTP delivery: via Resend → `internal.emails.sendOtpEmail`
-- Dev bypass: `OTP_DEV_BYPASS=true` → hardcodes OTP to "424242"
+- Providers: email/password (requires verification), passkeys, 2FA (TOTP + email OTP), Google OAuth, Apple Sign In, GitHub
+- Env vars: `AUTH_GOOGLE_ID/SECRET`, `AUTH_APPLE_ID/SECRET`, `AUTH_GITHUB_ID/SECRET`
+- Email mutations: `sendVerificationEmail`, `sendResetPassword`, `sendTwoFactorOtpEmail` via Resend
 - Auth API route: `src/routes/api/auth/$.tsx`
-- Required env: `BETTER_AUTH_SECRET`, `SITE_URL`
+- Required env: `BETTER_AUTH_SECRET`, `SITE_URL`, `BETTER_AUTH_TRUSTED_ORIGINS`
 
 ## Permissions (source: `convex/lib/permissions.ts`)
 
@@ -51,8 +50,8 @@ LISTS_LIMIT_EXCEEDED, ITEMS_LIMIT_EXCEEDED, TAGS_LIMIT_EXCEEDED, EDITORS_LIMIT_E
 TAG_NAME_EXISTS, ITEM_NOT_FOUND, USER_NOT_FOUND, RATE_LIMITED, and more.
 
 ## Route Structure
-- Public: `/` (landing), `/sign-in`, `/privacy`, `/support`, `/terms`
-- Protected: `/lists/:listId`, `/archive`
+- Public: `/` (landing), `/sign-in`, `/sign-up`, `/2fa`, `/request-reset-password`, `/reset-password`, `/privacy`, `/support`, `/terms`
+- Protected: `/lists/:listId`, `/archive`, `/subscription`
 - API: `/api/auth/*` (Better Auth handler)
 
 ## Key File Map
@@ -66,7 +65,7 @@ convex/
   listEditors.ts        ← sharing (add/remove editors, nicknames)
   users.ts               ← profile + deleteUserData (cascade)
   preferences.ts        ← user preferences
-  emails.ts             ← OTP email templates
+  emails.ts             ← verification, reset-password, 2FA OTP email templates
   http.ts               ← HTTP endpoints
   lib/permissions.ts    ← requireAuth, requireListOwner, requireListAccess
   lib/limits.ts         ← MAX_LISTS, MAX_ITEMS, MAX_TAGS, MAX_EDITORS
@@ -81,8 +80,13 @@ src/routes/
   _protected/
     lists.$listId.tsx   ← list detail page
     archive.tsx         ← archived lists
-  sign-in.tsx
-  (legal)/privacy.tsx, support.tsx, terms.tsx
+  _public/
+    sign-in.tsx
+    sign-up.tsx
+    2fa.tsx
+    request-reset-password.tsx
+    reset-password.tsx
+    (legal)/privacy.tsx, support.tsx, terms.tsx
   api/auth/$.tsx        ← Better Auth catch-all
 
 src/hooks/

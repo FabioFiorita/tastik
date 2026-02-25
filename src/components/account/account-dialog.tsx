@@ -1,8 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useAction, useMutation } from "convex/react";
-import { Trash2 } from "lucide-react";
+import { Key, Shield, Trash2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import {
@@ -15,6 +16,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { authClient } from "@/lib/auth-client";
 import { env } from "@/lib/env";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
@@ -37,7 +43,26 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 	const [imagePending, setImagePending] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [passwords, setPasswords] = useState<Record<string, string>>({});
+	const [totpCode, setTotpCode] = useState("");
+	const [enable2FADialogOpen, setEnable2FADialogOpen] = useState(false);
+	const [enable2FAStep, setEnable2FAStep] = useState<"password" | "verify">(
+		"password",
+	);
+	const [twoFactorData, setTwoFactorData] = useState<{
+		totpURI: string;
+		backupCodes: string[];
+	} | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const twoFactorEnabled =
+		(user as { twoFactorEnabled?: boolean })?.twoFactorEnabled ?? false;
+	const { data: passkeysList } = (
+		authClient as {
+			useListPasskeys: () => { data: { id: string; name?: string }[] | null };
+		}
+	).useListPasskeys();
+	const passkeysData = passkeysList ?? [];
 
 	const generateUploadUrl = useMutation(
 		api.userProfileImages.generateUploadUrl,
@@ -122,6 +147,109 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} finally {
 			setImagePending(false);
 			event.target.value = "";
+		}
+	};
+
+	const handleEnable2FA = async () => {
+		const password = passwords.enable2fa;
+		if (!password) {
+			toast.error("Enter your password");
+			return;
+		}
+		setIsPending(true);
+		try {
+			const result = await authClient.twoFactor.enable({ password });
+			if (result.error) {
+				toast.error(result.error.message ?? "Failed to enable 2FA");
+				return;
+			}
+			if (result.data?.totpURI && result.data?.backupCodes) {
+				setTwoFactorData({
+					totpURI: result.data.totpURI,
+					backupCodes: result.data.backupCodes,
+				});
+				setEnable2FAStep("verify");
+			}
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Failed to enable 2FA"));
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	const handleVerify2FACode = async () => {
+		if (!totpCode || totpCode.length !== 6) return;
+		setIsPending(true);
+		try {
+			const result = await authClient.twoFactor.verifyTotp({ code: totpCode });
+			if (result.error) {
+				toast.error(result.error.message ?? "Invalid code");
+				return;
+			}
+			toast.success("2FA enabled");
+			setEnable2FADialogOpen(false);
+			setEnable2FAStep("password");
+			setTwoFactorData(null);
+			setTotpCode("");
+			setPasswords((p) => ({ ...p, enable2fa: "" }));
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Verification failed"));
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	const handleDisable2FA = async () => {
+		const password = passwords.disable2fa;
+		if (!password) {
+			toast.error("Enter your password");
+			return;
+		}
+		setIsPending(true);
+		try {
+			const result = await authClient.twoFactor.disable({ password });
+			if (result.error) {
+				toast.error(result.error.message ?? "Failed to disable 2FA");
+				return;
+			}
+			toast.success("2FA disabled");
+			setPasswords((p) => ({ ...p, disable2fa: "" }));
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Failed to disable 2FA"));
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	const handleAddPasskey = async () => {
+		setIsPending(true);
+		try {
+			const result = await authClient.passkey?.addPasskey?.({});
+			if (result?.error) {
+				toast.error(result.error.message ?? "Failed to add passkey");
+			} else if (!result?.error) {
+				toast.success("Passkey added");
+			}
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Failed to add passkey"));
+		} finally {
+			setIsPending(false);
+		}
+	};
+
+	const handleDeletePasskey = async (id: string) => {
+		setIsPending(true);
+		try {
+			const result = await authClient.passkey?.deletePasskey?.({ id });
+			if (result?.error) {
+				toast.error(result.error.message ?? "Failed to remove passkey");
+			} else {
+				toast.success("Passkey removed");
+			}
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Failed to remove passkey"));
+		} finally {
+			setIsPending(false);
 		}
 	};
 
@@ -228,7 +356,89 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 							</Button>
 						</form>
 
-						<div className="border-t pt-6">
+						<div className="space-y-4 border-t pt-6">
+							<div>
+								<h3 className="mb-2 font-medium text-sm">Security</h3>
+								<div className="space-y-3">
+									<div className="flex items-center justify-between gap-4">
+										<div className="flex items-center gap-2">
+											<Shield className="size-4" />
+											<span className="text-sm">Two-factor authentication</span>
+										</div>
+										{twoFactorEnabled ? (
+											<div className="flex flex-col gap-2">
+												<Input
+													type="password"
+													placeholder="Password to disable"
+													value={passwords.disable2fa ?? ""}
+													onChange={(e) =>
+														setPasswords((p) => ({
+															...p,
+															disable2fa: e.target.value,
+														}))
+													}
+													className="max-w-[140px]"
+												/>
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													disabled={isPending}
+													onClick={handleDisable2FA}
+												>
+													Disable 2FA
+												</Button>
+											</div>
+										) : (
+											<Button
+												type="button"
+												variant="outline"
+												size="sm"
+												disabled={isPending}
+												onClick={() => setEnable2FADialogOpen(true)}
+											>
+												Enable 2FA
+											</Button>
+										)}
+									</div>
+									<div className="flex flex-col gap-2">
+										<div className="flex items-center gap-2">
+											<Key className="size-4" />
+											<span className="text-sm">Passkeys</span>
+										</div>
+										{passkeysData.length > 0 && (
+											<ul className="space-y-1 text-muted-foreground text-xs">
+												{passkeysData.map((pk) => (
+													<li
+														key={pk.id}
+														className="flex items-center justify-between"
+													>
+														<span>{pk.name ?? "Passkey"}</span>
+														<Button
+															type="button"
+															variant="ghost"
+															size="xs"
+															onClick={() => handleDeletePasskey(pk.id)}
+															disabled={isPending}
+														>
+															Remove
+														</Button>
+													</li>
+												))}
+											</ul>
+										)}
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											disabled={isPending}
+											onClick={handleAddPasskey}
+										>
+											Add passkey
+										</Button>
+									</div>
+								</div>
+							</div>
 							<Button
 								type="button"
 								variant="destructive"
@@ -256,6 +466,98 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 				testId="account-delete-confirm"
 				disabled={isDeleting}
 			/>
+
+			<ResponsiveDialog
+				open={enable2FADialogOpen}
+				onOpenChange={(open) => {
+					setEnable2FADialogOpen(open);
+					if (!open) {
+						setEnable2FAStep("password");
+						setTwoFactorData(null);
+						setTotpCode("");
+						setPasswords((p) => ({ ...p, enable2fa: "" }));
+					}
+				}}
+			>
+				<ResponsiveDialogContent className="max-w-md">
+					<ResponsiveDialogHeader>
+						<ResponsiveDialogTitle>
+							Enable two-factor authentication
+						</ResponsiveDialogTitle>
+					</ResponsiveDialogHeader>
+					{enable2FAStep === "password" ? (
+						<div className="space-y-4">
+							<Field>
+								<FieldLabel htmlFor="2fa-password">Password</FieldLabel>
+								<Input
+									id="2fa-password"
+									type="password"
+									placeholder="Your password"
+									value={passwords.enable2fa ?? ""}
+									onChange={(e) =>
+										setPasswords((p) => ({
+											...p,
+											enable2fa: e.target.value,
+										}))
+									}
+								/>
+							</Field>
+							<Button
+								className="w-full"
+								disabled={isPending}
+								onClick={handleEnable2FA}
+							>
+								Continue
+							</Button>
+						</div>
+					) : twoFactorData ? (
+						<div className="space-y-4">
+							<p className="text-muted-foreground text-sm">
+								Scan the QR code with your authenticator app, then enter the
+								verification code below.
+							</p>
+							<div className="flex justify-center rounded-lg bg-white p-4">
+								<QRCode value={twoFactorData.totpURI} size={180} />
+							</div>
+							<div>
+								<p className="mb-2 font-medium text-sm">Backup codes</p>
+								<p className="mb-2 text-muted-foreground text-xs">
+									Save these codes in a secure place. Each can only be used
+									once.
+								</p>
+								<div className="rounded-md bg-muted p-2 font-mono text-xs">
+									{twoFactorData.backupCodes.join(" ")}
+								</div>
+							</div>
+							<Field>
+								<FieldLabel>Verification code</FieldLabel>
+								<InputOTP
+									maxLength={6}
+									value={totpCode}
+									onChange={setTotpCode}
+									containerClassName="justify-center"
+								>
+									<InputOTPGroup className="justify-center">
+										<InputOTPSlot index={0} />
+										<InputOTPSlot index={1} />
+										<InputOTPSlot index={2} />
+										<InputOTPSlot index={3} />
+										<InputOTPSlot index={4} />
+										<InputOTPSlot index={5} />
+									</InputOTPGroup>
+								</InputOTP>
+							</Field>
+							<Button
+								className="w-full"
+								disabled={isPending || totpCode.length !== 6}
+								onClick={handleVerify2FACode}
+							>
+								Verify and enable
+							</Button>
+						</div>
+					) : null}
+				</ResponsiveDialogContent>
+			</ResponsiveDialog>
 		</>
 	);
 }

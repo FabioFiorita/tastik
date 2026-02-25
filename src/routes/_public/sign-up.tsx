@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,97 +13,47 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 
-export const Route = createFileRoute("/_public/sign-in")({
-	component: SignInPage,
+export const Route = createFileRoute("/_public/sign-up")({
+	component: SignUpPage,
 });
 
-export function SignInPage() {
+export function SignUpPage() {
 	const navigate = useNavigate();
+	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
 	const [isPending, setIsPending] = useState(false);
 
-	useEffect(() => {
-		if (typeof PublicKeyCredential === "undefined") return;
-		const check = PublicKeyCredential.isConditionalMediationAvailable?.();
-		if (typeof check?.then !== "function") return;
-		void check.then((available) => {
-			if (available) {
-				void authClient.signIn.passkey({ autoFill: true });
-			}
-		});
-	}, []);
-
-	const handleEmailSignIn = async (
-		event: React.SyntheticEvent<HTMLFormElement>,
-	) => {
+	const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setIsPending(true);
-		try {
-			const result = await authClient.signIn.email(
-				{ email, password, callbackURL: "/" },
-				{
-					onSuccess(context) {
-						const data = context.data as
-							| { twoFactorRedirect?: boolean }
-							| undefined;
-						if (data?.twoFactorRedirect) {
-							navigate({ to: "/2fa" });
-						}
-					},
-					onError(context) {
-						if (context.error.status === 403) {
-							toast.error(
-								"Please verify your email address. Check your inbox for the verification link.",
-							);
-						}
-					},
-				},
-			);
-
-			if (result.error) {
-				const message =
-					result.error.status === 403
-						? "Please verify your email address. Check your inbox for the verification link."
-						: (result.error.message ?? "Unable to sign in");
-				toast.error(message);
-				return;
-			}
-
-			const data = result.data as { twoFactorRedirect?: boolean } | undefined;
-			if (!data?.twoFactorRedirect) {
-				navigate({ to: "/" });
-			}
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Unable to sign in"));
-		} finally {
-			setIsPending(false);
+		if (password !== confirmPassword) {
+			toast.error("Passwords do not match");
+			return;
 		}
-	};
-
-	const handlePasskeySignIn = async () => {
 		setIsPending(true);
 		try {
-			const result = await authClient.signIn.passkey({
-				fetchOptions: {
-					onSuccess: () => navigate({ to: "/" }),
-					onError: (ctx) => {
-						toast.error(ctx.error.message ?? "Unable to sign in with passkey");
-					},
-				},
+			const result = await authClient.signUp.email({
+				name,
+				email,
+				password,
+				callbackURL: "/",
 			});
 
 			if (result.error) {
-				toast.error(result.error.message ?? "Unable to sign in");
+				toast.error(result.error.message ?? "Unable to create account");
+				return;
 			}
+
+			navigate({ to: "/" });
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Unable to sign in"));
+			toast.error(getErrorMessage(error, "Unable to create account"));
 		} finally {
 			setIsPending(false);
 		}
 	};
 
-	const handleSocialSignIn = async (
+	const handleSocialSignUp = async (
 		provider: "google" | "apple" | "github",
 	) => {
 		setIsPending(true);
@@ -114,10 +64,10 @@ export function SignInPage() {
 			});
 
 			if (result.error) {
-				toast.error(result.error.message ?? "Unable to sign in");
+				toast.error(result.error.message ?? "Unable to sign up");
 			}
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Unable to sign in"));
+			toast.error(getErrorMessage(error, "Unable to sign up"));
 		} finally {
 			setIsPending(false);
 		}
@@ -126,7 +76,7 @@ export function SignInPage() {
 	return (
 		<div className="mx-auto flex min-h-screen w-full max-w-lg items-center p-4">
 			<div className="flex w-full flex-col gap-6 rounded-xl border bg-card p-8 shadow-sm">
-				<form onSubmit={handleEmailSignIn}>
+				<form onSubmit={handleSubmit}>
 					<FieldGroup>
 						<div className="flex flex-col items-center gap-2 text-center">
 							<img
@@ -134,8 +84,20 @@ export function SignInPage() {
 								alt="Tastik"
 								className="size-10 rounded-lg"
 							/>
-							<h1 className="font-bold text-xl">Welcome to Tastik</h1>
+							<h1 className="font-bold text-xl">Create an account</h1>
 						</div>
+						<Field>
+							<FieldLabel htmlFor="name">Name</FieldLabel>
+							<Input
+								id="name"
+								type="text"
+								placeholder="Your name"
+								value={name}
+								onChange={(event) => setName(event.target.value)}
+								required
+								data-testid="sign-up-name-input"
+							/>
+						</Field>
 						<Field>
 							<FieldLabel htmlFor="email">Email</FieldLabel>
 							<Input
@@ -145,8 +107,7 @@ export function SignInPage() {
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
 								required
-								autoComplete="username webauthn"
-								data-testid="sign-in-email-input"
+								data-testid="sign-up-email-input"
 							/>
 						</Field>
 						<Field>
@@ -158,8 +119,23 @@ export function SignInPage() {
 								value={password}
 								onChange={(event) => setPassword(event.target.value)}
 								required
-								autoComplete="current-password webauthn"
-								data-testid="sign-in-password-input"
+								minLength={8}
+								data-testid="sign-up-password-input"
+							/>
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="confirmPassword">
+								Confirm password
+							</FieldLabel>
+							<Input
+								id="confirmPassword"
+								type="password"
+								placeholder="••••••••"
+								value={confirmPassword}
+								onChange={(event) => setConfirmPassword(event.target.value)}
+								required
+								minLength={8}
+								data-testid="sign-up-confirm-password-input"
 							/>
 						</Field>
 						<Field>
@@ -167,49 +143,19 @@ export function SignInPage() {
 								type="submit"
 								className="w-full"
 								disabled={isPending}
-								data-testid="sign-in-submit"
+								data-testid="sign-up-submit"
 							>
-								Sign in
+								Create account
 							</Button>
-						</Field>
-						<Field>
-							<Link
-								to="/request-reset-password"
-								className="text-muted-foreground text-sm underline"
-								data-testid="sign-in-forgot-password"
-							>
-								Forgot password?
-							</Link>
 						</Field>
 						<FieldSeparator>Or</FieldSeparator>
-						<Field className="grid gap-4 sm:grid-cols-2">
+						<Field className="grid gap-4 sm:grid-cols-3">
 							<Button
 								variant="outline"
 								type="button"
-								onClick={handlePasskeySignIn}
+								onClick={() => handleSocialSignUp("google")}
 								disabled={isPending}
-								data-testid="sign-in-passkey"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									className="size-5"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									role="img"
-									aria-label="Passkey"
-								>
-									<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-								</svg>
-								Passkey
-							</Button>
-							<Button
-								variant="outline"
-								type="button"
-								onClick={() => handleSocialSignIn("google")}
-								disabled={isPending}
-								data-testid="sign-in-google"
+								data-testid="sign-up-google"
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -228,9 +174,9 @@ export function SignInPage() {
 							<Button
 								variant="outline"
 								type="button"
-								onClick={() => handleSocialSignIn("apple")}
+								onClick={() => handleSocialSignUp("apple")}
 								disabled={isPending}
-								data-testid="sign-in-apple"
+								data-testid="sign-up-apple"
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -249,9 +195,9 @@ export function SignInPage() {
 							<Button
 								variant="outline"
 								type="button"
-								onClick={() => handleSocialSignIn("github")}
+								onClick={() => handleSocialSignUp("github")}
 								disabled={isPending}
-								data-testid="sign-in-github"
+								data-testid="sign-up-github"
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -271,9 +217,9 @@ export function SignInPage() {
 					</FieldGroup>
 				</form>
 				<p className="text-center text-muted-foreground text-sm">
-					Don&apos;t have an account?{" "}
-					<Link to="/sign-up" className="underline">
-						Sign up
+					Already have an account?{" "}
+					<Link to="/sign-in" className="underline">
+						Sign in
 					</Link>
 				</p>
 				<p className="px-6 text-center text-muted-foreground text-xs">

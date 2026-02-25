@@ -1,8 +1,9 @@
+import { passkey } from "@better-auth/passkey";
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { betterAuth } from "better-auth";
-import { emailOTP } from "better-auth/plugins";
+import { twoFactor } from "better-auth/plugins/two-factor";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
@@ -15,14 +16,6 @@ function requireServerEnv(name: string) {
 		throw new Error(`Missing required environment variable: ${name}`);
 	}
 	return value;
-}
-
-const OTP_DEV_BYPASS = process.env.OTP_DEV_BYPASS === "true";
-
-if (OTP_DEV_BYPASS && process.env.NODE_ENV === "production") {
-	throw new Error(
-		"OTP_DEV_BYPASS must not be enabled in production. Remove the OTP_DEV_BYPASS environment variable.",
-	);
 }
 
 function getSocialProviders() {
@@ -45,43 +38,81 @@ function getSocialProviders() {
 		};
 	}
 
+	if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+		socialProviders.github = {
+			clientId: process.env.AUTH_GITHUB_ID,
+			clientSecret: process.env.AUTH_GITHUB_SECRET,
+		};
+	}
+
 	return socialProviders;
 }
 
-export const createAuth = (ctx: GenericCtx<DataModel>) =>
-	betterAuth({
-		baseURL: requireServerEnv("SITE_URL"),
+function getPasskeyConfig() {
+	const siteUrl = requireServerEnv("SITE_URL");
+	const url = new URL(siteUrl);
+	const rpID = url.hostname === "localhost" ? "localhost" : url.hostname;
+	return {
+		rpID,
+		rpName: "Tastik",
+		origin: siteUrl.replace(/\/$/, ""),
+	};
+}
+
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+	const siteUrl = requireServerEnv("SITE_URL");
+
+	return betterAuth({
+		baseURL: siteUrl,
 		trustedOrigins: [requireServerEnv("BETTER_AUTH_TRUSTED_ORIGINS")],
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
+		appName: "Tastik",
 		database: authComponent.adapter(ctx),
 		emailAndPassword: {
-			enabled: false,
+			enabled: true,
+			requireEmailVerification: true,
+			sendResetPassword: async ({ user, url }) => {
+				if (!isRunMutationCtx(ctx)) return;
+				await ctx.runMutation(internal.emails.sendResetPasswordEmail, {
+					email: user.email,
+					url,
+				});
+			},
+		},
+		emailVerification: {
+			sendOnSignUp: true,
+			sendOnSignIn: true,
+			sendVerificationEmail: async ({ user, url }) => {
+				if (!isRunMutationCtx(ctx)) return;
+				await ctx.runMutation(internal.emails.sendVerificationEmail, {
+					email: user.email,
+					url,
+				});
+			},
 		},
 		socialProviders: getSocialProviders(),
+		account: {
+			accountLinking: { enabled: true },
+		},
 		plugins: [
 			convex({ authConfig }),
-			emailOTP({
-				otpLength: 6,
-				expiresIn: 300,
-				generateOTP: () => {
-					if (OTP_DEV_BYPASS) return "424242";
-					const bytes = new Uint8Array(4);
-					crypto.getRandomValues(bytes);
-					const n =
-						(bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
-					return ((Math.abs(n) % 900000) + 100000).toString();
-				},
-				async sendVerificationOTP({ email, otp }) {
-					if (OTP_DEV_BYPASS) return;
-					if (!isRunMutationCtx(ctx)) return;
-					await ctx.runMutation(internal.emails.sendOtpEmail, {
-						email,
-						otp,
-					});
+			twoFactor({
+				issuer: "Tastik",
+				otpOptions: {
+					sendOTP: async ({ user, otp }) => {
+						if (!isRunMutationCtx(ctx)) return;
+						await ctx.runMutation(internal.emails.sendTwoFactorOtpEmail, {
+							email: user.email,
+							otp,
+						});
+					},
+					storeOTP: "encrypted",
 				},
 			}),
+			passkey(getPasskeyConfig()),
 		],
 		user: {
 			deleteUser: { enabled: true },
 		},
 	});
+};

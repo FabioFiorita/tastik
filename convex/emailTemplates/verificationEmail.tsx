@@ -1,5 +1,6 @@
 import {
 	Body,
+	Button,
 	Container,
 	Head,
 	Heading,
@@ -14,24 +15,22 @@ import {
 	Text,
 } from "@react-email/components";
 
-export interface OtpEmailProps {
-	otp: string;
+export interface VerificationEmailProps {
+	url: string;
 	logoUrl: string;
 	supportEmail: string;
-	expiresInMinutes: number;
 }
 
-export function OtpEmail({
-	otp,
+export function VerificationEmail({
+	url,
 	logoUrl,
 	supportEmail,
-	expiresInMinutes,
-}: OtpEmailProps) {
+}: VerificationEmailProps) {
 	return (
 		<Html lang="en">
 			<Tailwind config={{ presets: [pixelBasedPreset] }}>
 				<Head />
-				<Preview>Your Tastik 2FA verification code: {otp}</Preview>
+				<Preview>Verify your Tastik email address</Preview>
 				<Body className="bg-gray-100 py-10 font-sans">
 					<Container
 						className="mx-auto max-w-xl bg-white p-10"
@@ -47,40 +46,30 @@ export function OtpEmail({
 							/>
 						</Section>
 						<Heading className="mb-2 font-semibold text-gray-900 text-xl">
-							Your 2FA verification code
+							Verify your email
 						</Heading>
 						<Text className="mb-6 text-base text-gray-600">
-							Use this code to complete sign-in to your Tastik account.
+							Click the button below to verify your email address for your
+							Tastik account.
 						</Text>
-						<Section
-							className="mb-6 text-center"
-							style={{
-								backgroundColor: "#f3f4f6",
-								borderRadius: "8px",
-								padding: "24px",
-							}}
-						>
-							<Text
-								className="m-0 text-gray-900"
-								style={{
-									fontSize: "32px",
-									fontWeight: "700",
-									letterSpacing: "8px",
-									fontFamily: "ui-monospace, monospace",
-								}}
+						<Section className="mb-6 text-center">
+							<Button
+								href={url}
+								className="rounded-lg bg-gray-900 px-6 py-3 font-medium text-white"
 							>
-								{otp}
-							</Text>
+								Verify email
+							</Button>
 						</Section>
 						<Text className="mb-2 text-gray-500 text-sm">
-							This code expires in {expiresInMinutes} minute
-							{expiresInMinutes === 1 ? "" : "s"}. Don&apos;t share it with
-							anyone.
+							Or copy and paste this link into your browser:
+						</Text>
+						<Text className="mb-6 break-all font-mono text-gray-600 text-sm">
+							{url}
 						</Text>
 						<Hr className="my-6 border-gray-200 border-solid" />
 						<Text className="m-0 text-gray-400 text-xs">
-							If you didn&apos;t request this code, you can safely ignore this
-							email. Need help?{" "}
+							If you didn&apos;t create a Tastik account, you can safely ignore
+							this email. Need help?{" "}
 							<Link
 								href={`mailto:${supportEmail}`}
 								className="text-gray-500 underline"
@@ -95,9 +84,8 @@ export function OtpEmail({
 	);
 }
 
-OtpEmail.PreviewProps = {
-	otp: "424242",
+VerificationEmail.PreviewProps = {
+	url: "https://tastik.app/verify?token=abc123",
 	logoUrl: "https://tastik.app/logo.png",
 	supportEmail: "support@tastik.app",
-	expiresInMinutes: 5,
-} satisfies OtpEmailProps;
+} satisfies VerificationEmailProps;

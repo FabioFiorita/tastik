@@ -51,7 +51,7 @@ function getSocialProviders() {
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
 	betterAuth({
 		baseURL: requireServerEnv("SITE_URL"),
-		trustedOrigins: [requireServerEnv("SITE_URL")],
+		trustedOrigins: [requireServerEnv("BETTER_AUTH_TRUSTED_ORIGINS")],
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
 		database: authComponent.adapter(ctx),
 		emailAndPassword: {

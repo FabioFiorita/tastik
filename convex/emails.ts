@@ -26,8 +26,8 @@ export const sendOtpEmail = internalMutation({
 			throw new Error("Missing required environment variable: SUPPORT_EMAIL");
 		}
 
-		const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
-		const logoUrl = `${siteUrl.replace(/\/$/, "")}/logo.png`;
+		const siteUrl = process.env.SITE_URL;
+		const logoUrl = `${siteUrl?.replace(/\/$/, "")}/logo.png`;
 
 		const expiresInMinutes = OTP_EXPIRES_IN_SECONDS / 60;
 		const emailProps = {
@@ -46,9 +46,6 @@ export const sendOtpEmail = internalMutation({
 			subject: "Your Tastik sign-in code",
 			html,
 			text,
-			...(process.env.RESEND_REPLY_TO && {
-				replyTo: [process.env.RESEND_REPLY_TO],
-			}),
 		});
 	},
 });

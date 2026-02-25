@@ -13,12 +13,8 @@
 - Travel Packing
 - Reading List
 
-## Business Model
-- Hard paywall: pay or don't use the app. No free tier. No freemium.
-- Monthly: $1.99/month — 7-day trial
-- Yearly: $19.99/year — 14-day trial
-- Trials configured in Stripe (not manual app-side logic). App trusts Stripe state.
-- Goal: self-sustaining; cover hosting costs.
+## Free App
+- No subscription or paywall. All features available to authenticated users.
 
 ## The 5 List Types
 - `simple`: Checkbox items. Toggle complete/incomplete. No numeric fields.

@@ -42,11 +42,6 @@ export const SUPPORT_FAQS: SupportFaq[] = [
 			"Each list can contain up to 500 items and 50 tags. You can invite up to 10 editors per list. These limits ensure optimal performance while giving you plenty of space to organize.",
 	},
 	{
-		question: "How do I cancel my subscription?",
-		answer:
-			"You can cancel anytime through your account settings. When you cancel, you'll retain access until the end of your current billing period, and all your data remains safe. You can resubscribe later to regain full access.",
-	},
-	{
 		question: "What happens if I delete my account?",
 		answer:
 			"When you delete your account, everything is permanently deleted immediately. All your personal data, lists you own, and your editing permissions on shared lists are removed instantly. There is no recovery period—once deleted, your data cannot be restored.",

@@ -8,7 +8,6 @@ import {
 	getListAccessOrNull,
 	requireAuth,
 	requireListAccess,
-	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import { compareByDateNameSort } from "./lib/sorting";
@@ -183,7 +182,6 @@ export const createItem = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "createItem", userId);
 		await assertItemsUnderLimit(ctx, args.listId);
 		validateItemName(args.name);

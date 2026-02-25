@@ -13,7 +13,6 @@ type RouteErrorComponentProps = {
 function getRedirectPath(error: unknown): string | null {
 	if (error instanceof ConvexError && isAppErrorData(error.data)) {
 		if (error.data.code === ERROR_CODES.NOT_AUTHENTICATED) return "/sign-in";
-		if (error.data.code === ERROR_CODES.NOT_SUBSCRIBED) return "/subscription";
 	}
 	return null;
 }

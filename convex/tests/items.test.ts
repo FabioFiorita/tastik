@@ -3,14 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
-import { getConvexErrorCode, seedSubscription } from "./helpers";
+import { getConvexErrorCode } from "./helpers";
 import { createConvexTest } from "./test.setup";
 
 const modules = import.meta.glob("../**/*.ts");
 
 describe("items", () => {
 	async function setup(t: ReturnType<typeof createConvexTest>, userId: string) {
-		await seedSubscription(t, userId);
 		const asUser = t.withIdentity({ subject: userId });
 		const listId = await asUser.mutation(api.lists.createList, {
 			name: "Item Test List",
@@ -77,34 +76,6 @@ describe("items", () => {
 			const items = await asUser.query(api.items.getListItems, { listId });
 			expect(items[0].status).toBe("todo");
 			expect(items[0].completed).toBe(false);
-		});
-
-		it("rejects creation without subscription", async () => {
-			const t = createConvexTest(schema, modules);
-			const userId = "user-item-no-sub";
-			const asUser = t.withIdentity({ subject: userId });
-
-			// Need a list — seed it directly since createList also requires subscription
-			const listId = await t.run((ctx) =>
-				ctx.db.insert("lists", {
-					ownerId: userId,
-					name: "Direct List",
-					type: "simple",
-					status: "active",
-					sortBy: "created_at",
-					sortAscending: true,
-					showCompleted: true,
-					hideCheckbox: false,
-					showTotal: false,
-					updatedAt: Date.now(),
-				}),
-			);
-
-			const error = await asUser
-				.mutation(api.items.createItem, { listId, name: "Item" })
-				.catch((e) => e);
-			expect(error).toBeInstanceOf(ConvexError);
-			expect(getConvexErrorCode(error)).toBe("NOT_SUBSCRIBED");
 		});
 	});
 
@@ -219,7 +190,6 @@ describe("items", () => {
 			const strangerUserId = "stranger-item-search";
 			const { asUser, listId } = await setup(t, userId);
 			const asStranger = t.withIdentity({ subject: strangerUserId });
-			await seedSubscription(t, strangerUserId);
 
 			await asUser.mutation(api.items.createItem, {
 				listId,

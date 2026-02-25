@@ -2,7 +2,7 @@ import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api, components } from "../../_generated/api";
 import schema from "../../schema";
-import { getConvexErrorCode, seedSubscription } from "../helpers";
+import { getConvexErrorCode } from "../helpers";
 import { createConvexTest } from "../test.setup";
 
 const modules = import.meta.glob("../../**/*.ts");
@@ -13,8 +13,6 @@ describe("limits", () => {
 			const t = createConvexTest(schema, modules);
 			const userId = "user-list-limit-ok";
 			const asUser = t.withIdentity({ subject: userId });
-
-			await seedSubscription(t, userId);
 
 			// Seed 49 lists directly, then create the 50th via the mutation
 			await t.run(async (ctx) => {
@@ -43,8 +41,6 @@ describe("limits", () => {
 			const t = createConvexTest(schema, modules);
 			const userId = "user-list-limit-fail";
 			const asUser = t.withIdentity({ subject: userId });
-
-			await seedSubscription(t, userId);
 
 			await t.run(async (ctx) => {
 				for (let i = 0; i < 50; i++) {
@@ -77,8 +73,6 @@ describe("limits", () => {
 			const userId = "user-item-limit";
 			const asUser = t.withIdentity({ subject: userId });
 
-			await seedSubscription(t, userId);
-
 			const listId = await asUser.mutation(api.lists.createList, {
 				name: "Big List",
 			});
@@ -109,8 +103,6 @@ describe("limits", () => {
 			const userId = "user-tag-limit";
 			const asUser = t.withIdentity({ subject: userId });
 
-			await seedSubscription(t, userId);
-
 			const listId = await asUser.mutation(api.lists.createList, {
 				name: "Tagged List",
 			});
@@ -134,8 +126,6 @@ describe("limits", () => {
 			const t = createConvexTest(schema, modules);
 			const ownerId = "owner-editor-limit";
 			const asOwner = t.withIdentity({ subject: ownerId });
-
-			await seedSubscription(t, ownerId);
 
 			const listId = await asOwner.mutation(api.lists.createList, {
 				name: "Shared List",

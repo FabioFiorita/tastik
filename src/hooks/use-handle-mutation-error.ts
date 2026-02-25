@@ -28,11 +28,6 @@ export function useHandleMutationError() {
 				return;
 			}
 
-			if (data.code === ERROR_CODES.NOT_SUBSCRIBED) {
-				navigate({ to: "/subscription", replace: true });
-				return;
-			}
-
 			if (options?.beforeToast?.(data)) {
 				return;
 			}

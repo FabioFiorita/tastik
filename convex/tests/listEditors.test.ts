@@ -2,7 +2,7 @@ import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api, components } from "../_generated/api";
 import schema from "../schema";
-import { getConvexErrorCode, seedSubscription } from "./helpers";
+import { getConvexErrorCode } from "./helpers";
 import { createConvexTest } from "./test.setup";
 
 const modules = import.meta.glob("../**/*.ts");
@@ -12,7 +12,6 @@ describe("listEditors", () => {
 		t: ReturnType<typeof createConvexTest>,
 		ownerId: string,
 	) {
-		await seedSubscription(t, ownerId);
 		const asOwner = t.withIdentity({ subject: ownerId });
 		const listId = await asOwner.mutation(api.lists.createList, {
 			name: "Shared List",

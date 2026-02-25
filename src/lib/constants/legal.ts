@@ -31,10 +31,4 @@ export const THIRD_PARTY_SERVICES = [
 			"Email address, name, and profile image used for authentication",
 		privacyPolicyUrl: "https://better-auth.com",
 	},
-	{
-		name: "Stripe",
-		purpose: "Payment processing and subscription billing",
-		dataShared: "Email address and payment information",
-		privacyPolicyUrl: "https://stripe.com/privacy",
-	},
 ];

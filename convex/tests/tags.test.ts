@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
-import { getConvexErrorCode, seedSubscription } from "./helpers";
+import { getConvexErrorCode } from "./helpers";
 import { createConvexTest } from "./test.setup";
 
 const modules = import.meta.glob("../**/*.ts");
@@ -13,7 +13,6 @@ describe("tags", () => {
 		t: ReturnType<typeof createConvexTest>,
 		userId: string,
 	) {
-		await seedSubscription(t, userId);
 		const asUser = t.withIdentity({ subject: userId });
 		const listId = await asUser.mutation(api.lists.createList, {
 			name: "Tag Test List",
@@ -81,7 +80,6 @@ describe("tags", () => {
 		it("allows same tag name in different lists", async () => {
 			const t = createConvexTest(schema, modules);
 			const userId = "user-tag-5";
-			await seedSubscription(t, userId);
 			const asUser = t.withIdentity({ subject: userId });
 
 			const listId1 = await asUser.mutation(api.lists.createList, {

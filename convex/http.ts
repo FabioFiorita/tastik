@@ -1,14 +1,9 @@
-import { registerRoutes } from "@convex-dev/stripe";
 import { httpRouter } from "convex/server";
-import { api, components } from "./_generated/api";
+import { api } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
 
 const http = httpRouter();
-
-registerRoutes(http, components.stripe, {
-	webhookPath: "/stripe/webhook",
-});
 
 authComponent.registerRoutes(http, createAuth);
 

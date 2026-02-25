@@ -1,17 +1,14 @@
-import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import schema from "../schema";
-import { getConvexErrorCode, seedSubscription } from "./helpers";
 import { createConvexTest } from "./test.setup";
 
 const modules = import.meta.glob("../**/*.ts");
 
 describe("lists", () => {
 	async function setup(t: ReturnType<typeof createConvexTest>, userId: string) {
-		await seedSubscription(t, userId);
 		return t.withIdentity({ subject: userId });
 	}
 
@@ -30,17 +27,6 @@ describe("lists", () => {
 			expect(list?.type).toBe("simple");
 			expect(list?.status).toBe("active");
 			expect(list?.isOwner).toBe(true);
-		});
-
-		it("rejects creation without a subscription", async () => {
-			const t = createConvexTest(schema, modules);
-			const asUser = t.withIdentity({ subject: "user-lists-nosub" });
-
-			const error = await asUser
-				.mutation(api.lists.createList, { name: "My List" })
-				.catch((e) => e);
-			expect(error).toBeInstanceOf(ConvexError);
-			expect(getConvexErrorCode(error)).toBe("NOT_SUBSCRIBED");
 		});
 	});
 

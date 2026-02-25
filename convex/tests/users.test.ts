@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { MutationCtx } from "../_generated/server";
 import schema from "../schema";
-import { seedSubscription } from "./helpers";
 import { createConvexTest } from "./test.setup";
 
 const modules = import.meta.glob("../**/*.ts");
@@ -52,8 +51,6 @@ describe("users", () => {
 			const t = createConvexTest(schema, modules);
 			const userId = "user-delete-1";
 			const asUser = t.withIdentity({ subject: userId });
-
-			await seedSubscription(t, userId);
 
 			// Create a list with an item and a tag
 			const listId = await asUser.mutation(api.lists.createList, {
@@ -127,7 +124,6 @@ describe("users", () => {
 			const ownerId = "owner-for-delete";
 			const editorId = "editor-to-delete";
 
-			await seedSubscription(t, ownerId);
 			const asOwner = t.withIdentity({ subject: ownerId });
 
 			const listId = await asOwner.mutation(api.lists.createList, {

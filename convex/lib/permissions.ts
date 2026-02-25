@@ -1,9 +1,7 @@
 import { ConvexError } from "convex/values";
-import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { appError } from "./errors";
-import { isComponentSubscriptionActive } from "./subscription";
 
 export async function requireAuth(
 	ctx: QueryCtx | MutationCtx,
@@ -88,24 +86,4 @@ export async function getListAccessOrNull(
 	}
 
 	return { userId, list, isOwner };
-}
-
-export async function requireSubscription(
-	ctx: MutationCtx,
-	userId: string,
-): Promise<void> {
-	const subs = await ctx.runQuery(
-		components.stripe.public.listSubscriptionsByUserId,
-		{ userId },
-	);
-	const nowSeconds = Math.floor(Date.now() / 1000);
-	const hasActive = subs.some((sub) =>
-		isComponentSubscriptionActive(sub, nowSeconds),
-	);
-
-	if (!hasActive) {
-		throw new ConvexError(
-			appError("NOT_SUBSCRIBED", "Active subscription required"),
-		);
-	}
 }

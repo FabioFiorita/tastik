@@ -249,7 +249,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 				title="Delete account"
-				description="All your data will be permanently deleted. This cannot be undone. Cancel your subscription first if you have one."
+				description="All your data will be permanently deleted. This cannot be undone."
 				confirmLabel={isDeleting ? "Deleting..." : "Delete account"}
 				onConfirm={handleDeleteAccount}
 				variant="destructive"

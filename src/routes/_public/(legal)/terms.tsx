@@ -44,47 +44,13 @@ function TermsPage() {
 						</section>
 
 						<section className="space-y-3">
-							<h2 className="font-semibold text-2xl">Plans and Pricing</h2>
+							<h2 className="font-semibold text-2xl">Service Access</h2>
 							<p className="text-muted-foreground">
-								Tastik requires a subscription to use the app. Plans are
-								processed through our billing provider:
+								Tastik is free to use. Create an account to access features such
+								as: up to 50 lists, up to 500 items per list, all list types
+								(simple, calculator, stepper, kanban, multi), tags (up to 50 per
+								list), and list sharing with editors (up to 10 per list).
 							</p>
-							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-								<li>Monthly: $1.99 per month</li>
-								<li>
-									Yearly: $19.99 per year (billed annually, equivalent to
-									$1.67/month)
-								</li>
-							</ul>
-							<p className="text-muted-foreground">
-								Monthly subscribers receive a 7-day free trial; yearly
-								subscribers receive a 14-day free trial. All subscribers get
-								access to: up to 50 lists, up to 500 items per list, all list
-								types (simple, calculator, stepper, kanban, multi), tags (up to
-								50 per list), and list sharing with editors (up to 10 per list).
-							</p>
-							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-								<li>
-									Subscriptions automatically renew unless cancelled before the
-									end of the current billing period
-								</li>
-								<li>
-									You can manage your subscription and cancel at any time
-									through your account settings and billing portal
-								</li>
-								<li>
-									Refund requests can be made through the billing portal or by
-									emailing {LEGAL_CONTACT.supportEmail}
-								</li>
-								<li>
-									We reserve the right to change subscription pricing with at
-									least 30 days' notice to active subscribers
-								</li>
-								<li>
-									When you cancel, you'll retain access until the end of your
-									current billing period
-								</li>
-							</ul>
 						</section>
 
 						<section className="space-y-3">
@@ -132,7 +98,6 @@ function TermsPage() {
 							</p>
 							<ul className="list-disc space-y-2 pl-5 text-muted-foreground">
 								<li>Violation of these Terms of Service</li>
-								<li>Non-payment of subscription fees</li>
 								<li>Security threats or unauthorized access attempts</li>
 								<li>Legal requirement or court order</li>
 							</ul>

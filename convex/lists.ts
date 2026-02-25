@@ -8,7 +8,6 @@ import {
 	requireAuth,
 	requireListAccess,
 	requireListOwner,
-	requireSubscription,
 } from "./lib/permissions";
 import { assertRateLimit } from "./lib/rateLimiter";
 import { compareByDateNameSort } from "./lib/sorting";
@@ -161,7 +160,6 @@ export const createList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await requireAuth(ctx);
-		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "createList", userId);
 		await assertListsUnderLimit(ctx, userId);
 
@@ -201,8 +199,7 @@ export const updateList = mutation({
 		showTotal: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
-		const { userId } = await requireListOwner(ctx, args.listId);
-		await requireSubscription(ctx, userId);
+		await requireListOwner(ctx, args.listId);
 
 		// Validate name if provided
 		if (args.name !== undefined) {
@@ -316,7 +313,6 @@ export const duplicateList = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { userId, list } = await requireListAccess(ctx, args.listId);
-		await requireSubscription(ctx, userId);
 		await assertRateLimit(ctx, "duplicateList", userId);
 		await assertListsUnderLimit(ctx, userId);
 

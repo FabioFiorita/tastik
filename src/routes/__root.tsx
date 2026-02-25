@@ -14,7 +14,6 @@ import type { ConvexReactClient } from "convex/react";
 import { useEffect } from "react";
 import { NotFoundPage } from "@/components/common/not-found";
 import { currentUserQueryOptions } from "@/hooks/queries/use-current-user";
-import { subscriptionQueryOptions } from "@/hooks/queries/use-subscription";
 import { serverAuth } from "@/lib/auth-server";
 import { trackPageView } from "@/lib/metrics";
 import { api } from "../../convex/_generated/api";
@@ -93,10 +92,7 @@ export const Route = createRootRouteWithContext<{
 		}
 
 		if (token) {
-			await Promise.all([
-				ctx.context.queryClient.ensureQueryData(currentUserQueryOptions()),
-				ctx.context.queryClient.ensureQueryData(subscriptionQueryOptions()),
-			]);
+			await ctx.context.queryClient.ensureQueryData(currentUserQueryOptions());
 		}
 
 		return {

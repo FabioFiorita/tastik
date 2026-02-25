@@ -2,7 +2,7 @@ import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api } from "../../_generated/api";
 import schema from "../../schema";
-import { getConvexErrorCode, seedSubscription } from "../helpers";
+import { getConvexErrorCode } from "../helpers";
 import { createConvexTest } from "../test.setup";
 
 const modules = import.meta.glob("../../**/*.ts");
@@ -25,9 +25,6 @@ describe("permissions", () => {
 			const editorId = "editor-perm-1";
 			const asOwner = t.withIdentity({ subject: ownerId });
 			const asEditor = t.withIdentity({ subject: editorId });
-
-			await seedSubscription(t, ownerId);
-			await seedSubscription(t, editorId);
 
 			const listId = await asOwner.mutation(api.lists.createList, {
 				name: "Owner List",
@@ -57,8 +54,6 @@ describe("permissions", () => {
 			const userId = "owner-perm-2";
 			const asUser = t.withIdentity({ subject: userId });
 
-			await seedSubscription(t, userId);
-
 			const listId = await asUser.mutation(api.lists.createList, {
 				name: "My List",
 			});
@@ -74,8 +69,6 @@ describe("permissions", () => {
 			const editorId = "editor-perm-3";
 			const asOwner = t.withIdentity({ subject: ownerId });
 			const asEditor = t.withIdentity({ subject: editorId });
-
-			await seedSubscription(t, ownerId);
 
 			const listId = await asOwner.mutation(api.lists.createList, {
 				name: "Shared List",
@@ -101,8 +94,6 @@ describe("permissions", () => {
 			const asOwner = t.withIdentity({ subject: ownerId });
 			const asStranger = t.withIdentity({ subject: strangerId });
 
-			await seedSubscription(t, ownerId);
-
 			const listId = await asOwner.mutation(api.lists.createList, {
 				name: "Private List",
 			});
@@ -113,32 +104,6 @@ describe("permissions", () => {
 			// getList uses getListAccessOrNull which returns null → returns null (no error)
 			// When no access, getList returns null
 			expect(error).toBeNull();
-		});
-	});
-
-	describe("requireSubscription", () => {
-		it("throws NOT_SUBSCRIBED when user has no subscription", async () => {
-			const t = createConvexTest(schema, modules);
-			const userId = "user-no-sub";
-			const asUser = t.withIdentity({ subject: userId });
-
-			const error = await asUser
-				.mutation(api.lists.createList, { name: "My List" })
-				.catch((e) => e);
-			expect(error).toBeInstanceOf(ConvexError);
-			expect(getConvexErrorCode(error)).toBe("NOT_SUBSCRIBED");
-		});
-
-		it("allows mutation when user has active subscription", async () => {
-			const t = createConvexTest(schema, modules);
-			const userId = "user-with-sub";
-			const asUser = t.withIdentity({ subject: userId });
-
-			await seedSubscription(t, userId);
-
-			await expect(
-				asUser.mutation(api.lists.createList, { name: "My List" }),
-			).resolves.toBeDefined();
 		});
 	});
 });

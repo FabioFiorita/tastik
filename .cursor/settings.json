@@ -3,9 +3,6 @@
 		"convex": {
 			"enabled": true
 		},
-		"stripe": {
-			"enabled": true
-		},
 		"sentry": {
 			"enabled": true
 		},

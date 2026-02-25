@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
 	Archive,
-	CreditCard,
 	FileText,
 	HelpCircle,
 	Monitor,
@@ -22,14 +21,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useManageSubscription } from "@/hooks/actions/use-manage-subscription";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils/cn";
 import { getInitials } from "@/lib/utils/get-initials";
 
 export function NavUser() {
 	const { theme, setTheme } = useTheme();
-	const { openBillingPortal } = useManageSubscription();
 	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
 	const [isSigningOut, setIsSigningOut] = useState(false);
@@ -77,10 +74,6 @@ export function NavUser() {
 					<DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
 						<User className="size-4" />
 						Account
-					</DropdownMenuItem>
-					<DropdownMenuItem onClick={openBillingPortal}>
-						<CreditCard className="size-4" />
-						Subscription
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => navigate({ to: "/archive" })}>
 						<Archive className="size-4" />

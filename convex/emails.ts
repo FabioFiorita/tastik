@@ -15,7 +15,7 @@ const resend = new Resend(components.resend, {
 
 const FROM_EMAIL =
 	process.env.RESEND_FROM_EMAIL ?? "Tastik <onboarding@resend.dev>";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "";
 
 export const sendTwoFactorOtpEmail = internalMutation({
 	args: {
@@ -23,10 +23,6 @@ export const sendTwoFactorOtpEmail = internalMutation({
 		otp: v.string(),
 	},
 	handler: async (ctx, args) => {
-		if (!SUPPORT_EMAIL) {
-			throw new Error("Missing required environment variable: SUPPORT_EMAIL");
-		}
-
 		const siteUrl = process.env.SITE_URL;
 		const logoUrl = `${siteUrl?.replace(/\/$/, "")}/logo.png`;
 
@@ -57,10 +53,6 @@ export const sendVerificationEmail = internalMutation({
 		url: v.string(),
 	},
 	handler: async (ctx, args) => {
-		if (!SUPPORT_EMAIL) {
-			throw new Error("Missing required environment variable: SUPPORT_EMAIL");
-		}
-
 		const siteUrl = process.env.SITE_URL;
 		const logoUrl = `${siteUrl?.replace(/\/$/, "")}/logo.png`;
 
@@ -91,10 +83,6 @@ export const sendResetPasswordEmail = internalMutation({
 		url: v.string(),
 	},
 	handler: async (ctx, args) => {
-		if (!SUPPORT_EMAIL) {
-			throw new Error("Missing required environment variable: SUPPORT_EMAIL");
-		}
-
 		const siteUrl = process.env.SITE_URL;
 		const logoUrl = `${siteUrl?.replace(/\/$/, "")}/logo.png`;
 

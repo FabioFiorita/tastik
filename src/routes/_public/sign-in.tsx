@@ -84,18 +84,14 @@ export function SignInPage() {
 	const handlePasskeySignIn = async () => {
 		setIsPending(true);
 		try {
-			const result = await authClient.signIn.passkey({
-				fetchOptions: {
-					onSuccess: () => navigate({ to: "/" }),
-					onError: (ctx) => {
-						toast.error(ctx.error.message ?? "Unable to sign in with passkey");
-					},
-				},
-			});
+			const result = await authClient.signIn.passkey();
 
-			if (result.error) {
-				toast.error(result.error.message ?? "Unable to sign in");
+			if (result?.error) {
+				toast.error(result.error.message ?? "Unable to sign in with passkey");
+				return;
 			}
+
+			navigate({ to: "/" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to sign in"));
 		} finally {

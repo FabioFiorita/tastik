@@ -73,10 +73,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 			requireEmailVerification: true,
 			sendResetPassword: async ({ user, url }) => {
 				if (!isRunMutationCtx(ctx)) return;
-				await ctx.runMutation(internal.emails.sendResetPasswordEmail, {
-					email: user.email,
-					url,
-				});
+				await ctx.scheduler.runAfter(
+					0,
+					internal.emails.sendResetPasswordEmail,
+					{ email: user.email, url },
+				);
 			},
 		},
 		emailVerification: {
@@ -84,10 +85,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 			sendOnSignIn: true,
 			sendVerificationEmail: async ({ user, url }) => {
 				if (!isRunMutationCtx(ctx)) return;
-				await ctx.runMutation(internal.emails.sendVerificationEmail, {
-					email: user.email,
-					url,
-				});
+				await ctx.scheduler.runAfter(
+					0,
+					internal.emails.sendVerificationEmail,
+					{ email: user.email, url },
+				);
 			},
 		},
 		socialProviders: getSocialProviders(),
@@ -101,10 +103,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 				otpOptions: {
 					sendOTP: async ({ user, otp }) => {
 						if (!isRunMutationCtx(ctx)) return;
-						await ctx.runMutation(internal.emails.sendTwoFactorOtpEmail, {
-							email: user.email,
-							otp,
-						});
+						await ctx.scheduler.runAfter(
+							0,
+							internal.emails.sendTwoFactorOtpEmail,
+							{ email: user.email, otp },
+						);
 					},
 					storeOTP: "encrypted",
 				},

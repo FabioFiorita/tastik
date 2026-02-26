@@ -55,6 +55,8 @@ export function ListPreferencesMenu({
 		list.type,
 	);
 	const showShowTotal = ["stepper", "calculator", "multi"].includes(list.type);
+	const hasVisibilityOptions =
+		showHideCompleted || showHideCheckbox || showShowTotal;
 
 	return (
 		<DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -115,53 +117,57 @@ export function ListPreferencesMenu({
 					/>
 				</div>
 
-				<DropdownMenuSeparator />
+				{hasVisibilityOptions && (
+					<>
+						<DropdownMenuSeparator />
 
-				<DropdownMenuGroup>
-					<DropdownMenuLabel>Visibility</DropdownMenuLabel>
-					{showHideCompleted && (
-						<div className="flex items-center justify-between px-2 py-2">
-							<Label htmlFor="hide-completed" className="text-sm">
-								Hide Completed
-							</Label>
-							<Switch
-								id="hide-completed"
-								checked={!list.showCompleted}
-								onCheckedChange={toggleShowCompleted}
-								disabled={isPending}
-								data-testid="hide-completed-toggle"
-							/>
-						</div>
-					)}
-					{showHideCheckbox && (
-						<div className="flex items-center justify-between px-2 py-2">
-							<Label htmlFor="hide-checkbox" className="text-sm">
-								Hide Checkbox
-							</Label>
-							<Switch
-								id="hide-checkbox"
-								checked={list.hideCheckbox ?? false}
-								onCheckedChange={toggleHideCheckbox}
-								disabled={isPending}
-								data-testid="hide-checkbox-toggle"
-							/>
-						</div>
-					)}
-					{showShowTotal && (
-						<div className="flex items-center justify-between px-2 py-2">
-							<Label htmlFor="show-total" className="text-sm">
-								Show Total
-							</Label>
-							<Switch
-								id="show-total"
-								checked={list.showTotal ?? false}
-								onCheckedChange={toggleShowTotal}
-								disabled={isPending}
-								data-testid="show-total-toggle"
-							/>
-						</div>
-					)}
-				</DropdownMenuGroup>
+						<DropdownMenuGroup>
+							<DropdownMenuLabel>Visibility</DropdownMenuLabel>
+							{showHideCompleted && (
+								<div className="flex items-center justify-between px-2 py-2">
+									<Label htmlFor="hide-completed" className="text-sm">
+										Hide Completed
+									</Label>
+									<Switch
+										id="hide-completed"
+										checked={!list.showCompleted}
+										onCheckedChange={toggleShowCompleted}
+										disabled={isPending}
+										data-testid="hide-completed-toggle"
+									/>
+								</div>
+							)}
+							{showHideCheckbox && (
+								<div className="flex items-center justify-between px-2 py-2">
+									<Label htmlFor="hide-checkbox" className="text-sm">
+										Hide Checkbox
+									</Label>
+									<Switch
+										id="hide-checkbox"
+										checked={list.hideCheckbox ?? false}
+										onCheckedChange={toggleHideCheckbox}
+										disabled={isPending}
+										data-testid="hide-checkbox-toggle"
+									/>
+								</div>
+							)}
+							{showShowTotal && (
+								<div className="flex items-center justify-between px-2 py-2">
+									<Label htmlFor="show-total" className="text-sm">
+										Show Total
+									</Label>
+									<Switch
+										id="show-total"
+										checked={list.showTotal ?? false}
+										onCheckedChange={toggleShowTotal}
+										disabled={isPending}
+										data-testid="show-total-toggle"
+									/>
+								</div>
+							)}
+						</DropdownMenuGroup>
+					</>
+				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

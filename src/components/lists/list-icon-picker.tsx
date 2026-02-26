@@ -20,7 +20,7 @@ export function ListIconPicker({ value, onChange }: ListIconPickerProps) {
 		!/[A-Za-z]/.test(value);
 
 	return (
-		<div className="flex flex-wrap gap-2">
+		<div className="flex flex-wrap gap-2 px-1 py-1">
 			{LIST_ICON_OPTIONS.map((option) => (
 				<Button
 					key={option.emoji}

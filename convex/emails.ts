@@ -1,8 +1,10 @@
+"use node";
+
 import { Resend } from "@convex-dev/resend";
-import { render } from "@react-email/components";
+import { render } from "@react-email/render";
 import { v } from "convex/values";
 import { components } from "./_generated/api";
-import { internalMutation } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { OtpEmail } from "./emailTemplates/otpEmail";
 import { ResetPasswordEmail } from "./emailTemplates/resetPasswordEmail";
 import { VerificationEmail } from "./emailTemplates/verificationEmail";
@@ -17,7 +19,7 @@ const FROM_EMAIL =
 	process.env.RESEND_FROM_EMAIL ?? "Tastik <onboarding@resend.dev>";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 
-export const sendTwoFactorOtpEmail = internalMutation({
+export const sendTwoFactorOtpEmail = internalAction({
 	args: {
 		email: v.string(),
 		otp: v.string(),
@@ -51,7 +53,7 @@ export const sendTwoFactorOtpEmail = internalMutation({
 	},
 });
 
-export const sendVerificationEmail = internalMutation({
+export const sendVerificationEmail = internalAction({
 	args: {
 		email: v.string(),
 		url: v.string(),
@@ -85,7 +87,7 @@ export const sendVerificationEmail = internalMutation({
 	},
 });
 
-export const sendResetPasswordEmail = internalMutation({
+export const sendResetPasswordEmail = internalAction({
 	args: {
 		email: v.string(),
 		url: v.string(),

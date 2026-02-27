@@ -127,6 +127,25 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 		],
 		user: {
 			deleteUser: { enabled: true },
+			changeEmail: {
+				enabled: true,
+				sendChangeEmailConfirmation: async ({ user, url }) => {
+					if (!isRunMutationCtx(ctx)) return;
+					await ctx.scheduler.runAfter(
+						0,
+						internal.emails.sendChangeEmailConfirmationEmail,
+						{ email: user.email, url },
+					);
+				},
+				sendChangeEmailVerification: async ({ newEmail, url }) => {
+					if (!isRunMutationCtx(ctx)) return;
+					await ctx.scheduler.runAfter(
+						0,
+						internal.emails.sendChangeEmailVerificationEmail,
+						{ email: newEmail, url },
+					);
+				},
+			},
 		},
 	});
 };

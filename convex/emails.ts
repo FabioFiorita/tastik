@@ -74,3 +74,43 @@ export const sendResetPasswordEmail = internalAction({
 		});
 	},
 });
+
+export const sendChangeEmailConfirmationEmail = internalAction({
+	args: {
+		email: v.string(),
+		url: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const templateId = requireEnv("RESEND_TEMPLATE_CHANGE_EMAIL_CONFIRM");
+
+		await resend.sendEmail(ctx, {
+			from: requireEnv("RESEND_FROM_EMAIL"),
+			to: args.email,
+			subject: "Confirm your Tastik email change",
+			template: {
+				id: templateId,
+				variables: { CONFIRM_URL: args.url },
+			},
+		});
+	},
+});
+
+export const sendChangeEmailVerificationEmail = internalAction({
+	args: {
+		email: v.string(),
+		url: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const templateId = requireEnv("RESEND_TEMPLATE_CHANGE_EMAIL_VERIFY");
+
+		await resend.sendEmail(ctx, {
+			from: requireEnv("RESEND_FROM_EMAIL"),
+			to: args.email,
+			subject: "Verify your new Tastik email address",
+			template: {
+				id: templateId,
+				variables: { VERIFY_URL: args.url },
+			},
+		});
+	},
+});

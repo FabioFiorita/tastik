@@ -1,7 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ListView } from "@/components/lists/list-view";
+import { listCollaboratorsQueryOptions } from "@/hooks/queries/use-list-collaborators";
 import { listQueryOptions } from "@/hooks/queries/use-list";
 import { listItemsQueryOptions } from "@/hooks/queries/use-list-items";
+import { listTagsQueryOptions } from "@/hooks/queries/use-list-tags";
 import { parseConvexId } from "@/lib/utils/parse-convex-id";
 
 export const Route = createFileRoute("/_protected/lists/$listId")({
@@ -19,9 +21,13 @@ export const Route = createFileRoute("/_protected/lists/$listId")({
 			throw redirect({ to: "/" });
 		}
 
-		await context.queryClient.ensureQueryData(
-			listItemsQueryOptions(listId, list.showCompleted),
-		);
+		await Promise.all([
+			context.queryClient.ensureQueryData(
+				listItemsQueryOptions(listId, list.showCompleted),
+			),
+			context.queryClient.prefetchQuery(listTagsQueryOptions(listId)),
+			context.queryClient.prefetchQuery(listCollaboratorsQueryOptions(listId)),
+		]);
 
 		return { listId };
 	},

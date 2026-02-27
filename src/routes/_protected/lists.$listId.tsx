@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { ListDetailPendingSkeleton } from "@/components/common/pending-skeletons";
 import { ListView } from "@/components/lists/list-view";
 import { listQueryOptions } from "@/hooks/queries/use-list";
 import { listCollaboratorsQueryOptions } from "@/hooks/queries/use-list-collaborators";
@@ -7,6 +8,7 @@ import { listTagsQueryOptions } from "@/hooks/queries/use-list-tags";
 import { parseConvexId } from "@/lib/utils/parse-convex-id";
 
 export const Route = createFileRoute("/_protected/lists/$listId")({
+	pendingComponent: ListDetailPendingSkeleton,
 	loader: async ({ context, params }) => {
 		const listId = parseConvexId<"lists">(params.listId);
 

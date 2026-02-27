@@ -9,31 +9,13 @@ import {
 	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { createServerFn } from "@tanstack/react-start";
 import type { ConvexReactClient } from "convex/react";
 import { useEffect } from "react";
 import { NotFoundPage } from "@/components/common/not-found";
+import { authStateQueryOptions } from "@/hooks/queries/use-auth-state";
 import { currentUserQueryOptions } from "@/hooks/queries/use-current-user";
-import { serverAuth } from "@/lib/auth-server";
 import { trackPageView } from "@/lib/metrics";
-import { api } from "../../convex/_generated/api";
 import appCss from "../styles.css?url";
-
-const fetchAuthState = createServerFn({ method: "GET" }).handler(async () => {
-	const token = await serverAuth.getToken();
-
-	if (!token) {
-		return { token: null };
-	}
-
-	try {
-		await serverAuth.fetchAuthMutation(api.users.ensureCurrentUser, {});
-	} catch {
-		return { token: null };
-	}
-
-	return { token };
-});
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
@@ -85,7 +67,9 @@ export const Route = createRootRouteWithContext<{
 	notFoundComponent: () => <NotFoundPage />,
 
 	beforeLoad: async (ctx) => {
-		const { token } = await fetchAuthState();
+		const { token } = await ctx.context.queryClient.ensureQueryData(
+			authStateQueryOptions(),
+		);
 
 		if (token) {
 			ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);

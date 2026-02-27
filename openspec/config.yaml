@@ -1,20 +1,45 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Product: Tastik (lists without deadlines).
+  Tech stack:
+    - Frontend: TanStack Start, React 19, TypeScript, Vite 7.
+    - Routing/data: TanStack Router + TanStack Query.
+    - Backend: Convex (queries/mutations/actions, schema-first validators).
+    - Auth: Better Auth (+ @convex-dev/better-auth integration).
+    - UI: Tailwind CSS v4, shadcn/base-ui patterns, mobile-first design.
+    - Runtime/deploy: Cloudflare Workers + Wrangler.
+    - Tooling: Bun scripts, Biome (format/lint/check), Vitest + Testing Library.
+  Architecture conventions:
+    - Keep business logic in hooks (src/hooks/actions, src/hooks/queries), not in UI components.
+    - Do not call Convex queries directly in components; wrap them in hooks that return only UI-needed data.
+    - One exported component per file; extract repeated UI blocks into shared components.
+    - Prefer named exports; import constants/utils from concrete module paths (no barrel files in src/lib/constants or src/lib/utils).
+    - Use TanStack Router navigation hooks (useNavigate), not window.location.
+  Knowledge capture conventions:
+    - If a change introduces reusable workflow/domain guidance, capture it in a skill (or update an existing one) instead of bloating INSTRUCTIONS.
+    - Keep INSTRUCTIONS focused on short must-follow rules; keep deep how-to/reference content in skills.
+  Quality checks after code changes:
+    - bun typecheck
+    - bun check:write
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Include problem statement, goals, non-goals, and measurable success criteria.
+    - Call out affected routes, hooks, Convex functions, and user impact.
+    - Include rollout and rollback considerations for risky changes.
+    - If new reusable domain/workflow knowledge appears, state whether a skill should be added/updated.
+  specs:
+    - Use clear Given/When/Then scenarios for each requirement.
+    - Separate functional, UX, and performance expectations when relevant.
+    - Explicitly list edge cases and permissions/auth constraints.
+  design:
+    - Document data flow from route/component to hook to Convex function.
+    - Explain tradeoffs and why the chosen approach fits TanStack Start + Convex architecture.
+    - Identify migration or compatibility concerns and observability points.
+    - Add a brief "Knowledge capture" note when implementation introduces patterns worth codifying in a skill.
+  tasks:
+    - Break tasks into small, testable steps with concrete file targets.
+    - Include tests to add/update and validation commands to run.
+    - Mark cross-cutting changes (types, hooks, routes, Convex schema/functions) explicitly.
+    - Add a task to create/update a skill when the change creates reusable guidance for future agents.

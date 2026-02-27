@@ -6,7 +6,7 @@ import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { ConvexReactClient } from "convex/react";
 import { Toaster } from "sonner";
-import { LoadingState } from "@/components/common/loading-state";
+import { DashboardPendingSkeleton } from "@/components/common/pending-skeletons";
 import { SentryUserSync } from "@/components/common/sentry-user-sync";
 import { RouteErrorComponent } from "@/components/layout/route-error-component";
 import { authClient } from "@/lib/auth-client";
@@ -33,7 +33,9 @@ export function getRouter() {
 		createRouter({
 			routeTree,
 			defaultPreload: "intent",
-			defaultPendingComponent: LoadingState,
+			defaultPendingMs: 150,
+			defaultPendingMinMs: 200,
+			defaultPendingComponent: DashboardPendingSkeleton,
 			defaultErrorComponent: RouteErrorComponent,
 			context: {
 				queryClient,

@@ -101,7 +101,7 @@ export function ItemRow({
 				</div>
 				<span
 					className={cn(
-						"flex-1 min-w-0",
+						"min-w-0 flex-1",
 						item.completed && "text-muted-foreground line-through",
 					)}
 					data-testid={`item-name-${item._id}`}

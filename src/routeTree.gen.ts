@@ -17,13 +17,13 @@ import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
 import { Route as PublicRequestResetPasswordRouteImport } from './routes/_public/request-reset-password'
 import { Route as Public2faRouteImport } from './routes/_public/2fa'
+import { Route as ProtectedHomeRouteImport } from './routes/_protected/home'
 import { Route as ProtectedArchiveRouteImport } from './routes/_protected/archive'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
 import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
 import { Route as ProtectedListsListIdRouteImport } from './routes/_protected/lists.$listId'
-import { Route as ProtectedHomeRouteImport } from './routes/_protected/home'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -64,6 +64,11 @@ const Public2faRoute = Public2faRouteImport.update({
   path: '/2fa',
   getParentRoute: () => PublicRoute,
 } as any)
+const ProtectedHomeRoute = ProtectedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedArchiveRoute = ProtectedArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
@@ -94,22 +99,17 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
   path: '/lists/$listId',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedHomeRoute = ProtectedHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => ProtectedRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
+  '/home': typeof ProtectedHomeRoute
   '/2fa': typeof Public2faRoute
   '/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/reset-password': typeof PublicResetPasswordRoute
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
-  '/home': typeof ProtectedHomeRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -118,13 +118,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
+  '/home': typeof ProtectedHomeRoute
   '/2fa': typeof Public2faRoute
   '/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/reset-password': typeof PublicResetPasswordRoute
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
-  '/home': typeof ProtectedHomeRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -136,13 +136,13 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/_protected/archive': typeof ProtectedArchiveRoute
+  '/_protected/home': typeof ProtectedHomeRoute
   '/_public/2fa': typeof Public2faRoute
   '/_public/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/_public/reset-password': typeof PublicResetPasswordRoute
   '/_public/sign-in': typeof PublicSignInRoute
   '/_public/sign-up': typeof PublicSignUpRoute
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
-  '/_protected/home': typeof ProtectedHomeRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
   '/_public/(legal)/terms': typeof PubliclegalTermsRoute
@@ -153,13 +153,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
+    | '/home'
     | '/2fa'
     | '/request-reset-password'
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/lists/$listId'
-    | '/home'
     | '/privacy'
     | '/support'
     | '/terms'
@@ -168,13 +168,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
+    | '/home'
     | '/2fa'
     | '/request-reset-password'
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/lists/$listId'
-    | '/home'
     | '/privacy'
     | '/support'
     | '/terms'
@@ -185,13 +185,13 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/_protected/archive'
+    | '/_protected/home'
     | '/_public/2fa'
     | '/_public/request-reset-password'
     | '/_public/reset-password'
     | '/_public/sign-in'
     | '/_public/sign-up'
     | '/_protected/lists/$listId'
-    | '/_protected/home'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
     | '/_public/(legal)/terms'
@@ -263,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Public2faRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_protected/home': {
+      id: '/_protected/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof ProtectedHomeRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/archive': {
       id: '/_protected/archive'
       path: '/archive'
@@ -305,26 +312,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedListsListIdRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/home': {
-      id: '/_protected/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof ProtectedHomeRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
   }
 }
 
 interface ProtectedRouteChildren {
   ProtectedArchiveRoute: typeof ProtectedArchiveRoute
-  ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
   ProtectedHomeRoute: typeof ProtectedHomeRoute
+  ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedArchiveRoute: ProtectedArchiveRoute,
-  ProtectedListsListIdRoute: ProtectedListsListIdRoute,
   ProtectedHomeRoute: ProtectedHomeRoute,
+  ProtectedListsListIdRoute: ProtectedListsListIdRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
@@ -365,3 +365,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ListView } from "@/components/lists/list-view";
-import { listCollaboratorsQueryOptions } from "@/hooks/queries/use-list-collaborators";
 import { listQueryOptions } from "@/hooks/queries/use-list";
+import { listCollaboratorsQueryOptions } from "@/hooks/queries/use-list-collaborators";
 import { listItemsQueryOptions } from "@/hooks/queries/use-list-items";
 import { listTagsQueryOptions } from "@/hooks/queries/use-list-tags";
 import { parseConvexId } from "@/lib/utils/parse-convex-id";

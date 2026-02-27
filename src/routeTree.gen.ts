@@ -24,6 +24,7 @@ import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/t
 import { Route as PubliclegalSupportRouteImport } from './routes/_public/(legal)/support'
 import { Route as PubliclegalPrivacyRouteImport } from './routes/_public/(legal)/privacy'
 import { Route as ProtectedListsListIdRouteImport } from './routes/_protected/lists.$listId'
+import { Route as ProtectedHomeRouteImport } from './routes/_protected/home'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -99,6 +100,11 @@ const ProtectedListsListIdRoute = ProtectedListsListIdRouteImport.update({
   path: '/lists/$listId',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedHomeRoute = ProtectedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
+  '/home': typeof ProtectedHomeRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/lists/$listId': typeof ProtectedListsListIdRoute
+  '/home': typeof ProtectedHomeRoute
   '/privacy': typeof PubliclegalPrivacyRoute
   '/support': typeof PubliclegalSupportRoute
   '/terms': typeof PubliclegalTermsRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/_public/sign-in': typeof PublicSignInRoute
   '/_public/sign-up': typeof PublicSignUpRoute
   '/_protected/lists/$listId': typeof ProtectedListsListIdRoute
+  '/_protected/home': typeof ProtectedHomeRoute
   '/_public/(legal)/privacy': typeof PubliclegalPrivacyRoute
   '/_public/(legal)/support': typeof PubliclegalSupportRoute
   '/_public/(legal)/terms': typeof PubliclegalTermsRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/lists/$listId'
+    | '/home'
     | '/privacy'
     | '/support'
     | '/terms'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/lists/$listId'
+    | '/home'
     | '/privacy'
     | '/support'
     | '/terms'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/_public/sign-in'
     | '/_public/sign-up'
     | '/_protected/lists/$listId'
+    | '/_protected/home'
     | '/_public/(legal)/privacy'
     | '/_public/(legal)/support'
     | '/_public/(legal)/terms'
@@ -312,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedListsListIdRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/home': {
+      id: '/_protected/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof ProtectedHomeRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
   }
 }
 
@@ -319,12 +338,14 @@ interface ProtectedRouteChildren {
   ProtectedArchiveRoute: typeof ProtectedArchiveRoute
   ProtectedSubscriptionRoute: typeof ProtectedSubscriptionRoute
   ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
+  ProtectedHomeRoute: typeof ProtectedHomeRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedArchiveRoute: ProtectedArchiveRoute,
   ProtectedSubscriptionRoute: ProtectedSubscriptionRoute,
   ProtectedListsListIdRoute: ProtectedListsListIdRoute,
+  ProtectedHomeRoute: ProtectedHomeRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
@@ -365,13 +386,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

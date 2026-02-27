@@ -46,7 +46,7 @@ export function TwoFactorPage() {
 				return;
 			}
 
-			navigate({ to: "/" });
+			navigate({ to: "/home" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Verification failed"));
 		} finally {
@@ -90,7 +90,7 @@ export function TwoFactorPage() {
 				return;
 			}
 
-			navigate({ to: "/" });
+			navigate({ to: "/home" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Verification failed"));
 		} finally {
@@ -114,7 +114,7 @@ export function TwoFactorPage() {
 				return;
 			}
 
-			navigate({ to: "/" });
+			navigate({ to: "/home" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Verification failed"));
 		} finally {

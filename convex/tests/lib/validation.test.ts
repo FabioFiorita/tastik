@@ -1,5 +1,4 @@
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vitest";
 import {
 	isValidEmail,
 	normalizeEmail,
@@ -132,6 +131,14 @@ describe("validation", () => {
 	describe("validateNickname", () => {
 		it("accepts a valid nickname", () => {
 			expect(() => validateNickname("Alice")).not.toThrow();
+		});
+
+		it("rejects empty string", () => {
+			expect(() => validateNickname("")).toThrow(ConvexError);
+		});
+
+		it("rejects whitespace-only string", () => {
+			expect(() => validateNickname("   ")).toThrow(ConvexError);
 		});
 
 		it("rejects nickname over max length", () => {

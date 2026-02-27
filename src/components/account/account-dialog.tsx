@@ -40,6 +40,8 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 	const [name, setName] = useState(user?.name ?? "");
 	const [email] = useState(user?.email ?? "");
 	const [isPending, setIsPending] = useState(false);
+	const [is2FAPending, setIs2FAPending] = useState(false);
+	const [isPasskeyPending, setIsPasskeyPending] = useState(false);
 	const [imagePending, setImagePending] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -55,13 +57,8 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 	} | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const twoFactorEnabled =
-		(user as { twoFactorEnabled?: boolean })?.twoFactorEnabled ?? false;
-	const { data: passkeysList } = (
-		authClient as {
-			useListPasskeys: () => { data: { id: string; name?: string }[] | null };
-		}
-	).useListPasskeys();
+	const twoFactorEnabled = user?.twoFactorEnabled ?? false;
+	const { data: passkeysList } = authClient.useListPasskeys();
 	const passkeysData = passkeysList ?? [];
 
 	const generateUploadUrl = useMutation(
@@ -156,7 +153,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 			toast.error("Enter your password");
 			return;
 		}
-		setIsPending(true);
+		setIs2FAPending(true);
 		try {
 			const result = await authClient.twoFactor.enable({ password });
 			if (result.error) {
@@ -173,13 +170,13 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Failed to enable 2FA"));
 		} finally {
-			setIsPending(false);
+			setIs2FAPending(false);
 		}
 	};
 
 	const handleVerify2FACode = async () => {
 		if (!totpCode || totpCode.length !== 6) return;
-		setIsPending(true);
+		setIs2FAPending(true);
 		try {
 			const result = await authClient.twoFactor.verifyTotp({ code: totpCode });
 			if (result.error) {
@@ -195,7 +192,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Verification failed"));
 		} finally {
-			setIsPending(false);
+			setIs2FAPending(false);
 		}
 	};
 
@@ -205,7 +202,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 			toast.error("Enter your password");
 			return;
 		}
-		setIsPending(true);
+		setIs2FAPending(true);
 		try {
 			const result = await authClient.twoFactor.disable({ password });
 			if (result.error) {
@@ -217,12 +214,12 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Failed to disable 2FA"));
 		} finally {
-			setIsPending(false);
+			setIs2FAPending(false);
 		}
 	};
 
 	const handleAddPasskey = async () => {
-		setIsPending(true);
+		setIsPasskeyPending(true);
 		try {
 			const result = await authClient.passkey?.addPasskey?.({});
 			if (result?.error) {
@@ -233,12 +230,12 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Failed to add passkey"));
 		} finally {
-			setIsPending(false);
+			setIsPasskeyPending(false);
 		}
 	};
 
 	const handleDeletePasskey = async (id: string) => {
-		setIsPending(true);
+		setIsPasskeyPending(true);
 		try {
 			const result = await authClient.passkey?.deletePasskey?.({ id });
 			if (result?.error) {
@@ -249,7 +246,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Failed to remove passkey"));
 		} finally {
-			setIsPending(false);
+			setIsPasskeyPending(false);
 		}
 	};
 
@@ -383,7 +380,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 													type="button"
 													variant="outline"
 													size="sm"
-													disabled={isPending}
+													disabled={is2FAPending}
 													onClick={handleDisable2FA}
 												>
 													Disable 2FA
@@ -394,7 +391,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 												type="button"
 												variant="outline"
 												size="sm"
-												disabled={isPending}
+												disabled={is2FAPending}
 												onClick={() => setEnable2FADialogOpen(true)}
 											>
 												Enable 2FA
@@ -412,6 +409,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 													<li
 														key={pk.id}
 														className="flex items-center justify-between"
+														data-testid="account-passkey-item"
 													>
 														<span>{pk.name ?? "Passkey"}</span>
 														<Button
@@ -419,7 +417,8 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 															variant="ghost"
 															size="xs"
 															onClick={() => handleDeletePasskey(pk.id)}
-															disabled={isPending}
+															disabled={isPasskeyPending}
+															data-testid="account-remove-passkey"
 														>
 															Remove
 														</Button>
@@ -431,8 +430,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 											type="button"
 											variant="outline"
 											size="sm"
-											disabled={isPending}
+											disabled={isPasskeyPending}
 											onClick={handleAddPasskey}
+											data-testid="account-add-passkey"
 										>
 											Add passkey
 										</Button>
@@ -479,7 +479,10 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 					}
 				}}
 			>
-				<ResponsiveDialogContent className="max-w-md">
+				<ResponsiveDialogContent
+					className="max-w-md"
+					data-testid="2fa-dialog-content"
+				>
 					<ResponsiveDialogHeader>
 						<ResponsiveDialogTitle>
 							Enable two-factor authentication
@@ -492,6 +495,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 								<Input
 									id="2fa-password"
 									type="password"
+									data-testid="2fa-password-input"
 									placeholder="Your password"
 									value={passwords.enable2fa ?? ""}
 									onChange={(e) =>
@@ -504,8 +508,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 							</Field>
 							<Button
 								className="w-full"
-								disabled={isPending}
+								disabled={is2FAPending}
 								onClick={handleEnable2FA}
+								data-testid="2fa-continue-button"
 							>
 								Continue
 							</Button>
@@ -516,11 +521,63 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 								Scan the QR code with your authenticator app, then enter the
 								verification code below.
 							</p>
-							<div className="flex justify-center rounded-lg bg-white p-4">
+							<div
+								className="flex justify-center rounded-lg bg-white p-4"
+								data-testid="2fa-qr-code"
+							>
 								<QRCode value={twoFactorData.totpURI} size={180} />
 							</div>
-							<div>
-								<p className="mb-2 font-medium text-sm">Backup codes</p>
+							{(() => {
+								const totpSecret =
+									new URL(twoFactorData.totpURI).searchParams.get("secret") ??
+									"";
+								return totpSecret ? (
+									<div>
+										<p className="mb-1 text-muted-foreground text-xs">
+											Can't scan? Enter this code manually in your authenticator
+											app:
+										</p>
+										<div
+											className="flex items-center justify-between rounded-md bg-muted p-2"
+											data-testid="2fa-totp-secret"
+										>
+											<span className="font-mono text-xs tracking-widest">
+												{totpSecret}
+											</span>
+											<Button
+												type="button"
+												variant="ghost"
+												size="xs"
+												onClick={() => {
+													navigator.clipboard.writeText(totpSecret);
+													toast.success("Secret copied");
+												}}
+												data-testid="2fa-copy-secret"
+											>
+												Copy
+											</Button>
+										</div>
+									</div>
+								) : null;
+							})()}
+							<div data-testid="2fa-backup-codes">
+								<div className="mb-2 flex items-center justify-between">
+									<p className="font-medium text-sm">Backup codes</p>
+									<Button
+										type="button"
+										variant="ghost"
+										size="xs"
+										onClick={() => {
+											navigator.clipboard.writeText(
+												twoFactorData.backupCodes.join("\n"),
+											);
+											toast.success("Backup codes copied");
+										}}
+										data-testid="2fa-copy-backup-codes"
+									>
+										Copy all
+									</Button>
+								</div>
 								<p className="mb-2 text-muted-foreground text-xs">
 									Save these codes in a secure place. Each can only be used
 									once.
@@ -549,8 +606,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 							</Field>
 							<Button
 								className="w-full"
-								disabled={isPending || totpCode.length !== 6}
+								disabled={is2FAPending || totpCode.length !== 6}
 								onClick={handleVerify2FACode}
+								data-testid="2fa-verify-enable-button"
 							>
 								Verify and enable
 							</Button>

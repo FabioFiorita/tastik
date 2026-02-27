@@ -65,6 +65,7 @@ export function TwoFactorPage() {
 			}
 
 			toast.success("Check your email for the verification code");
+			setCode("");
 			setOtpSent(true);
 			setMethod("otp");
 		} catch (error) {

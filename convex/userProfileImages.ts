@@ -1,12 +1,13 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { appError } from "./lib/errors";
 
 export const generateUploadUrl = mutation({
 	args: {},
 	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
-			throw new Error("Unauthorized");
+			throw new ConvexError(appError("NOT_AUTHENTICATED", "Not authenticated"));
 		}
 		return await ctx.storage.generateUploadUrl();
 	},
@@ -25,24 +26,31 @@ export const saveProfileImage = mutation({
 	handler: async (ctx, args) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
-			throw new Error("Unauthorized");
+			throw new ConvexError(appError("NOT_AUTHENTICATED", "Not authenticated"));
 		}
 		const userId = identity.subject;
 
 		const metadata = await ctx.storage.getMetadata(args.storageId);
 		if (!metadata) {
-			throw new Error("Invalid storage ID");
+			throw new ConvexError(appError("INVALID_INPUT", "Invalid storage ID"));
 		}
 		if (
 			!metadata.contentType ||
 			!ALLOWED_IMAGE_TYPES.has(metadata.contentType)
 		) {
 			await ctx.storage.delete(args.storageId);
-			throw new Error("File must be a JPEG, PNG, GIF, or WebP image");
+			throw new ConvexError(
+				appError(
+					"INVALID_INPUT",
+					"File must be a JPEG, PNG, GIF, or WebP image",
+				),
+			);
 		}
 		if (metadata.size > MAX_IMAGE_SIZE_BYTES) {
 			await ctx.storage.delete(args.storageId);
-			throw new Error("File must be less than 5 MB");
+			throw new ConvexError(
+				appError("INVALID_INPUT", "File must be less than 5 MB"),
+			);
 		}
 
 		const existing = await ctx.db

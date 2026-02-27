@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Field,
 	FieldGroup,
@@ -24,6 +24,7 @@ export function SignUpPage() {
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [isPending, setIsPending] = useState(false);
+	const [emailSent, setEmailSent] = useState(false);
 
 	const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -37,7 +38,6 @@ export function SignUpPage() {
 				name,
 				email,
 				password,
-				callbackURL: "/",
 			});
 
 			if (result.error) {
@@ -46,6 +46,7 @@ export function SignUpPage() {
 			}
 
 			navigate({ to: "/home" });
+			setEmailSent(true);
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to create account"));
 		} finally {
@@ -72,6 +73,30 @@ export function SignUpPage() {
 			setIsPending(false);
 		}
 	};
+
+	if (emailSent) {
+		return (
+			<div className="mx-auto flex min-h-screen w-full max-w-lg items-center p-4">
+				<div className="flex w-full flex-col gap-6 rounded-xl border bg-card p-8 shadow-sm">
+					<div className="flex flex-col items-center gap-2 text-center">
+						<img src="/logo.png" alt="Tastik" className="size-10 rounded-lg" />
+						<h1 className="font-bold text-xl">Check your email</h1>
+						<p className="text-muted-foreground text-sm">
+							We sent a verification link to {email}. Please verify your email
+							before signing in.
+						</p>
+						<Link
+							to="/sign-in"
+							className={buttonVariants({ variant: "default" })}
+							data-testid="sign-up-go-to-sign-in"
+						>
+							Go to sign in
+						</Link>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="mx-auto flex min-h-screen w-full max-w-lg items-center p-4">

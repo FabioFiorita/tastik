@@ -19,6 +19,7 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Kbd } from "@/components/ui/kbd";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useListsSort } from "@/hooks/actions/use-lists-sort";
 import { useUserLists } from "@/hooks/queries/use-user-lists";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
@@ -34,7 +35,25 @@ export function ListsView() {
 	useKeyboardShortcut("c", () => setCreateListOpen(true));
 
 	if (!lists) {
-		return null;
+		return (
+			<div className="space-y-6">
+				<div className="flex items-center justify-between">
+					<div className="space-y-2">
+						<Skeleton className="h-8 w-32" />
+						<Skeleton className="h-4 w-48" />
+					</div>
+					<Skeleton className="h-9 w-24" />
+				</div>
+				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					{["sk-1", "sk-2", "sk-3"].map((key) => (
+						<div key={key} className="rounded-lg border p-6">
+							<Skeleton className="mb-2 h-5 w-3/4" />
+							<Skeleton className="h-4 w-1/2" />
+						</div>
+					))}
+				</div>
+			</div>
+		);
 	}
 
 	return (

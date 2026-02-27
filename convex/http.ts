@@ -11,6 +11,11 @@ http.route({
 	path: "/serve-profile-image",
 	method: "GET",
 	handler: httpAction(async (ctx, request) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			return new Response("Unauthorized", { status: 401 });
+		}
+
 		const { searchParams } = new URL(request.url);
 		const userId = searchParams.get("userId");
 		if (!userId) {
@@ -38,7 +43,7 @@ http.route({
 		return new Response(blob, {
 			headers: {
 				"Content-Type": blob.type || "image/jpeg",
-				"Cache-Control": "public, max-age=3600",
+				"Cache-Control": "private, max-age=3600",
 			},
 		});
 	}),

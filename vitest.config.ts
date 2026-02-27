@@ -8,6 +8,7 @@ export default defineConfig({
 		}),
 	],
 	test: {
+		globals: true,
 		server: { deps: { inline: ["convex-test"] } },
 		coverage: {
 			provider: "v8",

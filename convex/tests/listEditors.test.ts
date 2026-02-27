@@ -1,5 +1,4 @@
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vitest";
 import { api, components } from "../_generated/api";
 import schema from "../schema";
 import { getConvexErrorCode } from "./helpers";

@@ -27,12 +27,16 @@ export function SignInPage() {
 		if (typeof PublicKeyCredential === "undefined") return;
 		const check = PublicKeyCredential.isConditionalMediationAvailable?.();
 		if (typeof check?.then !== "function") return;
-		void check.then((available) => {
+		check.then((available) => {
 			if (available) {
-				void authClient.signIn.passkey({ autoFill: true });
+				authClient.signIn.passkey({ autoFill: true }).then((result) => {
+					if (!result?.error) {
+						navigate({ to: "/" });
+					}
+				});
 			}
 		});
-	}, []);
+	}, [navigate]);
 
 	const handleEmailSignIn = async (
 		event: React.SyntheticEvent<HTMLFormElement>,

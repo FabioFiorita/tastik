@@ -17,7 +17,6 @@ import { Route as PublicSignInRouteImport } from './routes/_public/sign-in'
 import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
 import { Route as PublicRequestResetPasswordRouteImport } from './routes/_public/request-reset-password'
 import { Route as Public2faRouteImport } from './routes/_public/2fa'
-import { Route as ProtectedSubscriptionRouteImport } from './routes/_protected/subscription'
 import { Route as ProtectedArchiveRouteImport } from './routes/_protected/archive'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PubliclegalTermsRouteImport } from './routes/_public/(legal)/terms'
@@ -65,11 +64,6 @@ const Public2faRoute = Public2faRouteImport.update({
   path: '/2fa',
   getParentRoute: () => PublicRoute,
 } as any)
-const ProtectedSubscriptionRoute = ProtectedSubscriptionRouteImport.update({
-  id: '/subscription',
-  path: '/subscription',
-  getParentRoute: () => ProtectedRoute,
-} as any)
 const ProtectedArchiveRoute = ProtectedArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
@@ -109,7 +103,6 @@ const ProtectedHomeRoute = ProtectedHomeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
-  '/subscription': typeof ProtectedSubscriptionRoute
   '/2fa': typeof Public2faRoute
   '/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -125,7 +118,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ProtectedArchiveRoute
-  '/subscription': typeof ProtectedSubscriptionRoute
   '/2fa': typeof Public2faRoute
   '/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -144,7 +136,6 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/_protected/archive': typeof ProtectedArchiveRoute
-  '/_protected/subscription': typeof ProtectedSubscriptionRoute
   '/_public/2fa': typeof Public2faRoute
   '/_public/request-reset-password': typeof PublicRequestResetPasswordRoute
   '/_public/reset-password': typeof PublicResetPasswordRoute
@@ -162,7 +153,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
-    | '/subscription'
     | '/2fa'
     | '/request-reset-password'
     | '/reset-password'
@@ -178,7 +168,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
-    | '/subscription'
     | '/2fa'
     | '/request-reset-password'
     | '/reset-password'
@@ -196,7 +185,6 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/_protected/archive'
-    | '/_protected/subscription'
     | '/_public/2fa'
     | '/_public/request-reset-password'
     | '/_public/reset-password'
@@ -275,13 +263,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Public2faRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_protected/subscription': {
-      id: '/_protected/subscription'
-      path: '/subscription'
-      fullPath: '/subscription'
-      preLoaderRoute: typeof ProtectedSubscriptionRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
     '/_protected/archive': {
       id: '/_protected/archive'
       path: '/archive'
@@ -336,14 +317,12 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedRouteChildren {
   ProtectedArchiveRoute: typeof ProtectedArchiveRoute
-  ProtectedSubscriptionRoute: typeof ProtectedSubscriptionRoute
   ProtectedListsListIdRoute: typeof ProtectedListsListIdRoute
   ProtectedHomeRoute: typeof ProtectedHomeRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedArchiveRoute: ProtectedArchiveRoute,
-  ProtectedSubscriptionRoute: ProtectedSubscriptionRoute,
   ProtectedListsListIdRoute: ProtectedListsListIdRoute,
   ProtectedHomeRoute: ProtectedHomeRoute,
 }

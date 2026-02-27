@@ -89,7 +89,13 @@ export function validateNotes(notes: string): void {
 }
 
 export function validateNickname(nickname: string): void {
-	if (nickname.length > VALIDATION_LIMITS.NICKNAME_MAX) {
+	const trimmed = nickname.trim();
+	if (trimmed.length === 0) {
+		throw new ConvexError(
+			appError("INVALID_INPUT", "Nickname cannot be empty"),
+		);
+	}
+	if (trimmed.length > VALIDATION_LIMITS.NICKNAME_MAX) {
 		throw new ConvexError(
 			appError(
 				"INVALID_INPUT",

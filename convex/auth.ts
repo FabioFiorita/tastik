@@ -68,6 +68,14 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 		secret: requireServerEnv("BETTER_AUTH_SECRET"),
 		appName: "Tastik",
 		database: authComponent.adapter(ctx),
+		session: {
+			expiresIn: 60 * 60 * 24 * 30,
+			updateAge: 60 * 60 * 24,
+			cookieCache: {
+				enabled: true,
+				maxAge: 5 * 60,
+			},
+		},
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,

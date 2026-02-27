@@ -65,7 +65,7 @@ describe("users", () => {
 			});
 			expect(tagId).toBeDefined();
 
-			// Add an editor (seedSubscription already creates the profile)
+			// Add an editor (profile exists from createList)
 			await t.run(async (ctx: MutationCtx) => {
 				await ctx.db.insert("listEditors", {
 					listId,

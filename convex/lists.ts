@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertListsUnderLimit, MAX_ITEMS_PER_LIST } from "./lib/limits";
 import {
@@ -385,6 +385,120 @@ export const duplicateList = mutation({
 		}
 
 		return newListId;
+	},
+});
+
+const ONBOARDING_ITEMS: Array<{
+	name: string;
+	description: string;
+	type: "simple" | "stepper" | "calculator" | "kanban";
+	currentValue?: number;
+	step?: number;
+	calculatorValue?: number;
+	status?: "todo" | "in_progress" | "done";
+}> = [
+	{
+		name: "Welcome to Tastik",
+		description:
+			"Lists without deadlines — a quiet companion for ongoing tasks that don't need due dates.",
+		type: "simple",
+	},
+	{
+		name: "Simple lists",
+		description:
+			"Checkbox items. Toggle complete/incomplete. Perfect for grocery lists, packing, or quick to-dos.",
+		type: "simple",
+	},
+	{
+		name: "Stepper lists",
+		description:
+			"Items with quantities and +/- controls. Great for shopping with amounts or tracking inventory.",
+		type: "stepper",
+		currentValue: 0,
+		step: 1,
+	},
+	{
+		name: "Calculator lists",
+		description:
+			"Track numbers with a running total. Ideal for expenses, budgets, or splitting costs.",
+		type: "calculator",
+		calculatorValue: 0,
+	},
+	{
+		name: "Kanban lists",
+		description:
+			"Three columns: To do, In progress, Done. Drag items as you work.",
+		type: "kanban",
+		status: "todo",
+	},
+	{
+		name: "Multi lists",
+		description:
+			"Mix simple, stepper, calculator, and kanban items in one list. Pick the type per item.",
+		type: "simple",
+	},
+	{
+		name: "Tags",
+		description:
+			"Add tags to organize items. Use colors to group by priority, category, or custom labels.",
+		type: "simple",
+	},
+	{
+		name: "Sharing",
+		description:
+			"Share lists with others by email. They see nicknames only — privacy-first.",
+		type: "simple",
+	},
+	{
+		name: "Archive",
+		description:
+			"Done with a list? Archive it. Restore anytime from the Archive.",
+		type: "simple",
+	},
+	{
+		name: "Keyboard shortcuts",
+		description:
+			"Press C to create a list. Use shortcuts in list views for fast navigation.",
+		type: "simple",
+	},
+];
+
+export const createOnboardingList = internalMutation({
+	args: { userId: v.string() },
+	handler: async (ctx, args) => {
+		const now = Date.now();
+		const listId = await ctx.db.insert("lists", {
+			ownerId: args.userId,
+			name: "Start Here",
+			icon: "Multi",
+			type: "multi",
+			status: "active",
+			sortBy: "created_at",
+			sortAscending: true,
+			showCompleted: true,
+			hideCheckbox: false,
+			showTotal: true,
+			updatedAt: now,
+		});
+
+		for (let i = 0; i < ONBOARDING_ITEMS.length; i++) {
+			const item = ONBOARDING_ITEMS[i];
+			const initialCompleted = item.type === "kanban" && item.status === "done";
+			await ctx.db.insert("items", {
+				listId,
+				name: item.name,
+				type: item.type,
+				completed: initialCompleted,
+				completedAt: initialCompleted ? now : undefined,
+				currentValue: item.currentValue,
+				step: item.step,
+				calculatorValue: item.calculatorValue,
+				status: item.status,
+				description: item.description,
+				sortOrder: i + 1,
+				updatedAt: now,
+			});
+		}
 	},
 });
 

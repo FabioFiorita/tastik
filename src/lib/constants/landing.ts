@@ -26,7 +26,7 @@ export const LANDING_FEATURES: LandingFeature[] = [
 		icon: ListChecks,
 		title: "Simple Lists",
 		description:
-			"Quick checkbox lists for everyday tasks. Free plan includes up to 5 lists with 50 items each.",
+			"Checkbox items for casual tasks. Toggle complete—no dates, no alarms.",
 	},
 	{
 		icon: Calculator,
@@ -62,13 +62,13 @@ export const LANDING_FEATURES: LandingFeature[] = [
 		icon: Share2,
 		title: "Easy Sharing",
 		description:
-			"Up to 10 editors per list with privacy-first nicknames. Invite editors to collaborate on any list.",
+			"Invite collaborators with privacy-first nicknames. Work together on any list in real time.",
 	},
 	{
 		icon: Tag,
 		title: "Smart Tags",
 		description:
-			"Up to 50 tags per list for filtering and structure. Organize items with tags and filter within any list type.",
+			"Filter and organize with tags. Structure any list type and find items instantly.",
 	},
 ];
 

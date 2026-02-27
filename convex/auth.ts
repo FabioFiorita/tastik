@@ -90,7 +90,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 		},
 		emailVerification: {
 			sendOnSignUp: true,
-			sendOnSignIn: true,
+			sendOnSignIn: false,
 			sendVerificationEmail: async ({ user, url }) => {
 				if (!isRunMutationCtx(ctx)) return;
 				await ctx.scheduler.runAfter(0, internal.emails.sendVerificationEmail, {

@@ -1,8 +1,205 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle, Minus, Plus } from "lucide-react";
+import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackCtaClicked } from "@/lib/metrics";
 import { cn } from "@/lib/utils/cn";
+
+function HeroDemoGrocery() {
+	const [apples, setApples] = useState(6);
+	const [milk, setMilk] = useState(2);
+
+	const stepper = (
+		value: number,
+		onChange: (v: number) => void,
+		dataTestId: string,
+	) => (
+		<div className="flex items-center gap-2">
+			<button
+				type="button"
+				className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+				onClick={() => onChange(Math.max(0, value - 1))}
+				disabled={value === 0}
+				aria-label="Decrease quantity"
+				data-testid={`${dataTestId}-decrement`}
+			>
+				<Minus className="h-3 w-3" />
+			</button>
+			<span
+				className="min-w-6 text-center font-medium text-sm"
+				data-testid={`${dataTestId}-value`}
+			>
+				{value}
+			</span>
+			<button
+				type="button"
+				className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
+				onClick={() => onChange(value + 1)}
+				aria-label="Increase quantity"
+				data-testid={`${dataTestId}-increment`}
+			>
+				<Plus className="h-3 w-3" />
+			</button>
+		</div>
+	);
+
+	return (
+		<div
+			className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
+			data-testid="hero-demo-grocery"
+		>
+			<div className="mb-3 font-semibold text-foreground text-sm">
+				Grocery List
+			</div>
+			<div className="space-y-2">
+				<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+					<span className="text-foreground text-sm">Apples</span>
+					{stepper(apples, setApples, "hero-demo-grocery-apples")}
+				</div>
+				<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+					<span className="text-foreground text-sm">Milk</span>
+					{stepper(milk, setMilk, "hero-demo-grocery-milk")}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+type PackingState = { passport: boolean; charger: boolean; sunscreen: boolean };
+
+function HeroDemoPacking() {
+	const [state, setState] = useState<PackingState>({
+		passport: true,
+		charger: true,
+		sunscreen: false,
+	});
+
+	const toggle = (key: keyof PackingState) =>
+		setState((prev) => ({ ...prev, [key]: !prev[key] }));
+
+	const row = (key: keyof PackingState, label: string, dataTestId: string) => {
+		const checked = state[key];
+		return (
+			<button
+				type="button"
+				className={cn(
+					"flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+					checked ? "bg-secondary/50" : "bg-card ring-1 ring-border",
+				)}
+				onClick={() => toggle(key)}
+				data-testid={dataTestId}
+			>
+				{checked ? (
+					<CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+				) : (
+					<div className="h-5 w-5 shrink-0 rounded-full border-2 border-primary" />
+				)}
+				<span
+					className={cn(
+						"text-sm",
+						checked ? "text-muted-foreground line-through" : "text-foreground",
+					)}
+				>
+					{label}
+				</span>
+			</button>
+		);
+	};
+
+	return (
+		<div
+			className="w-72 -translate-y-8 rounded-2xl bg-card/95 p-4 shadow-2xl backdrop-blur-sm"
+			data-testid="hero-demo-packing"
+		>
+			<div className="mb-3 font-semibold text-foreground text-sm">
+				Packing List
+			</div>
+			<div className="space-y-2">
+				{row("passport", "Passport", "hero-demo-packing-passport")}
+				{row("charger", "Charger", "hero-demo-packing-charger")}
+				{row("sunscreen", "Sunscreen", "hero-demo-packing-sunscreen")}
+			</div>
+		</div>
+	);
+}
+
+function HeroDemoParty() {
+	const [decorations, setDecorations] = useState(45);
+	const [food, setFood] = useState(120);
+	const total = decorations + food;
+
+	const lineItem = (
+		label: string,
+		value: number,
+		setValue: (v: number) => void,
+		dataTestId: string,
+	) => (
+		<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+			<span className="text-foreground text-sm">{label}</span>
+			<div className="flex items-center gap-2">
+				<button
+					type="button"
+					className={cn(
+						"flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-90",
+						value < 0
+							? "bg-rose-500 text-white"
+							: "bg-primary text-primary-foreground",
+					)}
+					onClick={() => setValue(-value)}
+					aria-label="Toggle sign"
+					data-testid={`${dataTestId}-toggle`}
+				>
+					{value < 0 ? (
+						<Minus className="h-3 w-3" />
+					) : (
+						<Plus className="h-3 w-3" />
+					)}
+				</button>
+				<span
+					className={cn(
+						"min-w-12 text-center font-medium text-sm",
+						value < 0 ? "text-rose-500" : "text-primary",
+					)}
+					data-testid={`${dataTestId}-value`}
+				>
+					{value < 0 ? "-" : ""}${Math.abs(value)}
+				</span>
+			</div>
+		</div>
+	);
+
+	return (
+		<div
+			className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
+			data-testid="hero-demo-party"
+		>
+			<div className="mb-3 font-semibold text-foreground text-sm">
+				Party Budget
+			</div>
+			<div className="space-y-2">
+				{lineItem(
+					"Decorations",
+					decorations,
+					setDecorations,
+					"hero-demo-party-decorations",
+				)}
+				{lineItem("Food", food, setFood, "hero-demo-party-food")}
+				<div className="mt-3 flex items-center justify-between border-border border-t pt-3">
+					<span className="font-semibold text-foreground text-sm">Total</span>
+					<span
+						className={cn(
+							"font-bold text-sm",
+							total < 0 ? "text-rose-500" : "text-primary",
+						)}
+						data-testid="hero-demo-party-total"
+					>
+						{total < 0 ? "-" : ""}${Math.abs(total)}
+					</span>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 export function Hero() {
 	return (
@@ -38,7 +235,7 @@ export function Hero() {
 
 					<div className="flex flex-col items-center justify-center gap-4 md:flex-row">
 						<Link
-							to="/sign-in"
+							to="/sign-up"
 							className={cn(buttonVariants({ variant: "default", size: "lg" }))}
 							data-testid="hero-get-started"
 							onClick={() => trackCtaClicked("get_started")}
@@ -49,108 +246,9 @@ export function Hero() {
 				</div>
 
 				<div className="mt-16 hidden items-end justify-center gap-6 md:flex">
-					<div
-						className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
-						data-testid="hero-demo-grocery"
-					>
-						<div className="mb-3 font-semibold text-foreground text-sm">
-							Grocery List
-						</div>
-						<div className="space-y-2">
-							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-								<span className="text-foreground text-sm">Apples</span>
-								<div className="flex items-center gap-2">
-									<span
-										aria-hidden="true"
-										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
-									>
-										<Minus className="h-3 w-3" />
-									</span>
-									<span className="min-w-6 text-center font-medium text-sm">
-										6
-									</span>
-									<span
-										aria-hidden="true"
-										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
-									>
-										<Plus className="h-3 w-3" />
-									</span>
-								</div>
-							</div>
-							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-								<span className="text-foreground text-sm">Milk</span>
-								<div className="flex items-center gap-2">
-									<span
-										aria-hidden="true"
-										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
-									>
-										<Minus className="h-3 w-3" />
-									</span>
-									<span className="min-w-6 text-center font-medium text-sm">
-										2
-									</span>
-									<span
-										aria-hidden="true"
-										className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
-									>
-										<Plus className="h-3 w-3" />
-									</span>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div
-						className="w-72 -translate-y-8 rounded-2xl bg-card/95 p-4 shadow-2xl backdrop-blur-sm"
-						data-testid="hero-demo-packing"
-					>
-						<div className="mb-3 font-semibold text-foreground text-sm">
-							Packing List
-						</div>
-						<div className="space-y-2">
-							<div className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2">
-								<CheckCircle className="h-5 w-5 text-primary" />
-								<span className="text-muted-foreground text-sm line-through">
-									Passport
-								</span>
-							</div>
-							<div className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2">
-								<CheckCircle className="h-5 w-5 text-primary" />
-								<span className="text-muted-foreground text-sm line-through">
-									Charger
-								</span>
-							</div>
-							<div className="flex items-center gap-3 rounded-lg bg-card px-3 py-2 ring-1 ring-border">
-								<div className="h-5 w-5 rounded-full border-2 border-primary" />
-								<span className="text-foreground text-sm">Sunscreen</span>
-							</div>
-						</div>
-					</div>
-
-					<div
-						className="w-64 rounded-2xl bg-card/95 p-4 shadow-xl backdrop-blur-sm"
-						data-testid="hero-demo-party"
-					>
-						<div className="mb-3 font-semibold text-foreground text-sm">
-							Party Budget
-						</div>
-						<div className="space-y-2">
-							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-								<span className="text-foreground text-sm">Decorations</span>
-								<span className="font-medium text-primary text-sm">$45</span>
-							</div>
-							<div className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-								<span className="text-foreground text-sm">Food</span>
-								<span className="font-medium text-primary text-sm">$120</span>
-							</div>
-							<div className="mt-3 flex items-center justify-between border-border border-t pt-3">
-								<span className="font-semibold text-foreground text-sm">
-									Total
-								</span>
-								<span className="font-bold text-primary text-sm">$165</span>
-							</div>
-						</div>
-					</div>
+					<HeroDemoGrocery />
+					<HeroDemoPacking />
+					<HeroDemoParty />
 				</div>
 			</div>
 		</section>

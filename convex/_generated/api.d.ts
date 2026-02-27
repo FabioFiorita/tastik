@@ -23,7 +23,6 @@ import type * as lists from "../lists.js";
 import type * as preferences from "../preferences.js";
 import type * as tags from "../tags.js";
 import type * as tests_helpers from "../tests/helpers.js";
-import type * as userProfileImages from "../userProfileImages.js";
 import type * as users from "../users.js";
 
 import type {
@@ -48,7 +47,6 @@ declare const fullApi: ApiFromModules<{
   preferences: typeof preferences;
   tags: typeof tags;
   "tests/helpers": typeof tests_helpers;
-  userProfileImages: typeof userProfileImages;
   users: typeof users;
 }>;
 

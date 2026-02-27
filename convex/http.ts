@@ -22,10 +22,9 @@ http.route({
 			return new Response("Missing userId", { status: 400 });
 		}
 
-		const storageId = await ctx.runQuery(
-			api.userProfileImages.getProfileImageStorageId,
-			{ userId },
-		);
+		const storageId = await ctx.runQuery(api.users.getProfileImageStorageId, {
+			userId,
+		});
 		if (!storageId) {
 			return new Response("Image not found", { status: 404 });
 		}

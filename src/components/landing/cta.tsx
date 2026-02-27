@@ -34,12 +34,12 @@ export function CTA() {
 
 				<div className="flex flex-col items-center justify-center gap-4 md:flex-row">
 					<Link
-						to="/sign-in"
+						to="/sign-up"
 						className={cn(buttonVariants({ variant: "default", size: "lg" }))}
-						data-testid="cta-sign-in"
+						data-testid="cta-sign-up"
 						onClick={() => trackCtaClicked("get_started")}
 					>
-						Sign in to continue
+						Create free account
 					</Link>
 				</div>
 			</div>

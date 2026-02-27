@@ -8,15 +8,13 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
-function stripSourceMapFromSeroval() {
+function stripSourceMapFromPackages() {
+	const packages = ["seroval", "seroval-plugins", "@better-fetch/fetch"];
 	return {
-		name: "strip-seroval-sourcemap",
+		name: "strip-package-sourcemap",
 		enforce: "pre" as const,
 		load(id: string) {
-			if (
-				id.includes("node_modules/seroval") ||
-				id.includes("node_modules/seroval-plugins")
-			) {
+			if (packages.some((p) => id.includes(`node_modules/${p}`))) {
 				const filePath = id.split("?")[0];
 				const code = readFileSync(filePath, "utf-8").replace(
 					/\n\/\/# sourceMappingURL=.*$/m,
@@ -30,7 +28,7 @@ function stripSourceMapFromSeroval() {
 
 const config = defineConfig({
 	plugins: [
-		stripSourceMapFromSeroval(),
+		stripSourceMapFromPackages(),
 		cloudflare({ viteEnvironment: { name: "ssr" } }),
 		devtools({
 			eventBusConfig: {

@@ -152,7 +152,7 @@ export function trackPageView(route: string) {
 	);
 }
 
-export function trackCtaClicked(cta: "get_started" | "subscribe" | "support") {
+export function trackCtaClicked(cta: "get_started" | "support") {
 	safeMetric(() =>
 		Sentry.metrics.count("app.cta.clicked", 1, {
 			attributes: { cta },

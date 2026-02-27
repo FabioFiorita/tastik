@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_public/sign-up")({
 });
 
 export function SignUpPage() {
-	const navigate = useNavigate();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -38,6 +37,7 @@ export function SignUpPage() {
 				name,
 				email,
 				password,
+				callbackURL: "/home",
 			});
 
 			if (result.error) {
@@ -45,7 +45,6 @@ export function SignUpPage() {
 				return;
 			}
 
-			navigate({ to: "/home" });
 			setEmailSent(true);
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to create account"));

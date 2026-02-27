@@ -201,7 +201,7 @@ export function ListActionsMenu({
 				description="This cannot be undone. All items and tags will be removed."
 				confirmLabel="Delete"
 				onConfirm={async () => {
-					navigate({ to: "/", replace: true });
+					navigate({ to: "/home", replace: true });
 					await deleteList({ listId });
 				}}
 				variant="destructive"

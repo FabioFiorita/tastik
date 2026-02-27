@@ -72,7 +72,7 @@ export function SignInPage() {
 
 			const data = result.data as { twoFactorRedirect?: boolean } | undefined;
 			if (!data?.twoFactorRedirect) {
-				navigate({ to: "/" });
+				navigate({ to: "/home" });
 			}
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to sign in"));
@@ -91,7 +91,7 @@ export function SignInPage() {
 				return;
 			}
 
-			navigate({ to: "/" });
+			navigate({ to: "/home" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to sign in"));
 		} finally {

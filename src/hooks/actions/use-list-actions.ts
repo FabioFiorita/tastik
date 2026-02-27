@@ -30,7 +30,7 @@ export function useListActions(listId: Id<"lists"> | undefined) {
 			return;
 		}
 
-		navigate({ to: "/", replace: true });
+		navigate({ to: "/home", replace: true });
 		await deleteList({ listId });
 	};
 

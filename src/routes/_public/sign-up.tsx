@@ -45,7 +45,7 @@ export function SignUpPage() {
 				return;
 			}
 
-			navigate({ to: "/" });
+			navigate({ to: "/home" });
 		} catch (error) {
 			toast.error(getErrorMessage(error, "Unable to create account"));
 		} finally {

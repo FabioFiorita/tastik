@@ -116,3 +116,31 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 After any code change, run:
 - `bun typecheck`
 - `bun check:write`
+
+## Cursor Cloud specific instructions
+
+### Services overview
+
+| Service | How to run | Notes |
+|---|---|---|
+| Vite dev server (frontend) | `bun dev` | Serves on port 3000; requires `.env.local` with `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` |
+| Convex backend | `npx convex dev` | Connects to Convex cloud; requires auth via `npx convex login` or `CONVEX_DEPLOY_KEY` |
+
+### Running without Convex credentials
+
+Lint (`bun check`), typecheck (`bun typecheck`), and tests (`bun test:once`) all work without any Convex credentials or `.env.local`. The Vite dev server (`bun dev`) will start and render public pages (landing, sign-in, sign-up, legal pages) with placeholder env vars, but auth and data operations require a real Convex deployment.
+
+### Key commands
+
+See `package.json` scripts. The most common:
+- `bun dev` — start frontend dev server on port 3000
+- `bun typecheck` — TypeScript check
+- `bun check` / `bun check:write` — Biome lint (read-only / auto-fix)
+- `bun test:once` — run all tests (unit + convex) once
+- `bun test:unit` / `bun test:convex` — run project-specific tests
+
+### Gotchas
+
+- The pre-commit hook calls `pnpm run check:write` (not `bun`). This works because `pnpm` delegates to the same script. Cloud agents should use `bun check:write` directly.
+- Husky git hooks are installed by `bun install` (via the `prepare` script). If hooks are missing, re-run `bun install`.
+- The Cloudflare Vite plugin is loaded in `vite.config.ts` for production deployment; it does not affect `bun dev` in development.

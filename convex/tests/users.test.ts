@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { MutationCtx } from "../_generated/server";
 import schema from "../schema";
@@ -8,6 +9,7 @@ const modules = import.meta.glob("../**/*.ts");
 describe("users", () => {
 	describe("ensureCurrentUser", () => {
 		it("creates a profile when one does not exist", async () => {
+			vi.useFakeTimers();
 			const t = createConvexTest(schema, modules);
 			const userId = "user-ensure-1";
 			const asUser = t.withIdentity({ subject: userId });
@@ -15,9 +17,14 @@ describe("users", () => {
 			const profile = await asUser.mutation(api.users.ensureCurrentUser, {});
 			expect(profile).not.toBeNull();
 			expect(profile?.userId).toBe(userId);
+
+			vi.runAllTimers();
+			await t.finishInProgressScheduledFunctions();
+			vi.useRealTimers();
 		});
 
 		it("returns the existing profile if one already exists", async () => {
+			vi.useFakeTimers();
 			const t = createConvexTest(schema, modules);
 			const userId = "user-ensure-2";
 			const asUser = t.withIdentity({ subject: userId });
@@ -26,6 +33,10 @@ describe("users", () => {
 			const second = await asUser.mutation(api.users.ensureCurrentUser, {});
 
 			expect(first?._id).toBe(second?._id);
+
+			vi.runAllTimers();
+			await t.finishInProgressScheduledFunctions();
+			vi.useRealTimers();
 		});
 
 		it("returns null for unauthenticated caller", async () => {
@@ -35,6 +46,7 @@ describe("users", () => {
 		});
 
 		it("returns the full profile object, not just the ID", async () => {
+			vi.useFakeTimers();
 			const t = createConvexTest(schema, modules);
 			const userId = "user-ensure-3";
 			const asUser = t.withIdentity({ subject: userId });
@@ -42,6 +54,10 @@ describe("users", () => {
 			const profile = await asUser.mutation(api.users.ensureCurrentUser, {});
 			expect(profile).toMatchObject({ userId, lastSeenAt: expect.any(Number) });
 			expect(typeof profile?._id).toBe("string");
+
+			vi.runAllTimers();
+			await t.finishInProgressScheduledFunctions();
+			vi.useRealTimers();
 		});
 	});
 

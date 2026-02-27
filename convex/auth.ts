@@ -3,6 +3,8 @@ import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { betterAuth } from "better-auth";
+import { lastLoginMethod } from "better-auth/plugins";
+import { haveIBeenPwned } from "better-auth/plugins/haveibeenpwned";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
@@ -105,6 +107,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 		},
 		plugins: [
 			convex({ authConfig }),
+			haveIBeenPwned(),
+			lastLoginMethod(),
 			twoFactor({
 				issuer: "Tastik",
 				otpOptions: {

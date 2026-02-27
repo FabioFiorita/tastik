@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { LastUsedBadge } from "@/components/last-used-badge";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -10,7 +11,9 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useLastLoginMethod } from "@/hooks/use-last-login-method";
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils/cn";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 
 export const Route = createFileRoute("/_public/sign-in")({
@@ -22,6 +25,7 @@ export function SignInPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isPending, setIsPending] = useState(false);
+	const { lastLoginMethod, isLastLoginMethod } = useLastLoginMethod();
 
 	useEffect(() => {
 		if (typeof PublicKeyCredential === "undefined") return;
@@ -123,9 +127,18 @@ export function SignInPage() {
 		}
 	};
 
+	const hasLastLoginMethod = lastLoginMethod !== null;
+	const emailIsLastUsed = isLastLoginMethod("email");
+	const passkeyIsLastUsed = isLastLoginMethod("passkey");
+	const googleIsLastUsed = isLastLoginMethod("google");
+	const appleIsLastUsed = isLastLoginMethod("apple");
+	const githubIsLastUsed = isLastLoginMethod("github");
+	const getAuthMethodClassName = (isLastUsed: boolean) =>
+		hasLastLoginMethod && !isLastUsed ? "opacity-75" : undefined;
+
 	return (
 		<div className="mx-auto flex min-h-screen w-full max-w-lg items-center p-4">
-			<div className="flex w-full flex-col gap-6 rounded-xl border bg-card p-8 shadow-sm">
+			<div className="flex w-full flex-col gap-6 overflow-visible rounded-xl border bg-card p-8 shadow-sm">
 				<form onSubmit={handleEmailSignIn}>
 					<FieldGroup>
 						<div className="flex flex-col items-center gap-2 text-center">
@@ -165,11 +178,20 @@ export function SignInPage() {
 						<Field>
 							<Button
 								type="submit"
-								className="w-full"
+								variant={
+									emailIsLastUsed || !hasLastLoginMethod ? "default" : "outline"
+								}
+								className={cn(
+									"relative w-full",
+									getAuthMethodClassName(emailIsLastUsed),
+								)}
 								disabled={isPending}
 								data-testid="sign-in-submit"
 							>
 								Sign in
+								{emailIsLastUsed ? (
+									<LastUsedBadge data-testid="sign-in-last-used-email" />
+								) : null}
 							</Button>
 						</Field>
 						<Field>
@@ -184,8 +206,12 @@ export function SignInPage() {
 						<FieldSeparator>Or</FieldSeparator>
 						<Field className="grid gap-4 sm:grid-cols-2">
 							<Button
-								variant="outline"
+								variant={passkeyIsLastUsed ? "default" : "outline"}
 								type="button"
+								className={cn(
+									"relative",
+									getAuthMethodClassName(passkeyIsLastUsed),
+								)}
 								onClick={handlePasskeySignIn}
 								disabled={isPending}
 								data-testid="sign-in-passkey"
@@ -203,10 +229,17 @@ export function SignInPage() {
 									<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
 								</svg>
 								Passkey
+								{passkeyIsLastUsed ? (
+									<LastUsedBadge data-testid="sign-in-last-used-passkey" />
+								) : null}
 							</Button>
 							<Button
-								variant="outline"
+								variant={googleIsLastUsed ? "default" : "outline"}
 								type="button"
+								className={cn(
+									"relative",
+									getAuthMethodClassName(googleIsLastUsed),
+								)}
 								onClick={() => handleSocialSignIn("google")}
 								disabled={isPending}
 								data-testid="sign-in-google"
@@ -224,10 +257,17 @@ export function SignInPage() {
 									/>
 								</svg>
 								Google
+								{googleIsLastUsed ? (
+									<LastUsedBadge data-testid="sign-in-last-used-google" />
+								) : null}
 							</Button>
 							<Button
-								variant="outline"
+								variant={appleIsLastUsed ? "default" : "outline"}
 								type="button"
+								className={cn(
+									"relative",
+									getAuthMethodClassName(appleIsLastUsed),
+								)}
 								onClick={() => handleSocialSignIn("apple")}
 								disabled={isPending}
 								data-testid="sign-in-apple"
@@ -245,10 +285,17 @@ export function SignInPage() {
 									/>
 								</svg>
 								Apple
+								{appleIsLastUsed ? (
+									<LastUsedBadge data-testid="sign-in-last-used-apple" />
+								) : null}
 							</Button>
 							<Button
-								variant="outline"
+								variant={githubIsLastUsed ? "default" : "outline"}
 								type="button"
+								className={cn(
+									"relative",
+									getAuthMethodClassName(githubIsLastUsed),
+								)}
 								onClick={() => handleSocialSignIn("github")}
 								disabled={isPending}
 								data-testid="sign-in-github"
@@ -266,6 +313,9 @@ export function SignInPage() {
 									/>
 								</svg>
 								GitHub
+								{githubIsLastUsed ? (
+									<LastUsedBadge data-testid="sign-in-last-used-github" />
+								) : null}
 							</Button>
 						</Field>
 					</FieldGroup>

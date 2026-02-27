@@ -57,10 +57,10 @@ When a developer asks to add content to INSTRUCTIONS.md or create/update a skill
 ## Frontend Standards
 - Do not use `void` on function calls; it is unnecessary.
 - No deprecated APIs. Example: use `React.SyntheticEvent<HTMLFormElement>` for form submits (not `FormEvent`).
-- Tailwind/shadcn: prefer design tokens (`primary`, `muted`, `muted-foreground`, `foreground`) and standard scales (`text-xs`, `text-sm`, `size-5`). Avoid arbitrary values unless behind a theme variable or a shared component.
+- Tailwind/shadcn: prefer design tokens (`primary`, `muted`, `muted-foreground`, `foreground`) and standard scales (`text-xs`, `text-sm`, `size-5`, `text-2xs`). Avoid arbitrary values like `text-[10px]`—use theme variables (`@theme`) or existing scale utilities instead.
 - Mobile-first: base styles for mobile; use `md:` or `lg:` for larger breakpoints. Avoid `sm:` for layout.
 - One *exported* component per file. Small helper components (<30 lines, used only by the file's main component) may live in the same file as unexported functions.
-- No duplication. Extract repeated layout/structure into a reusable component.
+- No duplication. Extract repeated layout/structure into a reusable component. If the same UI block appears 3+ times, extract it into a shared component—never repeat the same markup 5 times.
 - Navigation: Use TanStack Router's `useNavigate()` hook for navigation. Never use `window.location.href` or `window.location` for navigation. Use `navigate({ to: "/path" })` or `navigate({ to: "/path", replace: true })` as needed.
 
 ## Component Files

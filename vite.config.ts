@@ -14,7 +14,7 @@ function stripSourceMapFromNodeModules() {
 		name: "strip-node-modules-sourcemap",
 		enforce: "pre" as const,
 		load(id: string) {
-			if (id.includes("node_modules") && jsExtensions.test(id)) {
+			if (!id.startsWith("\0") && id.includes("node_modules") && jsExtensions.test(id)) {
 				const filePath = id.split("?")[0];
 				const code = readFileSync(filePath, "utf-8").replace(
 					/\n\/\/# sourceMappingURL=.*$/m,

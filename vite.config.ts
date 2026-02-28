@@ -1,34 +1,22 @@
-import { readFileSync } from "node:fs";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { createLogger, defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
-function stripSourceMapFromNodeModules() {
-	const jsExtensions = /\.(c?js|mjs|ts|mts|cts)(\?|$)/;
-	return {
-		name: "strip-node-modules-sourcemap",
-		enforce: "pre" as const,
-		load(id: string) {
-			if (id.includes("node_modules") && jsExtensions.test(id)) {
-				const filePath = id.split("?")[0];
-				const code = readFileSync(filePath, "utf-8").replace(
-					/\n\/\/# sourceMappingURL=.*$/m,
-					"",
-				);
-				return { code, map: null };
-			}
-		},
-	};
-}
+const logger = createLogger();
+const originalWarn = logger.warn.bind(logger);
+logger.warn = (msg, options) => {
+	if (msg.includes("Sourcemap for") && msg.includes("points to missing source files")) return;
+	originalWarn(msg, options);
+};
 
 const config = defineConfig({
+	customLogger: logger,
 	plugins: [
-		stripSourceMapFromNodeModules(),
 		cloudflare({ viteEnvironment: { name: "ssr" } }),
 		devtools({
 			eventBusConfig: {

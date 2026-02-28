@@ -7,6 +7,12 @@ import { createConvexTest } from "./test.setup";
 const modules = import.meta.glob("../**/*.ts");
 
 describe("users", () => {
+	beforeAll(() => {
+		process.env.SITE_URL = "http://localhost:3000";
+		process.env.BETTER_AUTH_TRUSTED_ORIGINS = "http://localhost:3000";
+		process.env.BETTER_AUTH_SECRET = "test-secret";
+	});
+
 	describe("ensureCurrentUser", () => {
 		it("creates a profile when one does not exist", async () => {
 			vi.useFakeTimers();
@@ -166,6 +172,44 @@ describe("users", () => {
 			// Owner's list should still be intact
 			const list = await t.run((ctx) => ctx.db.get("lists", listId));
 			expect(list).not.toBeNull();
+		});
+	});
+
+	describe("serve-profile-image", () => {
+		it("returns 401 for unauthenticated requests", async () => {
+			const t = createConvexTest(schema, modules);
+
+			const response = await t.fetch("/serve-profile-image");
+			expect(response.status).toBe(401);
+		});
+
+		it("ignores userId query param and remains self-scoped", async () => {
+			const t = createConvexTest(schema, modules);
+			const asUser = t.withIdentity({ subject: "profile-http-1" });
+
+			const response = await asUser.fetch("/serve-profile-image?userId=legacy");
+			expect(response.status).toBe(404);
+		});
+
+		it("returns the authenticated user's profile image", async () => {
+			const t = createConvexTest(schema, modules);
+			const userId = "profile-http-2";
+			const asUser = t.withIdentity({ subject: userId });
+
+			const storageId = await t.run(async (ctx) =>
+				ctx.storage.store(new Blob(["image-content"], { type: "image/png" })),
+			);
+			await t.run(async (ctx) => {
+				await ctx.db.insert("userProfileImages", {
+					userId,
+					storageId,
+				});
+			});
+
+			const response = await asUser.fetch("/serve-profile-image");
+			expect(response.status).toBe(200);
+			expect(response.headers.get("Content-Type")).toBe("image/png");
+			expect((await response.arrayBuffer()).byteLength).toBeGreaterThan(0);
 		});
 	});
 });

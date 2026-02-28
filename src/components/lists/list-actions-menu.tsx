@@ -3,6 +3,7 @@ import {
 	Archive,
 	Copy,
 	Download,
+	LogOut,
 	MoreVertical,
 	Pencil,
 	Share2,
@@ -26,6 +27,7 @@ import { useArchiveList } from "@/hooks/actions/use-archive-list";
 import { useDeleteList } from "@/hooks/actions/use-delete-list";
 import { useDuplicateList } from "@/hooks/actions/use-duplicate-list";
 import { useExportList } from "@/hooks/actions/use-export-list";
+import { useLeaveList } from "@/hooks/actions/use-leave-list";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { LIST_EXPORT_FORMATS } from "@/lib/constants/list-export-formats";
 import { cn } from "@/lib/utils/cn";
@@ -49,12 +51,14 @@ export function ListActionsMenu({
 	onOpenDialog,
 }: ListActionsMenuProps) {
 	const navigate = useNavigate();
-	const { archiveList } = useArchiveList();
-	const { deleteList } = useDeleteList();
-	const { duplicateList } = useDuplicateList();
+	const { archiveList, isPending: isArchiving } = useArchiveList();
+	const { deleteList, isPending: isDeleting } = useDeleteList();
+	const { duplicateList, isPending: isDuplicating } = useDuplicateList();
+	const { leaveList, isPending: isLeaving } = useLeaveList();
 	const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 	const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 	const { exportList, isPending: isExporting } = useExportList(
 		listId,
 		listName,
@@ -82,6 +86,11 @@ export function ListActionsMenu({
 		onOpenChange(false);
 	};
 
+	const openLeaveDialog = () => {
+		setLeaveDialogOpen(true);
+		onOpenChange(false);
+	};
+
 	const handleExport = (format: "txt" | "md" | "csv") => {
 		exportList(format);
 		onOpenChange(false);
@@ -103,6 +112,7 @@ export function ListActionsMenu({
 				<DropdownMenuContent align="end" className="w-40">
 					<DropdownMenuItem
 						onClick={openDuplicateDialog}
+						disabled={isDuplicating}
 						data-testid="duplicate-list-item"
 					>
 						<Copy className="mr-2 size-4" />
@@ -163,6 +173,17 @@ export function ListActionsMenu({
 
 					<DropdownMenuSeparator />
 
+					{!isOwner && (
+						<DropdownMenuItem
+							onClick={openLeaveDialog}
+							disabled={isLeaving}
+							data-testid="leave-list-item"
+						>
+							<LogOut className="size-4" />
+							Leave list
+						</DropdownMenuItem>
+					)}
+
 					{isOwner && (
 						<DropdownMenuItem
 							variant="destructive"
@@ -184,28 +205,44 @@ export function ListActionsMenu({
 				confirmLabel="Archive"
 				onConfirm={() => archiveList({ listId })}
 				testId="archive-confirm"
+				disabled={isArchiving}
 			/>
 			<ConfirmDialog
 				open={duplicateDialogOpen}
 				onOpenChange={setDuplicateDialogOpen}
 				title="Duplicate list?"
 				description="A copy of this list will be created."
-				confirmLabel="Duplicate"
+				confirmLabel={isDuplicating ? "Duplicating..." : "Duplicate"}
 				onConfirm={() => duplicateList({ listId })}
 				testId="duplicate-confirm"
+				disabled={isDuplicating}
 			/>
 			<ConfirmDialog
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 				title="Delete list?"
 				description="This cannot be undone. All items and tags will be removed."
-				confirmLabel="Delete"
+				confirmLabel={isDeleting ? "Deleting..." : "Delete"}
 				onConfirm={async () => {
-					navigate({ to: "/home", replace: true });
-					await deleteList({ listId });
+					const deleted = await deleteList({ listId });
+					if (deleted) {
+						navigate({ to: "/home", replace: true });
+					}
 				}}
 				variant="destructive"
 				testId="delete-confirm"
+				disabled={isDeleting}
+			/>
+			<ConfirmDialog
+				open={leaveDialogOpen}
+				onOpenChange={setLeaveDialogOpen}
+				title="Leave list?"
+				description="You will lose access to this shared list immediately."
+				confirmLabel={isLeaving ? "Leaving..." : "Leave list"}
+				onConfirm={() => leaveList({ listId })}
+				variant="destructive"
+				testId="leave-list-confirm"
+				disabled={isLeaving}
 			/>
 		</>
 	);

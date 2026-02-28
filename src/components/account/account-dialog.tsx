@@ -139,7 +139,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 			};
 			await saveProfileImage({ storageId });
 
-			const serveUrl = `${env.VITE_CONVEX_SITE_URL}/serve-profile-image?userId=${user.id}`;
+			const serveUrl = `${env.VITE_CONVEX_SITE_URL}/serve-profile-image`;
 			const result = await authClient.updateUser({ image: serveUrl });
 			if (result.error) {
 				toast.error(result.error.message ?? "Failed to update image");
@@ -501,7 +501,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 																			setEditingPasskeyName(e.target.value)
 																		}
 																		placeholder="Passkey name"
-																		className="h-7 text-xs"
+																		className="h-7"
 																		data-testid="account-passkey-name-input"
 																		onKeyDown={(e) => {
 																			if (e.key === "Enter") {

@@ -1,5 +1,5 @@
 import { httpRouter } from "convex/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
 
@@ -10,21 +10,18 @@ authComponent.registerRoutes(http, createAuth);
 http.route({
 	path: "/serve-profile-image",
 	method: "GET",
-	handler: httpAction(async (ctx, request) => {
+	handler: httpAction(async (ctx, _request) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
 			return new Response("Unauthorized", { status: 401 });
 		}
 
-		const { searchParams } = new URL(request.url);
-		const userId = searchParams.get("userId");
-		if (!userId) {
-			return new Response("Missing userId", { status: 400 });
-		}
-
-		const storageId = await ctx.runQuery(api.users.getProfileImageStorageId, {
-			userId,
-		});
+		const storageId = await ctx.runQuery(
+			internal.users.getCurrentUserProfileImageStorageId,
+			{
+				userId: identity.subject,
+			},
+		);
 		if (!storageId) {
 			return new Response("Image not found", { status: 404 });
 		}

@@ -3,35 +3,29 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
-import { trackListDuplicated } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
-export function useDuplicateList() {
-	const mutation = useMutation(api.lists.duplicateList);
+export function useLeaveList() {
+	const mutation = useMutation(api.listEditors.leaveList);
 	const navigate = useNavigate();
 	const handleMutationError = useHandleMutationError();
 	const [isPending, setIsPending] = useState(false);
 
-	const duplicateList = async (args: { listId: Id<"lists"> }) => {
+	const leaveList = async (args: { listId: Id<"lists"> }) => {
 		setIsPending(true);
 		try {
-			const newListId = await mutation(args);
-			trackListDuplicated("success");
-			toast.success("List duplicated successfully");
-			navigate({ to: "/lists/$listId", params: { listId: newListId } });
-			return newListId;
+			await mutation(args);
+			toast.success("You left the list");
+			navigate({ to: "/home", replace: true });
+			return true;
 		} catch (error) {
-			trackListDuplicated("failure");
-			handleMutationError(error, "Failed to duplicate list");
-			return undefined;
+			handleMutationError(error, "Failed to leave list");
+			return false;
 		} finally {
 			setIsPending(false);
 		}
 	};
 
-	return {
-		duplicateList,
-		isPending,
-	};
+	return { leaveList, isPending };
 }

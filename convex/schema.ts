@@ -83,6 +83,7 @@ const schema = defineSchema({
 	items: defineTable({
 		listId: v.id("lists"),
 		name: v.string(),
+		searchText: v.optional(v.string()),
 		type: itemTypeValidator,
 		completed: v.boolean(),
 		completedAt: v.optional(v.number()),
@@ -108,8 +109,8 @@ const schema = defineSchema({
 		.index("by_list_and_tag", ["listId", "tagId"])
 		.index("by_list_and_status", ["listId", "status"])
 		.index("by_list_and_sortOrder", ["listId", "sortOrder"])
-		.searchIndex("search_name", {
-			searchField: "name",
+		.searchIndex("search_text", {
+			searchField: "searchText",
 			filterFields: ["listId"],
 		}),
 

@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { getConvexErrorCode } from "./helpers";
@@ -31,6 +31,7 @@ describe("items", () => {
 			expect(items[0]._id).toBe(itemId);
 			expect(items[0].type).toBe("simple");
 			expect(items[0].completed).toBe(false);
+			expect(items[0].searchText).toBe("buy milk");
 		});
 
 		it("creates a stepper item with currentValue=0 and step=1 by default", async () => {
@@ -180,6 +181,26 @@ describe("items", () => {
 			expect(item?.notes).toBeUndefined();
 			expect(item?.url).toBeUndefined();
 		});
+
+		it("recomputes searchText when name or description changes", async () => {
+			const t = createConvexTest(schema, modules);
+			const { asUser, listId } = await setup(t, "user-item-10");
+
+			const itemId = (await asUser.mutation(api.items.createItem, {
+				listId,
+				name: "Plan sprint",
+				description: "weekly goals",
+			})) as unknown as Id<"items">;
+
+			await asUser.mutation(api.items.updateItem, {
+				itemId,
+				name: "Plan roadmap",
+				description: "quarter goals",
+			});
+
+			const item = await asUser.query(api.items.getItem, { itemId });
+			expect(item?.searchText).toBe("plan roadmap quarter goals");
+		});
 	});
 
 	describe("searchItems", () => {
@@ -209,6 +230,49 @@ describe("items", () => {
 			// Only the item from the user's own list should appear
 			expect(results).toHaveLength(1);
 			expect(results[0].listId).toBe(listId);
+		});
+
+		it("matches terms that are only in description", async () => {
+			const t = createConvexTest(schema, modules);
+			const { asUser, listId } = await setup(t, "user-item-search-2");
+
+			await asUser.mutation(api.items.createItem, {
+				listId,
+				name: "Roadmap",
+				description: "quarterly planning session",
+			});
+
+			const results = await asUser.query(api.items.searchItems, {
+				query: "planning",
+			});
+			expect(results).toHaveLength(1);
+			expect(results[0].name).toBe("Roadmap");
+		});
+	});
+
+	describe("backfillItemSearchText", () => {
+		it("fills missing searchText fields for existing items", async () => {
+			const t = createConvexTest(schema, modules);
+			const { asUser, listId } = await setup(t, "user-item-backfill-1");
+
+			const legacyItemId = await t.run(async (ctx) =>
+				ctx.db.insert("items", {
+					listId,
+					name: "Legacy item",
+					type: "simple",
+					completed: false,
+					sortOrder: 1,
+					description: "missing search field",
+				}),
+			);
+
+			const result = await t.action(internal.items.backfillItemSearchText, {});
+			expect(result.updatedCount).toBeGreaterThan(0);
+
+			const legacyItem = await asUser.query(api.items.getItem, {
+				itemId: legacyItemId,
+			});
+			expect(legacyItem?.searchText).toBe("legacy item missing search field");
 		});
 	});
 });

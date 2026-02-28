@@ -1,7 +1,13 @@
 import { ConvexError, v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import {
+	internalAction,
+	internalMutation,
+	mutation,
+	query,
+} from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
 import {
@@ -19,6 +25,19 @@ import {
 	validateUrl,
 } from "./lib/validation";
 import { itemStatusValidator, itemTypeValidator } from "./schema";
+
+const MAX_SEARCH_RESULTS = 50;
+const SEARCH_RESULTS_PER_LIST = 20;
+const SEARCH_BACKFILL_BATCH_SIZE = 100;
+
+function normalizeSearchText(text: string): string {
+	return text.toLocaleLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function buildItemSearchText(name: string, description?: string): string {
+	const combined = description ? `${name} ${description}` : name;
+	return normalizeSearchText(combined);
+}
 
 // ── Queries ──────────────────────────────────────────────────────────
 
@@ -119,34 +138,29 @@ export const searchItems = query({
 			}
 		}
 
-		const normalizedQuery = searchQuery.toLocaleLowerCase();
 		const accessibleListIds = Array.from(accessibleListsMap.keys());
 		const listItems = await Promise.all(
 			accessibleListIds.map((listId) =>
 				ctx.db
 					.query("items")
-					.withIndex("by_list", (q) => q.eq("listId", listId))
-					.collect(),
+					.withSearchIndex("search_text", (q) =>
+						q.search("searchText", searchQuery).eq("listId", listId),
+					)
+					.take(SEARCH_RESULTS_PER_LIST),
 			),
 		);
+		const uniqueItems = new Map<Id<"items">, Doc<"items">>();
+		for (const item of listItems.flat()) {
+			uniqueItems.set(item._id, item);
+		}
 
-		const searchResults = listItems
-			.flat()
-			.filter((item) => {
-				const nameMatches = item.name
-					.toLocaleLowerCase()
-					.includes(normalizedQuery);
-				const descriptionMatches =
-					item.description?.toLocaleLowerCase().includes(normalizedQuery) ??
-					false;
-				return nameMatches || descriptionMatches;
-			})
+		const searchResults = Array.from(uniqueItems.values())
 			.sort((a, b) => {
 				const aUpdatedAt = a.updatedAt ?? a._creationTime;
 				const bUpdatedAt = b.updatedAt ?? b._creationTime;
 				return bUpdatedAt - aUpdatedAt;
 			})
-			.slice(0, 50)
+			.slice(0, MAX_SEARCH_RESULTS)
 			.map((item) => {
 				const list = accessibleListsMap.get(item.listId);
 				return {
@@ -212,6 +226,7 @@ export const createItem = mutation({
 
 		const maxSortOrder = lastItem?.sortOrder ?? 0;
 		const itemType = args.type ?? "simple";
+		const trimmedName = args.name.trim();
 
 		const now = Date.now();
 		const initialStatus =
@@ -222,7 +237,8 @@ export const createItem = mutation({
 
 		const itemId = await ctx.db.insert("items", {
 			listId: args.listId,
-			name: args.name.trim(),
+			name: trimmedName,
+			searchText: buildItemSearchText(trimmedName, args.description),
 			type: itemType,
 			completed: initialCompleted,
 			completedAt: initialCompleted ? now : undefined,
@@ -348,6 +364,18 @@ export const updateItem = mutation({
 			patchData.completed = completed;
 		} else if (status !== undefined && status !== null) {
 			patchData.completed = status === "done";
+		}
+
+		if (patchData.name !== undefined || description !== undefined) {
+			const nextName =
+				(typeof patchData.name === "string" ? patchData.name : item.name) ?? "";
+			const nextDescription =
+				description !== undefined
+					? description === null
+						? undefined
+						: description
+					: item.description;
+			patchData.searchText = buildItemSearchText(nextName, nextDescription);
 		}
 
 		if (Object.keys(patchData).length > 0) {
@@ -515,6 +543,63 @@ export const deleteItem = mutation({
 
 		// Update parent list's updatedAt
 		await ctx.db.patch(item.listId, { updatedAt: Date.now() });
+	},
+});
+
+export const backfillItemSearchTextBatch = internalMutation({
+	args: {
+		cursor: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const page = await ctx.db.query("items").paginate({
+			numItems: SEARCH_BACKFILL_BATCH_SIZE,
+			cursor: args.cursor ?? null,
+		});
+
+		let updatedCount = 0;
+		for (const item of page.page) {
+			const expectedSearchText = buildItemSearchText(
+				item.name,
+				item.description,
+			);
+			if (item.searchText === expectedSearchText) {
+				continue;
+			}
+
+			await ctx.db.patch(item._id, {
+				searchText: expectedSearchText,
+			});
+			updatedCount += 1;
+		}
+
+		return {
+			isDone: page.isDone,
+			continueCursor: page.continueCursor,
+			updatedCount,
+		};
+	},
+});
+
+export const backfillItemSearchText = internalAction({
+	args: {},
+	handler: async (ctx) => {
+		let cursor: string | undefined;
+		let updatedCount = 0;
+		let isDone = false;
+
+		while (!isDone) {
+			const page = await ctx.runMutation(
+				internal.items.backfillItemSearchTextBatch,
+				{
+					cursor,
+				},
+			);
+			updatedCount += page.updatedCount;
+			isDone = page.isDone;
+			cursor = page.continueCursor;
+		}
+
+		return { updatedCount };
 	},
 });
 

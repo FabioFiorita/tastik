@@ -1,6 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import { action, internalMutation, mutation, query } from "./_generated/server";
+import {
+	action,
+	internalMutation,
+	internalQuery,
+	mutation,
+	query,
+} from "./_generated/server";
 import { appError } from "./lib/errors";
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -199,19 +205,7 @@ export const saveProfileImage = mutation({
 	},
 });
 
-export const getProfileImageUrl = query({
-	args: { userId: v.string() },
-	handler: async (ctx, args) => {
-		const record = await ctx.db
-			.query("userProfileImages")
-			.withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-			.unique();
-		if (!record) return null;
-		return await ctx.storage.getUrl(record.storageId);
-	},
-});
-
-export const getProfileImageStorageId = query({
+export const getCurrentUserProfileImageStorageId = internalQuery({
 	args: { userId: v.string() },
 	handler: async (ctx, args) => {
 		const record = await ctx.db

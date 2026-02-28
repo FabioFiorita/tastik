@@ -16,7 +16,7 @@ function SupportPage() {
 	return (
 		<div>
 			<section className="bg-card/50 py-16 md:py-24">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="container mx-auto px-4 md:px-6 lg:px-8">
 					<div className="mx-auto max-w-2xl text-center">
 						<h1 className="mb-4 font-bold text-4xl text-foreground tracking-tight md:text-5xl">
 							How can I help?
@@ -29,7 +29,7 @@ function SupportPage() {
 			</section>
 
 			<section className="py-16">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="container mx-auto px-4 md:px-6 lg:px-8">
 					<div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
 						<div className="rounded-2xl border border-border bg-card p-6">
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-primary">
@@ -89,7 +89,7 @@ function SupportPage() {
 			</section>
 
 			<section className="bg-card/50 py-16">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="container mx-auto px-4 md:px-6 lg:px-8">
 					<div className="mx-auto max-w-3xl">
 						<div className="mb-12 flex items-center gap-3">
 							<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -118,7 +118,7 @@ function SupportPage() {
 			</section>
 
 			<section className="py-16">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="container mx-auto px-4 md:px-6 lg:px-8">
 					<div className="mx-auto max-w-3xl text-center">
 						<div className="mb-4 flex justify-center">
 							<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-primary">

@@ -1,12 +1,21 @@
 import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { appError } from "./errors";
+import {
+	MAX_EDITORS_PER_LIST,
+	MAX_ITEMS_PER_LIST,
+	MAX_LISTS_PER_USER,
+	MAX_TAGS_PER_LIST,
+} from "./constraints";
 
-export const MAX_LISTS_PER_USER = 50;
-export const MAX_ITEMS_PER_LIST = 500;
-export const MAX_TAGS_PER_LIST = 50;
-export const MAX_EDITORS_PER_LIST = 10;
+export {
+	MAX_EDITORS_PER_LIST,
+	MAX_ITEMS_PER_LIST,
+	MAX_LISTS_PER_USER,
+	MAX_TAGS_PER_LIST,
+} from "./constraints";
+
+import { appError } from "./errors";
 
 export async function assertListsUnderLimit(
 	ctx: MutationCtx,

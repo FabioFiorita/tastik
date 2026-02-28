@@ -7,15 +7,14 @@ import {
 	ResponsiveDialogTitle,
 } from "@/components/common/responsive-dialog";
 import { EditorCard } from "@/components/lists/editor-card";
-import { ShareListOwnerCard } from "@/components/lists/share-list-owner-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAddListEditor } from "@/hooks/actions/use-add-list-editor";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useListEditors } from "@/hooks/queries/use-list-editors";
 import type { Id } from "../../../convex/_generated/dataModel";
-
-const MAX_EDITORS_PER_LIST = 10;
+import { MAX_EDITORS_PER_LIST } from "../../../convex/lib/constraints";
 
 interface ShareListDialogProps {
 	listId: Id<"lists">;
@@ -84,12 +83,22 @@ export function ShareListDialog({
 						</h3>
 						{currentUser && (
 							<ul className="space-y-2" data-testid="owner-list">
-								<ShareListOwnerCard
-									owner={{
-										email: currentUser.email,
-										name: currentUser.name,
-									}}
-								/>
+								<li
+									className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2"
+									data-testid="editor-card-owner"
+								>
+									<div className="min-w-0 flex-1">
+										<p className="truncate font-medium text-sm">
+											{currentUser.name ?? currentUser.email ?? "Owner"}
+										</p>
+										{currentUser.name && currentUser.email ? (
+											<p className="truncate text-muted-foreground text-xs">
+												{currentUser.email}
+											</p>
+										) : null}
+									</div>
+									<Badge variant="secondary">Owner</Badge>
+								</li>
 							</ul>
 						)}
 					</section>

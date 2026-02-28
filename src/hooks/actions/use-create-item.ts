@@ -1,21 +1,22 @@
 import { useMutation } from "convex/react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackItemCreated } from "@/lib/metrics";
 import type { ItemStatus } from "@/lib/types/item-status";
+import type { ItemType } from "@/lib/types/item-type";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManagedAction } from "./use-managed-action";
 
 export function useCreateItem() {
 	const mutation = useMutation(api.items.createItem);
 	const handleMutationError = useHandleMutationError();
-	const [isPending, setIsPending] = useState(false);
+	const { runAction, isPending } = useManagedAction();
 
 	const createItem = async (args: {
 		listId: Id<"lists">;
 		name: string;
-		type?: "simple" | "stepper" | "calculator" | "kanban";
+		type?: ItemType;
 		currentValue?: number;
 		step?: number;
 		calculatorValue?: number;
@@ -26,19 +27,17 @@ export function useCreateItem() {
 		url?: string;
 		notes?: string;
 	}): Promise<boolean> => {
-		setIsPending(true);
-		try {
-			await mutation(args);
-			trackItemCreated(args.type ?? "simple", "success");
-			toast.success("Item added");
-			return true;
-		} catch (error) {
-			trackItemCreated(args.type ?? "simple", "failure");
-			handleMutationError(error, "Failed to add item");
-			return false;
-		} finally {
-			setIsPending(false);
-		}
+		const result = await runAction(() => mutation(args), {
+			onSuccess: () => {
+				trackItemCreated(args.type ?? "simple", "success");
+				toast.success("Item added");
+			},
+			onError: (error) => {
+				trackItemCreated(args.type ?? "simple", "failure");
+				handleMutationError(error, "Failed to add item");
+			},
+		});
+		return result !== undefined;
 	};
 
 	return { createItem, isPending };

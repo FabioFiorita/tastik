@@ -1,9 +1,9 @@
 import { useMutation } from "convex/react";
-import { useState } from "react";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import type { SortBy } from "@/lib/types/sort-by";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManagedAction } from "./use-managed-action";
 
 export function useUpdateListPreferences(
 	listId: Id<"lists">,
@@ -17,70 +17,70 @@ export function useUpdateListPreferences(
 ) {
 	const mutation = useMutation(api.lists.updateList);
 	const handleMutationError = useHandleMutationError();
-	const [isPending, setIsPending] = useState(false);
+	const { runAction, isPending } = useManagedAction();
 
 	const updateSortBy = async (sortBy: SortBy) => {
-		setIsPending(true);
-		try {
-			await mutation({ listId, sortBy });
-		} catch (error) {
-			handleMutationError(error, "Failed to update sort preference");
-		} finally {
-			setIsPending(false);
-		}
+		await runAction(() => mutation({ listId, sortBy }), {
+			onError: (error) => {
+				handleMutationError(error, "Failed to update sort preference");
+			},
+		});
 	};
 
 	const toggleSortDirection = async () => {
-		setIsPending(true);
-		try {
-			await mutation({
-				listId,
-				sortAscending: !currentPreferences.sortAscending,
-			});
-		} catch (error) {
-			handleMutationError(error, "Failed to update sort direction");
-		} finally {
-			setIsPending(false);
-		}
+		await runAction(
+			() =>
+				mutation({
+					listId,
+					sortAscending: !currentPreferences.sortAscending,
+				}),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update sort direction");
+				},
+			},
+		);
 	};
 
 	const toggleShowCompleted = async () => {
-		setIsPending(true);
-		try {
-			await mutation({
-				listId,
-				showCompleted: !currentPreferences.showCompleted,
-			});
-		} catch (error) {
-			handleMutationError(error, "Failed to update visibility preference");
-		} finally {
-			setIsPending(false);
-		}
+		await runAction(
+			() =>
+				mutation({
+					listId,
+					showCompleted: !currentPreferences.showCompleted,
+				}),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update visibility preference");
+				},
+			},
+		);
 	};
 
 	const toggleHideCheckbox = async () => {
-		setIsPending(true);
-		try {
-			await mutation({
-				listId,
-				hideCheckbox: !currentPreferences.hideCheckbox,
-			});
-		} catch (error) {
-			handleMutationError(error, "Failed to update checkbox visibility");
-		} finally {
-			setIsPending(false);
-		}
+		await runAction(
+			() =>
+				mutation({
+					listId,
+					hideCheckbox: !currentPreferences.hideCheckbox,
+				}),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update checkbox visibility");
+				},
+			},
+		);
 	};
 
 	const toggleShowTotal = async () => {
-		setIsPending(true);
-		try {
-			await mutation({ listId, showTotal: !currentPreferences.showTotal });
-		} catch (error) {
-			handleMutationError(error, "Failed to update total visibility");
-		} finally {
-			setIsPending(false);
-		}
+		await runAction(
+			() => mutation({ listId, showTotal: !currentPreferences.showTotal }),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update total visibility");
+				},
+			},
+		);
 	};
 
 	return {

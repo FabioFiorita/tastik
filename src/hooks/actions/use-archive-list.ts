@@ -1,33 +1,31 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListArchived } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManagedAction } from "./use-managed-action";
 
 export function useArchiveList() {
 	const mutation = useMutation(api.lists.archiveList);
 	const navigate = useNavigate();
 	const handleMutationError = useHandleMutationError();
-	const [isPending, setIsPending] = useState(false);
+	const { runAction, isPending } = useManagedAction();
 
 	const archiveList = async (args: { listId: Id<"lists"> }) => {
-		setIsPending(true);
-		try {
-			await mutation(args);
-			trackListArchived("success");
-			toast.success("List archived");
-			navigate({ to: "/archive", replace: true });
-			return true;
-		} catch (error) {
-			trackListArchived("failure");
-			handleMutationError(error, "Failed to archive list");
-			return false;
-		} finally {
-			setIsPending(false);
-		}
+		const result = await runAction(() => mutation(args), {
+			onSuccess: () => {
+				trackListArchived("success");
+				toast.success("List archived");
+				navigate({ to: "/archive", replace: true });
+			},
+			onError: (error) => {
+				trackListArchived("failure");
+				handleMutationError(error, "Failed to archive list");
+			},
+		});
+		return result !== undefined;
 	};
 
 	return { archiveList, isPending };

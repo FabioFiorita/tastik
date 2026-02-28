@@ -1,30 +1,28 @@
 import { useMutation } from "convex/react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListDeleted } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManagedAction } from "./use-managed-action";
 
 export function useDeleteList() {
 	const mutation = useMutation(api.lists.deleteList);
 	const handleMutationError = useHandleMutationError();
-	const [isPending, setIsPending] = useState(false);
+	const { runAction, isPending } = useManagedAction();
 
 	const deleteList = async (args: { listId: Id<"lists"> }) => {
-		setIsPending(true);
-		try {
-			await mutation(args);
-			trackListDeleted("success");
-			toast.success("List deleted");
-			return true;
-		} catch (error) {
-			trackListDeleted("failure");
-			handleMutationError(error, "Failed to delete list");
-			return false;
-		} finally {
-			setIsPending(false);
-		}
+		const result = await runAction(() => mutation(args), {
+			onSuccess: () => {
+				trackListDeleted("success");
+				toast.success("List deleted");
+			},
+			onError: (error) => {
+				trackListDeleted("failure");
+				handleMutationError(error, "Failed to delete list");
+			},
+		});
+		return result !== undefined;
 	};
 
 	return { deleteList, isPending };

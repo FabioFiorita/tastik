@@ -3,6 +3,7 @@ import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import type { SortBy } from "@/lib/types/sort-by";
 import { api } from "../../../convex/_generated/api";
 import { useUserPreferences } from "../queries/use-user-preferences";
+import { useManagedAction } from "./use-managed-action";
 
 export function useListsSort() {
 	const preferences = useUserPreferences();
@@ -10,30 +11,39 @@ export function useListsSort() {
 		api.preferences.updateListsSortPreference,
 	);
 	const handleMutationError = useHandleMutationError();
+	const { runAction, isPending } = useManagedAction();
 
 	const sortBy: SortBy = preferences?.listsSortBy ?? "created_at";
 	const sortAscending = preferences?.listsSortAscending ?? false;
 
 	const updateSortBy = async (newSortBy: SortBy) => {
-		try {
-			await updatePreferenceMutation({
-				sortBy: newSortBy,
-				sortAscending,
-			});
-		} catch (error) {
-			handleMutationError(error, "Failed to update sort preference");
-		}
+		await runAction(
+			() =>
+				updatePreferenceMutation({
+					sortBy: newSortBy,
+					sortAscending,
+				}),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update sort preference");
+				},
+			},
+		);
 	};
 
 	const toggleSortDirection = async () => {
-		try {
-			await updatePreferenceMutation({
-				sortBy,
-				sortAscending: !sortAscending,
-			});
-		} catch (error) {
-			handleMutationError(error, "Failed to update sort direction");
-		}
+		await runAction(
+			() =>
+				updatePreferenceMutation({
+					sortBy,
+					sortAscending: !sortAscending,
+				}),
+			{
+				onError: (error) => {
+					handleMutationError(error, "Failed to update sort direction");
+				},
+			},
+		);
 	};
 
 	return {
@@ -41,5 +51,6 @@ export function useListsSort() {
 		sortAscending,
 		updateSortBy,
 		toggleSortDirection,
+		isPending,
 	};
 }

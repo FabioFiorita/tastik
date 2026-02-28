@@ -6,7 +6,7 @@ import { createRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { ConvexReactClient } from "convex/react";
 import { Toaster } from "sonner";
-import { DashboardPendingSkeleton } from "@/components/common/pending-skeletons";
+import { DashboardPendingSkeleton } from "@/components/common/dashboard-pending-skeleton";
 import { SentryUserSync } from "@/components/common/sentry-user-sync";
 import { RouteErrorComponent } from "@/components/layout/route-error-component";
 import { authClient } from "@/lib/auth-client";

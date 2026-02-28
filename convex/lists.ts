@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertListsUnderLimit, MAX_ITEMS_PER_LIST } from "./lib/limits";
+import { getAccessibleLists } from "./lib/listAccess";
 import {
 	getListAccessOrNull,
 	requireAuth,
@@ -38,38 +39,17 @@ export const getUserLists = query({
 		const sortBy = profile?.listsSortBy ?? "created_at";
 		const sortAscending = profile?.listsSortAscending ?? false;
 
-		// Get owned lists
-		const ownedListsQuery = ctx.db
-			.query("lists")
-			.withIndex("by_owner", (q) => q.eq("ownerId", userId));
-
-		const ownedLists = await ownedListsQuery.collect();
+		const { ownedLists, sharedLists } = await getAccessibleLists(ctx, userId);
 
 		// Filter by status if specified
 		const filteredOwnedLists = args.status
 			? ownedLists.filter((list) => list.status === args.status)
 			: ownedLists;
 
-		// Get lists where user is an editor
-		const editorEntries = await ctx.db
-			.query("listEditors")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.collect();
-
-		// Batch fetch lists (more efficient than N+1 queries)
-		const listIds = editorEntries.map((entry) => entry.listId);
-		const sharedLists = await Promise.all(
-			listIds.map((id) => ctx.db.get("lists", id)),
-		);
-
-		// Filter out nulls and apply status filter
-		const validSharedLists = sharedLists.filter(
-			(list): list is NonNullable<typeof list> => {
-				if (!list) return false;
-				if (args.status && list.status !== args.status) return false;
-				return true;
-			},
-		);
+		const validSharedLists = sharedLists.filter((list) => {
+			if (args.status && list.status !== args.status) return false;
+			return true;
+		});
 
 		// Combine and mark ownership
 		const allLists = [

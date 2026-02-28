@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AuthPageCard } from "@/components/auth/auth-page-card";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -132,81 +133,71 @@ export function TwoFactorPage() {
 	const codeLength = method === "backup" ? 10 : 6;
 
 	return (
-		<div className="mx-auto flex min-h-screen w-full max-w-lg items-center p-4">
-			<div className="flex w-full flex-col gap-6 rounded-xl border bg-card p-8 shadow-sm">
-				<form onSubmit={handleSubmit}>
-					<FieldGroup>
-						<div className="flex flex-col items-center gap-2 text-center">
-							<img
-								src="/logo.png"
-								alt="Tastik"
-								className="size-10 rounded-lg"
-							/>
-							<h1 className="font-bold text-xl">Two-factor authentication</h1>
-							<FieldDescription>
-								Enter the code from your authenticator app
-							</FieldDescription>
-						</div>
-						<Field>
-							<FieldLabel htmlFor="code">Verification code</FieldLabel>
-							<InputOTP
-								maxLength={codeLength}
-								value={code}
-								onChange={setCode}
-								containerClassName="justify-center"
-								data-testid="2fa-code-input"
-							>
-								<InputOTPGroup className="justify-center">
-									{(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const)
-										.slice(0, codeLength)
-										.map((slotId, i) => (
-											<InputOTPSlot key={slotId} index={i} />
-										))}
-								</InputOTPGroup>
-							</InputOTP>
-						</Field>
-						<Field>
-							<Button
-								type="submit"
-								className="w-full"
-								disabled={isPending || code.length !== codeLength}
-								data-testid="2fa-verify"
-							>
-								Verify
-							</Button>
-						</Field>
-						<div className="flex flex-col gap-2">
-							{method !== "otp" && (
-								<Button
-									type="button"
-									variant="ghost"
-									className="w-full"
-									disabled={isPending || otpSent}
-									onClick={handleSendOtp}
-									data-testid="2fa-send-email"
-								>
-									{otpSent ? "Code sent" : "Send code to email"}
-								</Button>
-							)}
+		<AuthPageCard title="Two-factor authentication">
+			<form onSubmit={handleSubmit}>
+				<FieldGroup>
+					<FieldDescription className="text-center">
+						Enter the code from your authenticator app
+					</FieldDescription>
+					<Field>
+						<FieldLabel htmlFor="code">Verification code</FieldLabel>
+						<InputOTP
+							maxLength={codeLength}
+							value={code}
+							onChange={setCode}
+							containerClassName="justify-center"
+							data-testid="2fa-code-input"
+						>
+							<InputOTPGroup className="justify-center">
+								{(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const)
+									.slice(0, codeLength)
+									.map((slotId, i) => (
+										<InputOTPSlot key={slotId} index={i} />
+									))}
+							</InputOTPGroup>
+						</InputOTP>
+					</Field>
+					<Field>
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={isPending || code.length !== codeLength}
+							data-testid="2fa-verify"
+						>
+							Verify
+						</Button>
+					</Field>
+					<div className="flex flex-col gap-2">
+						{method !== "otp" && (
 							<Button
 								type="button"
 								variant="ghost"
 								className="w-full"
-								disabled={isPending}
-								onClick={() => {
-									setMethod(method === "backup" ? "totp" : "backup");
-									setCode("");
-								}}
-								data-testid="2fa-use-backup"
+								disabled={isPending || otpSent}
+								onClick={handleSendOtp}
+								data-testid="2fa-send-email"
 							>
-								{method === "backup"
-									? "Use authenticator app"
-									: "Use backup code"}
+								{otpSent ? "Code sent" : "Send code to email"}
 							</Button>
-						</div>
-					</FieldGroup>
-				</form>
-			</div>
-		</div>
+						)}
+						<Button
+							type="button"
+							variant="ghost"
+							className="w-full"
+							disabled={isPending}
+							onClick={() => {
+								setMethod(method === "backup" ? "totp" : "backup");
+								setCode("");
+							}}
+							data-testid="2fa-use-backup"
+						>
+							{method === "backup"
+								? "Use authenticator app"
+								: "Use backup code"}
+						</Button>
+					</div>
+				</FieldGroup>
+			</form>
+		</AuthPageCard>
 	);
 }

@@ -1,47 +1,47 @@
 import { useRouteContext } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useHandleMutationError } from "@/hooks/use-handle-mutation-error";
 import { trackListExported } from "@/lib/metrics";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManagedAction } from "./use-managed-action";
 
 export function useExportList(listId: Id<"lists">, listName: string) {
 	const { convexClient } = useRouteContext({ from: "__root__" });
 	const handleMutationError = useHandleMutationError();
-	const [isPending, setIsPending] = useState(false);
+	const { runAction, isPending } = useManagedAction();
 
 	const exportList = async (format: "txt" | "md" | "csv") => {
-		setIsPending(true);
-		try {
-			// Use ConvexClient to call query (not useQuery hook)
-			const content = await convexClient.query(api.lists.exportList, {
-				listId,
-				format,
-			});
+		await runAction(
+			() =>
+				convexClient.query(api.lists.exportList, {
+					listId,
+					format,
+				}),
+			{
+				onSuccess: (content) => {
+					const mimeTypes = {
+						txt: "text/plain",
+						md: "text/markdown",
+						csv: "text/csv",
+					};
 
-			// Trigger download
-			const mimeTypes = {
-				txt: "text/plain",
-				md: "text/markdown",
-				csv: "text/csv",
-			};
-
-			const blob = new Blob([content], { type: mimeTypes[format] });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			a.download = `${listName}.${format}`;
-			a.click();
-			URL.revokeObjectURL(url);
-			trackListExported("success");
-			toast.success(`Exported as ${format.toUpperCase()}`);
-		} catch (error) {
-			trackListExported("failure");
-			handleMutationError(error, "Failed to export list");
-		} finally {
-			setIsPending(false);
-		}
+					const blob = new Blob([content], { type: mimeTypes[format] });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement("a");
+					a.href = url;
+					a.download = `${listName}.${format}`;
+					a.click();
+					URL.revokeObjectURL(url);
+					trackListExported("success");
+					toast.success(`Exported as ${format.toUpperCase()}`);
+				},
+				onError: (error) => {
+					trackListExported("failure");
+					handleMutationError(error, "Failed to export list");
+				},
+			},
+		);
 	};
 
 	return { exportList, isPending };

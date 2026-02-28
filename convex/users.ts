@@ -7,15 +7,15 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import {
+	ALLOWED_PROFILE_IMAGE_TYPES,
+	MAX_PROFILE_IMAGE_SIZE_BYTES,
+} from "./lib/constraints";
 import { appError } from "./lib/errors";
 
-const ALLOWED_IMAGE_TYPES = new Set([
-	"image/jpeg",
-	"image/png",
-	"image/gif",
-	"image/webp",
-]);
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_PROFILE_IMAGE_TYPES_SET: Set<string> = new Set(
+	ALLOWED_PROFILE_IMAGE_TYPES,
+);
 
 export const getCurrentUser = query({
 	args: {},
@@ -169,7 +169,7 @@ export const saveProfileImage = mutation({
 		}
 		if (
 			!metadata.contentType ||
-			!ALLOWED_IMAGE_TYPES.has(metadata.contentType)
+			!ALLOWED_PROFILE_IMAGE_TYPES_SET.has(metadata.contentType)
 		) {
 			await ctx.storage.delete(args.storageId);
 			throw new ConvexError(
@@ -179,7 +179,7 @@ export const saveProfileImage = mutation({
 				),
 			);
 		}
-		if (metadata.size > MAX_IMAGE_SIZE_BYTES) {
+		if (metadata.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
 			await ctx.storage.delete(args.storageId);
 			throw new ConvexError(
 				appError("INVALID_INPUT", "File must be less than 5 MB"),

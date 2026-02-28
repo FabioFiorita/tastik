@@ -10,6 +10,7 @@ import {
 } from "./_generated/server";
 import { appError } from "./lib/errors";
 import { assertItemsUnderLimit } from "./lib/limits";
+import { getAccessibleLists } from "./lib/listAccess";
 import {
 	getListAccessOrNull,
 	requireAuth,
@@ -109,34 +110,7 @@ export const searchItems = query({
 			return [];
 		}
 
-		// Get user's owned lists
-		const ownedLists = await ctx.db
-			.query("lists")
-			.withIndex("by_owner", (q) => q.eq("ownerId", userId))
-			.collect();
-
-		// Get lists where user is an editor
-		const editorEntries = await ctx.db
-			.query("listEditors")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.collect();
-
-		// Batch fetch shared lists
-		const sharedListIds = editorEntries.map((entry) => entry.listId);
-		const sharedLists = await Promise.all(
-			sharedListIds.map((id) => ctx.db.get("lists", id)),
-		);
-
-		// Build a map of accessible lists for quick lookup
-		const accessibleListsMap = new Map<Id<"lists">, Doc<"lists">>();
-		for (const list of ownedLists) {
-			accessibleListsMap.set(list._id, list);
-		}
-		for (const list of sharedLists) {
-			if (list) {
-				accessibleListsMap.set(list._id, list);
-			}
-		}
+		const { accessibleListsMap } = await getAccessibleLists(ctx, userId);
 
 		const accessibleListIds = Array.from(accessibleListsMap.keys());
 		const listItems = await Promise.all(
@@ -259,7 +233,7 @@ export const createItem = mutation({
 			updatedAt: now,
 		});
 
-		await ctx.db.patch(args.listId, { updatedAt: now });
+		await touchList(ctx, args.listId, now);
 		return itemId;
 	},
 });
@@ -394,7 +368,7 @@ export const updateItem = mutation({
 			});
 
 			// Update parent list's updatedAt
-			await ctx.db.patch(item.listId, { updatedAt: now });
+			await touchList(ctx, item.listId, now);
 		}
 	},
 });
@@ -423,7 +397,7 @@ export const toggleItemComplete = mutation({
 		});
 
 		// Update parent list's updatedAt
-		await ctx.db.patch(item.listId, { updatedAt: now });
+		await touchList(ctx, item.listId, now);
 	},
 });
 
@@ -466,7 +440,7 @@ export const incrementItemValue = mutation({
 			});
 
 			// Update parent list's updatedAt
-			await ctx.db.patch(item.listId, { updatedAt: now });
+			await touchList(ctx, item.listId, now);
 			return;
 		}
 
@@ -485,7 +459,7 @@ export const incrementItemValue = mutation({
 		});
 
 		// Update parent list's updatedAt
-		await ctx.db.patch(item.listId, { updatedAt: now });
+		await touchList(ctx, item.listId, now);
 	},
 });
 
@@ -521,7 +495,7 @@ export const updateItemStatus = mutation({
 		});
 
 		// Update parent list's updatedAt
-		await ctx.db.patch(item.listId, { updatedAt: now });
+		await touchList(ctx, item.listId, now);
 	},
 });
 
@@ -542,7 +516,7 @@ export const deleteItem = mutation({
 		await ctx.db.delete(args.itemId);
 
 		// Update parent list's updatedAt
-		await ctx.db.patch(item.listId, { updatedAt: Date.now() });
+		await touchList(ctx, item.listId);
 	},
 });
 
@@ -604,6 +578,14 @@ export const backfillItemSearchText = internalAction({
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────
+
+async function touchList(
+	ctx: MutationCtx,
+	listId: Id<"lists">,
+	timestamp: number = Date.now(),
+): Promise<void> {
+	await ctx.db.patch(listId, { updatedAt: timestamp });
+}
 
 async function assertTagBelongsToList(
 	ctx: MutationCtx,

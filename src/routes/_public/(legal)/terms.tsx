@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_public/(legal)/terms")({
 function TermsPage() {
 	return (
 		<section className="py-16 md:py-24">
-			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+			<div className="container mx-auto px-4 md:px-6 lg:px-8">
 				<div className="mx-auto max-w-3xl space-y-10">
 					<div className="space-y-3">
 						<h1 className="font-bold text-4xl text-foreground tracking-tight">

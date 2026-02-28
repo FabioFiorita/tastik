@@ -65,7 +65,7 @@ export function ErrorBoundary({ error, reset, className }: ErrorBoundaryProps) {
 							</pre>
 						</details>
 					)}
-					<div className="mt-2 flex w-full flex-col gap-2 sm:flex-row">
+					<div className="mt-2 flex w-full flex-col gap-2 md:flex-row">
 						<Button
 							onClick={handleReset}
 							className="flex-1"

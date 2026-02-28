@@ -1,9 +1,8 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
 import { useAction, useMutation } from "convex/react";
 import { Key, Shield, Trash2 } from "lucide-react";
 import type React from "react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -22,16 +21,19 @@ import {
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useChangeEmail } from "@/hooks/account/use-change-email";
+import { useDeleteAccountFlow } from "@/hooks/account/use-delete-account-flow";
+import { usePasskeyManagement } from "@/hooks/account/use-passkey-management";
+import { useProfileImageUpload } from "@/hooks/account/use-profile-image-upload";
+import { useTwoFactorManagement } from "@/hooks/account/use-two-factor-management";
 import { authClient } from "@/lib/auth-client";
-import { env } from "@/lib/env";
-import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { getInitials } from "@/lib/utils/get-initials";
 import {
 	accountFormDefaults,
 	validateAccountName,
 } from "@/lib/validation/account-form";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import { PROFILE_IMAGE_ACCEPT } from "../../../convex/lib/constraints";
 
 type AccountDialogProps = {
 	open: boolean;
@@ -39,30 +41,8 @@ type AccountDialogProps = {
 };
 
 export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
-	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
 	const user = session?.user;
-	const [is2FAPending, setIs2FAPending] = useState(false);
-	const [isPasskeyPending, setIsPasskeyPending] = useState(false);
-	const [imagePending, setImagePending] = useState(false);
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
-	const [passwords, setPasswords] = useState<Record<string, string>>({});
-	const [totpCode, setTotpCode] = useState("");
-	const [enable2FADialogOpen, setEnable2FADialogOpen] = useState(false);
-	const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
-	const [enable2FAStep, setEnable2FAStep] = useState<"password" | "verify">(
-		"password",
-	);
-	const [twoFactorData, setTwoFactorData] = useState<{
-		totpURI: string;
-		backupCodes: string[];
-	} | null>(null);
-	const [changeEmailDialogOpen, setChangeEmailDialogOpen] = useState(false);
-	const [newEmail, setNewEmail] = useState("");
-	const [isChangeEmailPending, setIsChangeEmailPending] = useState(false);
-	const [editingPasskeyId, setEditingPasskeyId] = useState<string | null>(null);
-	const [editingPasskeyName, setEditingPasskeyName] = useState("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const twoFactorEnabled = user?.twoFactorEnabled ?? false;
@@ -72,6 +52,61 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 	const generateUploadUrl = useMutation(api.users.generateUploadUrl);
 	const saveProfileImage = useMutation(api.users.saveProfileImage);
 	const deleteAccountAction = useAction(api.users.deleteAccount);
+
+	const { handleImageChange, isPending: imagePending } = useProfileImageUpload({
+		userId: user?.id,
+		generateUploadUrl,
+		saveProfileImage,
+	});
+
+	const {
+		disableDialogOpen: disable2FADialogOpen,
+		enableDialogOpen: enable2FADialogOpen,
+		enableStep: enable2FAStep,
+		handleDisable2FA,
+		handleDisableDialogOpenChange,
+		handleEnable2FA,
+		handleEnableDialogOpenChange,
+		handleVerify2FACode,
+		isPending: is2FAPending,
+		passwords,
+		setPasswords,
+		setTotpCode,
+		totpCode,
+		twoFactorData,
+	} = useTwoFactorManagement();
+
+	const {
+		cancelEditingPasskey,
+		editingPasskeyId,
+		editingPasskeyName,
+		handleAddPasskey,
+		handleDeletePasskey,
+		handleRenamePasskey,
+		isPending: isPasskeyPending,
+		setEditingPasskeyName,
+		startEditingPasskey,
+	} = usePasskeyManagement();
+
+	const {
+		dialogOpen: changeEmailDialogOpen,
+		handleChangeEmail,
+		handleDialogOpenChange: handleChangeEmailDialogOpenChange,
+		isPending: isChangeEmailPending,
+		newEmail,
+		setNewEmail,
+	} = useChangeEmail();
+
+	const {
+		dialogOpen: deleteDialogOpen,
+		handleDeleteAccount,
+		isDeleting,
+		setDialogOpen: setDeleteDialogOpen,
+	} = useDeleteAccountFlow({
+		userId: user?.id,
+		onCloseAccountDialog: () => onOpenChange(false),
+		deleteAccountAction,
+	});
 
 	const defaultValues = {
 		...accountFormDefaults,
@@ -104,233 +139,13 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 		},
 	});
 
-	const handleImageChange = async (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		const file = event.target.files?.[0];
-		if (!file || !user) return;
-
-		const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-		if (!validTypes.includes(file.type)) {
-			toast.error("Please choose a JPEG, PNG, WebP, or GIF image");
-			return;
-		}
-
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("Image must be under 5MB");
-			return;
-		}
-
-		setImagePending(true);
-		try {
-			const uploadUrl = await generateUploadUrl();
-			const response = await fetch(uploadUrl, {
-				method: "POST",
-				headers: { "Content-Type": file.type },
-				body: file,
-			});
-
-			if (!response.ok) {
-				throw new Error("Upload failed");
-			}
-
-			const { storageId } = (await response.json()) as {
-				storageId: Id<"_storage">;
-			};
-			await saveProfileImage({ storageId });
-
-			const serveUrl = `${env.VITE_CONVEX_SITE_URL}/serve-profile-image`;
-			const result = await authClient.updateUser({ image: serveUrl });
-			if (result.error) {
-				toast.error(result.error.message ?? "Failed to update image");
-				return;
-			}
-			toast.success("Profile image updated");
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to update image"));
-		} finally {
-			setImagePending(false);
-			event.target.value = "";
-		}
-	};
-
-	const handleEnable2FA = async () => {
-		const password = passwords.enable2fa;
-		if (!password) {
-			toast.error("Enter your password");
-			return;
-		}
-		setIs2FAPending(true);
-		try {
-			const result = await authClient.twoFactor.enable({ password });
-			if (result.error) {
-				toast.error(result.error.message ?? "Failed to enable 2FA");
-				return;
-			}
-			if (result.data?.totpURI && result.data?.backupCodes) {
-				setTwoFactorData({
-					totpURI: result.data.totpURI,
-					backupCodes: result.data.backupCodes,
-				});
-				setEnable2FAStep("verify");
-			}
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to enable 2FA"));
-		} finally {
-			setIs2FAPending(false);
-		}
-	};
-
-	const handleVerify2FACode = async () => {
-		if (!totpCode || totpCode.length !== 6) return;
-		setIs2FAPending(true);
-		try {
-			const result = await authClient.twoFactor.verifyTotp({ code: totpCode });
-			if (result.error) {
-				toast.error(result.error.message ?? "Invalid code");
-				return;
-			}
-			toast.success("2FA enabled");
-			setEnable2FADialogOpen(false);
-			setEnable2FAStep("password");
-			setTwoFactorData(null);
-			setTotpCode("");
-			setPasswords((p) => ({ ...p, enable2fa: "" }));
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Verification failed"));
-		} finally {
-			setIs2FAPending(false);
-		}
-	};
-
-	const handleDisable2FA = async () => {
-		const password = passwords.disable2fa;
-		if (!password) {
-			toast.error("Enter your password");
-			return;
-		}
-		setIs2FAPending(true);
-		try {
-			const result = await authClient.twoFactor.disable({ password });
-			if (result.error) {
-				toast.error(result.error.message ?? "Failed to disable 2FA");
-				return;
-			}
-			toast.success("2FA disabled");
-			setDisable2FADialogOpen(false);
-			setPasswords((p) => ({ ...p, disable2fa: "" }));
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to disable 2FA"));
-		} finally {
-			setIs2FAPending(false);
-		}
-	};
-
-	const handleAddPasskey = async () => {
-		setIsPasskeyPending(true);
-		try {
-			const result = await authClient.passkey?.addPasskey?.({});
-			if (result?.error) {
-				toast.error(result.error.message ?? "Failed to add passkey");
-			} else if (!result?.error) {
-				toast.success("Passkey added");
-			}
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to add passkey"));
-		} finally {
-			setIsPasskeyPending(false);
-		}
-	};
-
-	const handleDeletePasskey = async (id: string) => {
-		setIsPasskeyPending(true);
-		try {
-			const result = await authClient.passkey?.deletePasskey?.({ id });
-			if (result?.error) {
-				toast.error(result.error.message ?? "Failed to remove passkey");
-			} else {
-				toast.success("Passkey removed");
-			}
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to remove passkey"));
-		} finally {
-			setIsPasskeyPending(false);
-		}
-	};
-
-	const handleRenamePasskey = async (id: string, name: string) => {
-		const trimmed = name.trim();
-		if (!trimmed) return;
-		setIsPasskeyPending(true);
-		try {
-			const result = await authClient.passkey?.updatePasskey?.({
-				id,
-				name: trimmed,
-			});
-			if (result?.error) {
-				toast.error(result.error.message ?? "Failed to rename passkey");
-			} else {
-				toast.success("Passkey renamed");
-				setEditingPasskeyId(null);
-				setEditingPasskeyName("");
-			}
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to rename passkey"));
-		} finally {
-			setIsPasskeyPending(false);
-		}
-	};
-
-	const handleChangeEmail = async () => {
-		const trimmed = newEmail.trim();
-		if (!trimmed) {
-			toast.error("Enter a new email address");
-			return;
-		}
-		setIsChangeEmailPending(true);
-		try {
-			const result = await authClient.changeEmail({
-				newEmail: trimmed,
-				callbackURL: window.location.origin,
-			});
-			if (result.error) {
-				toast.error(result.error.message ?? "Failed to change email");
-				return;
-			}
-			toast.success("Check your email to verify the change");
-			setChangeEmailDialogOpen(false);
-			setNewEmail("");
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to change email"));
-		} finally {
-			setIsChangeEmailPending(false);
-		}
-	};
-
-	const handleDeleteAccount = async () => {
-		if (!user || isDeleting) return;
-
-		setIsDeleting(true);
-		try {
-			await deleteAccountAction();
-			await authClient.deleteUser();
-			onOpenChange(false);
-			setDeleteDialogOpen(false);
-			navigate({ to: "/sign-in", replace: true });
-		} catch (error) {
-			toast.error(getErrorMessage(error, "Failed to delete account"));
-		} finally {
-			setIsDeleting(false);
-		}
-	};
-
 	if (!user) return null;
 
 	return (
 		<>
 			<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
 				<ResponsiveDialogContent
-					className="flex max-w-md flex-col sm:max-w-md"
+					className="flex max-w-md flex-col"
 					data-testid="account-dialog"
 				>
 					<ResponsiveDialogHeader className="shrink-0">
@@ -352,7 +167,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 									<input
 										ref={fileInputRef}
 										type="file"
-										accept="image/jpeg,image/png,image/webp,image/gif"
+										accept={PROFILE_IMAGE_ACCEPT}
 										className="hidden"
 										onChange={handleImageChange}
 										data-testid="account-image-input"
@@ -421,7 +236,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 														variant="link"
 														size="sm"
 														className="mt-1 px-0"
-														onClick={() => setChangeEmailDialogOpen(true)}
+														onClick={() =>
+															handleChangeEmailDialogOpenChange(true)
+														}
 														data-testid="account-change-email-button"
 													>
 														Change email
@@ -463,7 +280,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 													variant="outline"
 													size="sm"
 													disabled={is2FAPending}
-													onClick={() => setDisable2FADialogOpen(true)}
+													onClick={() => handleDisableDialogOpenChange(true)}
 													data-testid="account-disable-2fa-button"
 												>
 													Disable 2FA
@@ -474,7 +291,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 													variant="outline"
 													size="sm"
 													disabled={is2FAPending}
-													onClick={() => setEnable2FADialogOpen(true)}
+													onClick={() => handleEnableDialogOpenChange(true)}
 												>
 													Enable 2FA
 												</Button>
@@ -511,8 +328,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 																				);
 																			}
 																			if (e.key === "Escape") {
-																				setEditingPasskeyId(null);
-																				setEditingPasskeyName("");
+																				cancelEditingPasskey();
 																			}
 																		}}
 																		autoFocus
@@ -539,10 +355,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 																		type="button"
 																		variant="ghost"
 																		size="xs"
-																		onClick={() => {
-																			setEditingPasskeyId(null);
-																			setEditingPasskeyName("");
-																		}}
+																		onClick={cancelEditingPasskey}
 																	>
 																		Cancel
 																	</Button>
@@ -557,12 +370,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 																			type="button"
 																			variant="ghost"
 																			size="xs"
-																			onClick={() => {
-																				setEditingPasskeyId(pk.id);
-																				setEditingPasskeyName(
-																					pk.name ?? "Passkey",
-																				);
-																			}}
+																			onClick={() =>
+																				startEditingPasskey(pk.id, pk.name)
+																			}
 																			disabled={isPasskeyPending}
 																			data-testid="account-rename-passkey"
 																		>
@@ -629,12 +439,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
 			<ResponsiveDialog
 				open={disable2FADialogOpen}
-				onOpenChange={(open) => {
-					setDisable2FADialogOpen(open);
-					if (!open) {
-						setPasswords((p) => ({ ...p, disable2fa: "" }));
-					}
-				}}
+				onOpenChange={handleDisableDialogOpenChange}
 			>
 				<ResponsiveDialogContent
 					className="max-w-md"
@@ -676,10 +481,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
 			<ResponsiveDialog
 				open={changeEmailDialogOpen}
-				onOpenChange={(open) => {
-					setChangeEmailDialogOpen(open);
-					if (!open) setNewEmail("");
-				}}
+				onOpenChange={handleChangeEmailDialogOpenChange}
 			>
 				<ResponsiveDialogContent
 					className="max-w-md"
@@ -719,15 +521,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
 			<ResponsiveDialog
 				open={enable2FADialogOpen}
-				onOpenChange={(open) => {
-					setEnable2FADialogOpen(open);
-					if (!open) {
-						setEnable2FAStep("password");
-						setTwoFactorData(null);
-						setTotpCode("");
-						setPasswords((p) => ({ ...p, enable2fa: "" }));
-					}
-				}}
+				onOpenChange={handleEnableDialogOpenChange}
 			>
 				<ResponsiveDialogContent
 					className="max-w-md"

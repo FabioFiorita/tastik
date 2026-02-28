@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { ListDetailPendingSkeleton } from "@/components/common/pending-skeletons";
+import { ListDetailPendingSkeleton } from "@/components/common/list-detail-pending-skeleton";
 import { ListView } from "@/components/lists/list-view";
 import { listQueryOptions } from "@/hooks/queries/use-list";
 import { listCollaboratorsQueryOptions } from "@/hooks/queries/use-list-collaborators";

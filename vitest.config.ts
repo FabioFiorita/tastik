@@ -49,7 +49,7 @@ export default defineConfig({
 				test: {
 					name: "unit",
 					include: ["**/*.{test,spec}.?(c|m)[jt]s?(x)"],
-					exclude: ["convex/**", "**/node_modules/**"],
+					exclude: ["convex/**", "e2e/**", "**/node_modules/**"],
 					environment: "happy-dom",
 					setupFiles: ["./src/test-setup.ts"],
 				},

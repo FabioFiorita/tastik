@@ -61,6 +61,15 @@ function getPasskeyConfig() {
 	};
 }
 
+const authRateLimitRules = {
+	"/sign-in/email": { window: 60, max: 10 },
+	"/sign-up/email": { window: 10 * 60, max: 5 },
+	"/request-password-reset": { window: 10 * 60, max: 5 },
+	"/send-verification-email": { window: 10 * 60, max: 5 },
+	"/two-factor/send-otp": { window: 5 * 60, max: 5 },
+	"/two-factor/verify-otp": { window: 5 * 60, max: 15 },
+} as const;
+
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
 	const siteUrl = requireServerEnv("SITE_URL");
 
@@ -77,6 +86,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 				enabled: true,
 				maxAge: 5 * 60,
 			},
+		},
+		rateLimit: {
+			enabled: true,
+			storage: "database",
+			window: 60,
+			max: 100,
+			customRules: authRateLimitRules,
 		},
 		emailAndPassword: {
 			enabled: true,

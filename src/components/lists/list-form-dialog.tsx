@@ -1,16 +1,8 @@
 import { useForm } from "@tanstack/react-form";
-import { type ReactElement, useState } from "react";
-import {
-	ResponsiveDialog,
-	ResponsiveDialogContent,
-	ResponsiveDialogDescription,
-	ResponsiveDialogFooter,
-	ResponsiveDialogHeader,
-	ResponsiveDialogTitle,
-	ResponsiveDialogTrigger,
-} from "@/components/common/responsive-dialog";
+import type { ReactElement } from "react";
+import { useState } from "react";
+import { FormDialog } from "@/components/common/form-dialog";
 import { CreateListFormFields } from "@/components/lists/create-list-form-fields";
-import { Button } from "@/components/ui/button";
 import { useCreateList } from "@/hooks/actions/use-create-list";
 import { useUpdateList } from "@/hooks/actions/use-update-list";
 import type { ListType } from "@/lib/types/list-type";
@@ -88,58 +80,40 @@ export function ListFormDialog({
 	const submitLabel = mode === "create" ? "Create List" : "Save Changes";
 
 	return (
-		<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-			{trigger && <ResponsiveDialogTrigger render={trigger} />}
-			<ResponsiveDialogContent>
-				<ResponsiveDialogHeader className="shrink-0">
-					<ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription>
-						{description}
-					</ResponsiveDialogDescription>
-				</ResponsiveDialogHeader>
-				<div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-					<form
-						id="list-form"
-						onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
-							e.preventDefault();
-							form.handleSubmit();
-						}}
-					>
-						<CreateListFormFields
-							form={
-								form as {
-									Field: (props: {
-										name: "name" | "type" | "icon";
-										children: (field: unknown) => React.ReactNode;
-									}) => React.ReactNode;
-								}
-							}
-						/>
-					</form>
-				</div>
-				<ResponsiveDialogFooter className="shrink-0">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						data-testid={
-							mode === "create" ? "create-list-cancel" : "edit-list-cancel"
+		<FormDialog
+			open={open}
+			onOpenChange={onOpenChange}
+			trigger={trigger}
+			title={title}
+			description={description}
+			formId="list-form"
+			submitLabel={submitLabel}
+			isPending={isPending}
+			cancelTestId={
+				mode === "create" ? "create-list-cancel" : "edit-list-cancel"
+			}
+			submitTestId={
+				mode === "create" ? "create-list-submit" : "edit-list-submit"
+			}
+		>
+			<form
+				id="list-form"
+				onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+			>
+				<CreateListFormFields
+					form={
+						form as {
+							Field: (props: {
+								name: "name" | "type" | "icon";
+								children: (field: unknown) => React.ReactNode;
+							}) => React.ReactNode;
 						}
-					>
-						Cancel
-					</Button>
-					<Button
-						type="submit"
-						form="list-form"
-						disabled={isPending}
-						data-testid={
-							mode === "create" ? "create-list-submit" : "edit-list-submit"
-						}
-					>
-						{submitLabel}
-					</Button>
-				</ResponsiveDialogFooter>
-			</ResponsiveDialogContent>
-		</ResponsiveDialog>
+					}
+				/>
+			</form>
+		</FormDialog>
 	);
 }

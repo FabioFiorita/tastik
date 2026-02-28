@@ -1,17 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import type { ReactElement } from "react";
 import { useState } from "react";
-import {
-	ResponsiveDialog,
-	ResponsiveDialogContent,
-	ResponsiveDialogDescription,
-	ResponsiveDialogFooter,
-	ResponsiveDialogHeader,
-	ResponsiveDialogTitle,
-	ResponsiveDialogTrigger,
-} from "@/components/common/responsive-dialog";
+import { FormDialog } from "@/components/common/form-dialog";
 import { ItemFormFields } from "@/components/lists/item-form-fields";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCreateItem } from "@/hooks/actions/use-create-item";
@@ -188,93 +179,75 @@ export function ItemFormDialog({
 	const submitLabel = mode === "create" ? "Add Item" : "Save";
 
 	return (
-		<ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-			{trigger && <ResponsiveDialogTrigger render={trigger} />}
-			<ResponsiveDialogContent>
-				<ResponsiveDialogHeader className="shrink-0">
-					<ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription>
-						{description}
-					</ResponsiveDialogDescription>
-				</ResponsiveDialogHeader>
-				<div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-					<form
-						id="item-form"
-						onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
-							e.preventDefault();
-							form.handleSubmit();
-						}}
-					>
-						<ItemFormFields
-							listType={listType}
-							listId={listId}
-							form={
-								form as unknown as {
-									Field: (props: {
-										name:
-											| "name"
-											| "description"
-											| "url"
-											| "tagId"
-											| "itemType"
-											| "step"
-											| "currentValue"
-											| "calculatorValue"
-											| "status";
-										children: (field: unknown) => React.ReactNode;
-									}) => React.ReactNode;
-									Subscribe: (props: {
-										selector: (state: {
-											values: { itemType: ItemType };
-										}) => ItemType;
-										children: (itemType: ItemType) => React.ReactNode;
-									}) => React.ReactNode;
-								}
-							}
+		<FormDialog
+			open={open}
+			onOpenChange={onOpenChange}
+			trigger={trigger}
+			title={title}
+			description={description}
+			formId="item-form"
+			submitLabel={submitLabel}
+			isPending={isPending}
+			cancelTestId={
+				mode === "create" ? "create-item-cancel" : "edit-item-cancel"
+			}
+			submitTestId={
+				mode === "create" ? "create-item-submit" : "edit-item-submit"
+			}
+			footerStartContent={
+				mode === "create" ? (
+					<div className="mr-auto flex items-center gap-2">
+						<Checkbox
+							id="create-another"
+							checked={createAnother}
+							onCheckedChange={(checked) => setCreateAnother(checked === true)}
+							data-testid="create-another-checkbox"
 						/>
-					</form>
-				</div>
-				<ResponsiveDialogFooter className="shrink-0">
-					{mode === "create" && (
-						<div className="mr-auto flex items-center gap-2">
-							<Checkbox
-								id="create-another"
-								checked={createAnother}
-								onCheckedChange={(checked) =>
-									setCreateAnother(checked === true)
-								}
-								data-testid="create-another-checkbox"
-							/>
-							<Label
-								htmlFor="create-another"
-								className="cursor-pointer font-normal text-muted-foreground text-sm"
-							>
-								Create another
-							</Label>
-						</div>
-					)}
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						data-testid={
-							mode === "create" ? "create-item-cancel" : "edit-item-cancel"
+						<Label
+							htmlFor="create-another"
+							className="cursor-pointer font-normal text-muted-foreground text-sm"
+						>
+							Create another
+						</Label>
+					</div>
+				) : undefined
+			}
+		>
+			<form
+				id="item-form"
+				onSubmit={(e: React.SyntheticEvent<HTMLFormElement>) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+			>
+				<ItemFormFields
+					listType={listType}
+					listId={listId}
+					form={
+						form as unknown as {
+							Field: (props: {
+								name:
+									| "name"
+									| "description"
+									| "url"
+									| "tagId"
+									| "itemType"
+									| "step"
+									| "currentValue"
+									| "calculatorValue"
+									| "status";
+								children: (field: unknown) => React.ReactNode;
+							}) => React.ReactNode;
+							Subscribe: (props: {
+								selector: (state: {
+									values: { itemType: ItemType };
+								}) => ItemType;
+								children: (itemType: ItemType) => React.ReactNode;
+							}) => React.ReactNode;
 						}
-					>
-						Cancel
-					</Button>
-					<Button
-						type="submit"
-						form="item-form"
-						disabled={isPending}
-						data-testid={
-							mode === "create" ? "create-item-submit" : "edit-item-submit"
-						}
-					>
-						{submitLabel}
-					</Button>
-				</ResponsiveDialogFooter>
-			</ResponsiveDialogContent>
-		</ResponsiveDialog>
+					}
+				/>
+			</form>
+		</FormDialog>
 	);
 }

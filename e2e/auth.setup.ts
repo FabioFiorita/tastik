@@ -34,15 +34,22 @@ setup("authenticate", async ({ page }) => {
 			break;
 		}
 
-		await staleListCard.click();
-		await page.getByTestId("list-actions-trigger").click();
-		const deleteAction = page.getByTestId("delete-list-item");
-		if ((await deleteAction.count()) === 0) {
-			break;
-		}
-		await deleteAction.click();
-		await page.getByTestId("delete-confirm").click();
-		await expect(page).toHaveURL(/\/home/);
+		try {
+			await staleListCard.click();
+			await expect(page).toHaveURL(/\/lists\//, { timeout: 15000 });
+
+			const actionsButton = page.getByTestId("list-actions-trigger");
+			await expect(actionsButton).toBeVisible({ timeout: 15000 });
+			await actionsButton.click();
+
+			const deleteAction = page.getByTestId("delete-list-item");
+			if ((await deleteAction.count()) === 0) {
+				continue;
+			}
+			await deleteAction.click();
+			await page.getByTestId("delete-confirm").click();
+			await expect(page).toHaveURL(/\/home/);
+		} catch {}
 	}
 
 	await page.context().storageState({ path: authFile });

@@ -21,6 +21,7 @@ test.describe("authenticated app shell", () => {
 		).toBeVisible();
 		await expect(page.getByTestId("public-footer")).toBeVisible();
 
+		await gotoHome(page);
 		await page.getByTestId("nav-user-trigger").click();
 		await page.getByRole("menuitem", { name: "Terms of Service" }).click();
 		await expect(page).toHaveURL(/\/terms/);

@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
+	addItem,
 	cleanupListByName,
 	createList,
+	deleteItem,
 	itemRowByName,
 	openListByName,
-	selectOptionByTestId,
 	uniqueName,
 } from "../helpers/list-helpers";
 
@@ -19,9 +20,7 @@ test.describe("item flows by list type", () => {
 			await createList(page, { name: listName, type: "simple" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, { name: itemName });
 
 			const originalRow = itemRowByName(page, itemName);
 			await expect(originalRow).toBeVisible();
@@ -44,11 +43,7 @@ test.describe("item flows by list type", () => {
 				itemRowByName(page, `${updatedItemName} (copy)`),
 			).toBeVisible();
 
-			const copiedRow = itemRowByName(page, `${updatedItemName} (copy)`);
-			await copiedRow.locator("[data-testid^='item-actions-']").click();
-			await page.getByRole("menuitem", { name: "Delete" }).click();
-			await page.getByTestId("delete-item-confirm").click();
-			await expect(itemRowByName(page, copiedItemName)).toHaveCount(0);
+			await deleteItem(page, copiedItemName);
 		} finally {
 			await cleanupListByName(page, listName);
 		}
@@ -62,11 +57,7 @@ test.describe("item flows by list type", () => {
 			await createList(page, { name: listName, type: "stepper" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await page.getByTestId("item-step-input").fill("2");
-			await page.getByTestId("item-current-value-input").fill("3");
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, { name: itemName, step: "2", currentValue: "3" });
 
 			const row = itemRowByName(page, itemName);
 			await expect(row).toBeVisible();
@@ -90,10 +81,7 @@ test.describe("item flows by list type", () => {
 			await createList(page, { name: listName, type: "calculator" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await page.getByTestId("item-calculator-value-input").fill("12");
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, { name: itemName, calculatorValue: "12" });
 
 			const row = itemRowByName(page, itemName);
 			await expect(row).toBeVisible();
@@ -120,9 +108,7 @@ test.describe("item flows by list type", () => {
 			await createList(page, { name: listName, type: "kanban" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, { name: itemName });
 
 			await expect(page.getByTestId("kanban-board")).toBeVisible();
 			const row = itemRowByName(page, itemName);
@@ -153,11 +139,11 @@ test.describe("item flows by list type", () => {
 			await createList(page, { name: listName, type: "multi" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await selectOptionByTestId(page, "item-type-select", "Calculator");
-			await page.getByTestId("item-calculator-value-input").fill("42");
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, {
+				name: itemName,
+				itemType: "Calculator",
+				calculatorValue: "42",
+			});
 
 			const row = itemRowByName(page, itemName);
 			await expect(row).toBeVisible();

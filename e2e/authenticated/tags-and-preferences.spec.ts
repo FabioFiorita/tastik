@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import {
+	addItem,
 	cleanupListByName,
 	createList,
 	itemRowByName,
 	openListActions,
 	openListByName,
+	selectOptionByTestId,
 	uniqueName,
 } from "../helpers/list-helpers";
 
@@ -21,11 +23,11 @@ test.describe("tags and list preferences", () => {
 			await createList(page, { name: listName, type: "stepper" });
 			await openListByName(page, listName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(firstItemName);
-			await page.getByTestId("item-step-input").fill("1");
-			await page.getByTestId("item-current-value-input").fill("2");
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, {
+				name: firstItemName,
+				step: "1",
+				currentValue: "2",
+			});
 			await expect(itemRowByName(page, firstItemName)).toBeVisible();
 
 			await openListActions(page);
@@ -42,14 +44,7 @@ test.describe("tags and list preferences", () => {
 			await page.getByTestId("item-name-input").fill(secondItemName);
 			await page.getByTestId("item-step-input").fill("1");
 			await page.getByTestId("item-current-value-input").fill("3");
-			await page.getByTestId("item-tag-select").click();
-			await page
-				.locator("[data-slot='select-content']")
-				.last()
-				.locator("[data-slot='select-item']")
-				.filter({ hasText: tagName })
-				.first()
-				.click();
+			await selectOptionByTestId(page, "item-tag-select", tagName);
 			await page.getByTestId("create-item-submit").click();
 
 			const taggedRow = itemRowByName(page, secondItemName);

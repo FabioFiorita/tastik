@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
 import {
+	addItem,
 	cleanupListByName,
 	createList,
 	deleteCurrentList,
+	gotoHome,
 	itemRowByName,
 	openListActions,
 	openListByName,
@@ -43,9 +45,7 @@ test.describe("list lifecycle", () => {
 			await createList(page, { name: sourceListName });
 			await openListByName(page, sourceListName);
 
-			await page.getByTestId("add-item-button").click();
-			await page.getByTestId("item-name-input").fill(itemName);
-			await page.getByTestId("create-item-submit").click();
+			await addItem(page, { name: itemName });
 			await expect(itemRowByName(page, itemName)).toBeVisible();
 
 			await openListActions(page);
@@ -73,7 +73,7 @@ test.describe("list lifecycle", () => {
 			await page.getByTestId("archive-list-item").click();
 			await page.getByTestId("archive-confirm").click();
 
-			await page.goto("/home");
+			await gotoHome(page);
 			await expect(page.getByRole("link", { name: listName })).toHaveCount(0, {
 				timeout: 15000,
 			});

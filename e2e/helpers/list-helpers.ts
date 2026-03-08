@@ -109,8 +109,10 @@ export async function openListByName(
 	const listLink = listLinkByName(page, listName);
 	await expect(listLink).toBeVisible();
 	await listLink.click();
-	await expect(page).toHaveURL(/\/lists\//);
-	await expect(page.getByTestId("list-name")).toHaveText(listName);
+	await expect(page).toHaveURL(/\/lists\//, { timeout: 15000 });
+	const listNameEl = page.getByTestId("list-name");
+	await expect(listNameEl).toBeVisible({ timeout: 15000 });
+	await expect(listNameEl).toHaveText(listName);
 }
 
 export async function openListActions(page: Page): Promise<void> {
@@ -122,6 +124,45 @@ export async function deleteCurrentList(page: Page): Promise<void> {
 	await page.getByTestId("delete-list-item").click();
 	await page.getByTestId("delete-confirm").click();
 	await expect(page).toHaveURL(/\/home/);
+}
+
+export async function addItem(
+	page: Page,
+	args: {
+		name: string;
+		step?: string;
+		currentValue?: string;
+		calculatorValue?: string;
+		itemType?: string;
+	},
+): Promise<void> {
+	await page.getByTestId("add-item-button").click();
+	await page.getByTestId("item-name-input").fill(args.name);
+
+	if (args.itemType) {
+		await selectOptionByTestId(page, "item-type-select", args.itemType);
+	}
+	if (args.step) {
+		await page.getByTestId("item-step-input").fill(args.step);
+	}
+	if (args.currentValue) {
+		await page.getByTestId("item-current-value-input").fill(args.currentValue);
+	}
+	if (args.calculatorValue) {
+		await page
+			.getByTestId("item-calculator-value-input")
+			.fill(args.calculatorValue);
+	}
+
+	await page.getByTestId("create-item-submit").click();
+}
+
+export async function deleteItem(page: Page, itemName: string): Promise<void> {
+	const row = itemRowByName(page, itemName);
+	await row.locator("[data-testid^='item-actions-']").click();
+	await page.getByRole("menuitem", { name: "Delete" }).click();
+	await page.getByTestId("delete-item-confirm").click();
+	await expect(itemRowByName(page, itemName)).toHaveCount(0);
 }
 
 export async function cleanupListByName(

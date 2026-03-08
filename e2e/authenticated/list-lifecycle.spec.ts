@@ -7,7 +7,6 @@ import {
 	gotoHome,
 	itemRowByName,
 	openListActions,
-	openListByName,
 	uniqueName,
 } from "../helpers/list-helpers";
 
@@ -18,7 +17,6 @@ test.describe("list lifecycle", () => {
 
 		try {
 			await createList(page, { name: listName });
-			await openListByName(page, listName);
 
 			await openListActions(page);
 			await page.getByTestId("edit-list-item").click();
@@ -43,7 +41,6 @@ test.describe("list lifecycle", () => {
 
 		try {
 			await createList(page, { name: sourceListName });
-			await openListByName(page, sourceListName);
 
 			await addItem(page, { name: itemName });
 			await expect(itemRowByName(page, itemName)).toBeVisible();
@@ -67,7 +64,6 @@ test.describe("list lifecycle", () => {
 
 		try {
 			await createList(page, { name: listName });
-			await openListByName(page, listName);
 
 			await openListActions(page);
 			await page.getByTestId("archive-list-item").click();

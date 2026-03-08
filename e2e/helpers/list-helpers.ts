@@ -98,7 +98,10 @@ export async function createList(
 	}
 
 	await page.getByTestId("create-list-submit").click();
-	await expect(listLinkByName(page, args.name)).toBeVisible({ timeout: 15000 });
+	await expect(page).toHaveURL(/\/lists\//, { timeout: 15000 });
+	const listNameEl = page.getByTestId("list-name");
+	await expect(listNameEl).toBeVisible({ timeout: 30000 });
+	await expect(listNameEl).toHaveText(args.name);
 }
 
 export async function openListByName(

@@ -5,7 +5,6 @@ import {
 	createList,
 	deleteItem,
 	itemRowByName,
-	openListByName,
 	uniqueName,
 } from "../helpers/list-helpers";
 
@@ -18,7 +17,6 @@ test.describe("item flows by list type", () => {
 
 		try {
 			await createList(page, { name: listName, type: "simple" });
-			await openListByName(page, listName);
 
 			await addItem(page, { name: itemName });
 
@@ -55,7 +53,6 @@ test.describe("item flows by list type", () => {
 
 		try {
 			await createList(page, { name: listName, type: "stepper" });
-			await openListByName(page, listName);
 
 			await addItem(page, { name: itemName, step: "2", currentValue: "3" });
 
@@ -79,7 +76,6 @@ test.describe("item flows by list type", () => {
 
 		try {
 			await createList(page, { name: listName, type: "calculator" });
-			await openListByName(page, listName);
 
 			await addItem(page, { name: itemName, calculatorValue: "12" });
 
@@ -106,7 +102,6 @@ test.describe("item flows by list type", () => {
 
 		try {
 			await createList(page, { name: listName, type: "kanban" });
-			await openListByName(page, listName);
 
 			await addItem(page, { name: itemName });
 
@@ -137,7 +132,6 @@ test.describe("item flows by list type", () => {
 
 		try {
 			await createList(page, { name: listName, type: "multi" });
-			await openListByName(page, listName);
 
 			await addItem(page, {
 				name: itemName,

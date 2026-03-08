@@ -5,7 +5,6 @@ import {
 	createList,
 	itemRowByName,
 	openListActions,
-	openListByName,
 	selectOptionByTestId,
 	uniqueName,
 } from "../helpers/list-helpers";
@@ -21,7 +20,6 @@ test.describe("tags and list preferences", () => {
 
 		try {
 			await createList(page, { name: listName, type: "stepper" });
-			await openListByName(page, listName);
 
 			await addItem(page, {
 				name: firstItemName,

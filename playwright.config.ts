@@ -22,7 +22,7 @@ export default defineConfig({
 	timeout: process.env.CI ? 90000 : 60000,
 	retries: process.env.CI ? 2 : 0,
 	workers: 1,
-	reporter: "html",
+	reporter: process.env.CI ? "list" : "html",
 	use: {
 		baseURL: baseUrl,
 		trace: "on-first-retry",
@@ -41,7 +41,7 @@ export default defineConfig({
 				...devices["Desktop Chrome"],
 				storageState: { cookies: [], origins: [] },
 			},
-			dependencies: ["chromium-auth"],
+			dependencies: ["setup"],
 			testMatch: /public\/.*\.spec\.ts/,
 		},
 	],

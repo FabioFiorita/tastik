@@ -9,6 +9,7 @@ These instructions apply to any assistant working in this repository. Keep rules
 - Prefer skills for product/domain knowledge and deeper context (example: `tastik-knowledge`).
 - Use `convex-guidelines` skill when writing or modifying Convex backend code.
 - Use `testing-setup` skill when writing tests or working with test utilities.
+- Use `e2e-testing` skill when writing or modifying Playwright E2E tests.
 - Use `git-commit` skill when writing a git commit message in this repo (Conventional Commits enforced by commitlint).
 - Keep this file focused on stable rules, project conventions, and must-follow constraints.
 
